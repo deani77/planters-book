@@ -5,6 +5,7 @@ import 'domain.dart';
 import 'store.dart';
 import 'importer.dart';
 import 'home_dashboard.dart';
+import 'estate_dashboard.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -46,14 +47,7 @@ class _BookPageState extends State<BookPage> {
   String? startupError;
   final controllers = <String, TextEditingController>{};
   bool busy = false;
-  static const tabs = [
-    'Home',
-    'Estate',
-    'Field',
-    'Data Input',
-    'Tools',
-    'Settings',
-  ];
+  static const tabs = ['Home', 'Estate', 'Field', 'Input', 'Tools', 'Settings'];
   static const icons = [
     Icons.home_outlined,
     Icons.landscape_outlined,
@@ -175,14 +169,13 @@ class _BookPageState extends State<BookPage> {
       Column(children: data.map((e) => card(e.kind, detail(e))).toList());
   Widget dashboard() => HomeDashboard(entries: entries);
 
-  Widget estateView() => Column(
-    crossAxisAlignment: CrossAxisAlignment.stretch,
-    children: [
-      heading('Estate', 'Select an estate to view its records.'),
-      estatePicker(),
-      if (estate != null)
-        records(entries.where((e) => e.data['estate_id'] == estate)),
-    ],
+  Widget estateView() => EstateDashboard(
+    entries: entries,
+    selectedEstate: estate,
+    onEstateChanged: (value) => setState(() {
+      estate = value;
+      field = null;
+    }),
   );
   Widget fieldView() {
     final fields = entries.where(
@@ -437,7 +430,7 @@ class _BookPageState extends State<BookPage> {
   );
   @override
   Widget build(BuildContext context) => Scaffold(
-    appBar: tab == 0
+    appBar: tab <= 1
         ? null
         : AppBar(
             title: const Text('Planters Book'),
@@ -454,7 +447,7 @@ class _BookPageState extends State<BookPage> {
         ? const Center(child: CircularProgressIndicator())
         : SafeArea(
             child: SingleChildScrollView(
-              padding: EdgeInsets.all(tab == 0 ? 12 : 20),
+              padding: EdgeInsets.all(tab <= 1 ? 12 : 20),
               child: Align(
                 alignment: Alignment.topCenter,
                 child: ConstrainedBox(

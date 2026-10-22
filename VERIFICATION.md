@@ -2,7 +2,7 @@
 
 - Flutter 3.47.7 stable, Dart 3.13.5, Xcode 27.1.
 - `flutter analyze`: passed, no issues.
-- `flutter test`: 9 tests passed. Includes CSV/Markdown/XLSX parsing; date, area and percentage validation; duplicate rejection; real SQLite persistence across reopen and transaction rollback; and six-tab navigation at 390 × 844 logical pixels.
+- `flutter test`: 11 tests passed. Includes CSV/Markdown/XLSX parsing; date, area and percentage validation; duplicate rejection; real SQLite persistence across reopen and transaction rollback; and six-tab navigation at 390 × 844 logical pixels.
 - iOS simulator debug compilation: passed. Building directly under Documents encountered macOS resource-fork/Finder signing metadata on Flutter.framework. Copying source (excluding build/.dart_tool/.git) into `/private/tmp/planters-book-native-check` and building there succeeded.
 - Revised Home: recovered reference layout, sample/actual separation, no-overflow test at 320 logical pixels, and daily-yield filtering verified. Native iOS rebuild passed after the Home revision.
 - iPhone simulator smoke test: installed and launched on iPhone 18 Pro / iOS 27.0; Home screen and all six navigation labels visually inspected.
@@ -12,3 +12,5 @@
 
 The app is an MVP. See README for data identity rules, import limitations and remaining work.
 
+
+Estate proposal: verified narrow-phone layout, selected-estate isolation, missing-budget placeholders, area discrepancy display and all six tabs with the shortened Input label.

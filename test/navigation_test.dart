@@ -24,13 +24,7 @@ void main() {
       );
       await tester.pumpAndSettle();
       expect(find.text('Estate Crop Production'), findsOneWidget);
-      for (final label in [
-        'Estate',
-        'Field',
-        'Data Input',
-        'Tools',
-        'Settings',
-      ]) {
+      for (final label in ['Estate', 'Field', 'Input', 'Tools', 'Settings']) {
         await tester.tap(
           find.descendant(
             of: find.byType(NavigationBar),

@@ -22,7 +22,7 @@ flutter build ios --simulator --debug
 
 ## Implemented
 
-- Six tabs: Home, Estate, Field, Data Input, Tools, Settings.
+- Six fixed bottom tabs: Home, Estate, Field, Input, Tools, Settings. The Input page retains the full Data Input heading.
 - Read-only Home/Estate/Field views. Large rectangular field selection cards.
 - Estate and field profiles: perimeter/planted hectares, planting year and calculated calendar age.
 - Data Input: daily/weekly/monthly crop production; estate-only weeding/manuring; rainfall; workforce; costs; FFB quality and OER.
@@ -47,6 +47,12 @@ Home actual yields use recorded daily crop entries divided by estate planted hec
 Home follows the recovered [shared Home mockup](https://chatgpt.com/s/t_6ada2b1e08dc8191863e1b8c2fb3acb5): Estate Crop Production (mill crop, harvesting coverage and productivity), Weeding (circle/selective), and Manuring on a single scrolling page with pale green metric panels. The six-tab navigation follows the explicit app request rather than the mockup's earlier four-tab footer.
 
 When no real estate exists, Home shows a clearly labeled, unsaved sample design preview matching the reference figures. For a real estate, actual crop yields and circle/selective weeding totals are calculated from available records. Other metrics remain blank until their dedicated inputs exist: budgets, harvesting hectares, harvester-specific attendance, bag quantities and fertilizer programmes. The reference provisionally defines Manuring “This Month” as monthly planned bags and MTD as applied bags. No kilogram-to-bag conversion is assumed.
+
+## Estate screen proposal
+
+The Estate tab now presents the selected estate profile, perimeter/planted/balance hectares, planting-year and age distribution, a field planting table, annual budget categories, and estate-level reporting context. It follows the approved Home visual style. Real profile and field information is read from SQLite; field-area differences are flagged. When no real estate exists, a clearly marked unsaved sample preview is shown.
+
+Annual production, circle/selective weeding, fertilizer bags and operating-cost budgets are proposed categories for review. Budget input/persistence and configurable estate preferences are not implemented yet. No illustrative budget is supplied to Home actual calculations. Field palm populations, plantation calculators, cloud backup/device sharing and other expansion work remain future steps.
 
 ## Remaining
 
