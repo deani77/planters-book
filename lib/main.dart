@@ -4,6 +4,7 @@ import 'package:file_picker/file_picker.dart';
 import 'domain.dart';
 import 'store.dart';
 import 'importer.dart';
+import 'home_dashboard.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -172,40 +173,7 @@ class _BookPageState extends State<BookPage> {
   );
   Widget records(Iterable<Entry> data) =>
       Column(children: data.map((e) => card(e.kind, detail(e))).toList());
-  Widget dashboard() {
-    final real = entries.where((e) => !e.sample).toList();
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        heading(
-          'Your plantation, at a glance',
-          'Offline • read-only dashboard',
-        ),
-        card(
-          'Estate profiles',
-          '${real.where((e) => e.kind == 'Estate profile').length} real estates',
-        ),
-        card(
-          'Field profiles',
-          '${real.where((e) => e.kind == 'Field profile').length} real fields',
-        ),
-        card(
-          'Daily FFB recorded',
-          '${real.where((e) => e.kind == 'Crop production' && e.data['period'] == 'daily').fold<double>(0, (s, e) => s + double.parse(e.data['ffb_tonnes']!)).toStringAsFixed(2)} tonnes across recorded daily entries\nWeekly/monthly summaries are excluded to avoid double counting.',
-        ),
-        if (entries.any((e) => e.sample))
-          card(
-            'Sample data loaded',
-            'Sample records are labeled and excluded from the totals above.',
-          ),
-        if (entries.isEmpty)
-          card(
-            'Start your estate book',
-            'Create an estate in Data Input, then add its fields and operational records.',
-          ),
-      ],
-    );
-  }
+  Widget dashboard() => HomeDashboard(entries: entries);
 
   Widget estateView() => Column(
     crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -469,22 +437,24 @@ class _BookPageState extends State<BookPage> {
   );
   @override
   Widget build(BuildContext context) => Scaffold(
-    appBar: AppBar(
-      title: const Text('Planters Book'),
-      actions: [
-        const Padding(
-          padding: EdgeInsets.all(16),
-          child: Icon(Icons.offline_pin_outlined),
-        ),
-      ],
-    ),
+    appBar: tab == 0
+        ? null
+        : AppBar(
+            title: const Text('Planters Book'),
+            actions: [
+              const Padding(
+                padding: EdgeInsets.all(16),
+                child: Icon(Icons.offline_pin_outlined),
+              ),
+            ],
+          ),
     body: startupError != null
         ? Center(child: Text('Unable to open local storage: $startupError'))
         : store == null
         ? const Center(child: CircularProgressIndicator())
         : SafeArea(
             child: SingleChildScrollView(
-              padding: const EdgeInsets.all(20),
+              padding: EdgeInsets.all(tab == 0 ? 12 : 20),
               child: Align(
                 alignment: Alignment.topCenter,
                 child: ConstrainedBox(

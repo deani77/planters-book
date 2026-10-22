@@ -40,11 +40,13 @@ Maximum input file: 5 MB, 10,000 data rows. Markdown support is pipe tables, not
 
 One record per type/estate/field/date/period/role/category combination. Repeating that identity is rejected. For multiple costs in the same category/day or multiple estate activities per day, consolidate before importing. Profile IDs cannot be overwritten through imports.
 
-Home sums only daily crop entries, excluding weekly/monthly summaries to prevent double counting. Estate views list records with their periods; they do not combine overlapping reporting periods.
+Home actual yields use recorded daily crop entries divided by estate planted hectares, excluding weekly/monthly summaries and future dates. Missing inputs are shown as an em dash. Estate views list records with their periods; they do not combine overlapping reporting periods.
 
 ## Design provenance and scope
 
-The supplied request defines six tabs and the form list. Retrieved earlier user messages confirm large rectangular field cards, perimeter and planted hectares, and planting-year/age details. Earlier assistant replies were only unresolved references, so exact colors, fonts, and further proposed details could not be recovered. The current restrained green Material theme is an MVP assumption for review.
+Home follows the recovered [shared Home mockup](https://chatgpt.com/s/t_6ada2b1e08dc8191863e1b8c2fb3acb5): Estate Crop Production (mill crop, harvesting coverage and productivity), Weeding (circle/selective), and Manuring on a single scrolling page with pale green metric panels. The six-tab navigation follows the explicit app request rather than the mockup's earlier four-tab footer.
+
+When no real estate exists, Home shows a clearly labeled, unsaved sample design preview matching the reference figures. For a real estate, actual crop yields and circle/selective weeding totals are calculated from available records. Other metrics remain blank until their dedicated inputs exist: budgets, harvesting hectares, harvester-specific attendance, bag quantities and fertilizer programmes. The reference provisionally defines Manuring “This Month” as monthly planned bags and MTD as applied bags. No kilogram-to-bag conversion is assumed.
 
 ## Remaining
 

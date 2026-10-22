@@ -23,7 +23,7 @@ void main() {
         () => Future<void>.delayed(const Duration(milliseconds: 500)),
       );
       await tester.pumpAndSettle();
-      expect(find.text('Your plantation, at a glance'), findsOneWidget);
+      expect(find.text('Estate Crop Production'), findsOneWidget);
       for (final label in [
         'Estate',
         'Field',
