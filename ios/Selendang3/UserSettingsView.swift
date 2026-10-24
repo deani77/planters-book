@@ -31,6 +31,7 @@ struct UserSettingsView: View {
                         }.pickerStyle(.inline)
                     }.estateScreen().navigationTitle("Appearance")
                 }
+                NavigationLink("Suggestions") { SuggestionsView() }
                 NavigationLink("About") { ModuleView(title: "About") }
             } footer: {
                 Text("Profile and appearance are saved on this device.")

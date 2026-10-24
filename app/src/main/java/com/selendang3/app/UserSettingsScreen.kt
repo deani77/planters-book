@@ -26,7 +26,7 @@ fun UserSettingsScreen(themeChoice: String, onThemeChange: (String) -> Unit) {
             Text(page, style = MaterialTheme.typography.headlineSmall)
             when (page) {
                 "Settings" -> {
-                    listOf("Inbox", "User Profile", "Appearance", "About").forEach { item ->
+                    listOf("Inbox", "User Profile", "Appearance", "Suggestions", "About").forEach { item ->
                         OutlinedButton(onClick = { page = item }, modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp)) {
                             Text(item)
                         }
@@ -35,6 +35,7 @@ fun UserSettingsScreen(themeChoice: String, onThemeChange: (String) -> Unit) {
                     EstateDataControls()
 
                 }
+                "Suggestions" -> SuggestionsScreen()
                 "About" -> {
                     Text("Planters Book", style = MaterialTheme.typography.titleMedium)
                     Text("v${BuildConfig.VERSION_NAME}")

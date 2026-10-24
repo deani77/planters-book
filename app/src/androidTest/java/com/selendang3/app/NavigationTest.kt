@@ -46,7 +46,7 @@ class NavigationTest {
         compose.onNodeWithText("Unit Conversion").performScrollTo().assertIsDisplayed()
         compose.onNodeWithText("‹  Back").performClick()
         compose.onNodeWithText("Settings").performScrollTo().performClick()
-        compose.onNodeWithText("Suggestions").assertDoesNotExist()
+        compose.onNodeWithText("Suggestions").performScrollTo().assertIsDisplayed()
         compose.onNodeWithText("Estate Data Management").performScrollTo().assertIsDisplayed()
         compose.onNodeWithText("Import Estate File").performScrollTo().assertIsDisplayed()
         compose.onAllNodesWithText("Read PDF with AI").assertCountEquals(2)
@@ -82,6 +82,24 @@ class NavigationTest {
             compose.onNodeWithText("ESTATE DETAILS · Example Estate").assertIsDisplayed()
         } finally {
             compose.activity.getSharedPreferences("user_settings", 0).edit().remove("estate_name").apply()
+        }
+    }
+
+    @Test fun suggestionsKeepsDraftWithoutSending() {
+        try {
+            compose.onNodeWithText("Settings").performScrollTo().performClick()
+            compose.onNodeWithText("Suggestions").performScrollTo().performClick()
+            compose.onNodeWithText("Your suggestion").performTextClearance()
+            compose.onNodeWithText("Your suggestion").performTextInput("Please add a rainfall summary.")
+            compose.onNodeWithText("To: deani77@gmail.com").performScrollTo().assertIsDisplayed()
+            compose.onNodeWithText("Email Suggestion").performScrollTo().assertIsEnabled()
+            compose.onNodeWithText("‹ Settings").performScrollTo().performClick()
+            compose.onNodeWithText("Suggestions").performScrollTo().performClick()
+            compose.onNodeWithText("Please add a rainfall summary.").assertIsDisplayed()
+            compose.onNodeWithText("Clear Draft").performScrollTo().performClick()
+            compose.onNodeWithText("Email Suggestion").performScrollTo().assertIsNotEnabled()
+        } finally {
+            compose.activity.getSharedPreferences("suggestions", 0).edit().remove("draft").apply()
         }
     }
 }
