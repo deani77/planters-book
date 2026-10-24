@@ -2,17 +2,18 @@ import SwiftUI
 import Charts
 
 struct EstateDashboardView: View {
+    @AppStorage("estate_name") private var estateName = ""
     @ObservedObject private var estate = EstateReferenceStore.shared
     var body: some View {
         TimelineView(.periodic(from:Date(),by:60)) { context in
             let data = EstateDashboardData(reference:estate.reference,today:context.date)
             ScrollView {
                 VStack(alignment:.leading,spacing:16) {
-                    Text("ESTATE DETAILS · SELENDANG 3").font(.title2.bold())
+                    Text("ESTATE DETAILS · " + (estateName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? "Your Estate" : estateName)).font(.title2.bold())
                     if let reference = estate.reference {
                         Text("Saved estate revision \(reference.revision)").font(.headline)
                         Text(reference.reportingPeriod).font(.footnote)
-                    } else { Text("No estate data imported. Open Settings → Sync Now.") }
+                    } else { Text("No estate data imported. Open Settings → Estate Data Management.") }
                     Text("Uses saved offline records. Each measure retains its reporting period. Pending means data is unavailable.")
                         .font(.footnote).foregroundStyle(.secondary)
                     NavigationLink("All Estate Records") { EstateRecordsView() }

@@ -34,7 +34,8 @@ object EstatePackages {
         require(text.toByteArray(Charsets.UTF_8).size <= MAX_BYTES) { "Update file exceeds 2 MB." }
         val root = JSONObject(text)
         require(root.opt("schemaVersion") == 1) { "Unsupported estate update format." }
-        require(root.opt("estateId") == "selendang-3") { "This update belongs to a different estate." }
+        val estateId = root.opt("estateId")
+        require(estateId is String && estateId.isNotBlank() && estateId.length <= 100) { "Include a valid estate identifier (1–100 characters)." }
         val revisionValue = root.get("revision")
         require(revisionValue is Int || revisionValue is Long) { "Revision must be a whole number." }
         val revision = (revisionValue as Number).toLong()

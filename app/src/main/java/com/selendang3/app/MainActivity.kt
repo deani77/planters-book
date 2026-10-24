@@ -65,6 +65,7 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 fun EstateApp() {
+    val estateName = rememberEstateName()
     val context = LocalContext.current.applicationContext
     val preferences = remember(context) { context.getSharedPreferences("user_settings", 0) }
     var themeChoice by remember { mutableStateOf(preferences.getString("theme", "system") ?: "system") }
@@ -94,7 +95,7 @@ fun EstateApp() {
                     TextButton(onClick = { nav.popBackStack() }) { Text("‹  Back") }
                 } else {
                     Spacer(Modifier.height(20.dp))
-                    Text("LADANG SELENDANG 3", modifier = Modifier.fillMaxWidth(),
+                    Text(estateName, modifier = Modifier.fillMaxWidth(),
                         style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant,
                         textAlign = TextAlign.Center)
                 }

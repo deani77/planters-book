@@ -1,6 +1,7 @@
 import SwiftUI
 
 struct HomeView: View {
+    @AppStorage("estate_name") private var estateName = ""
     @Environment(\.colorScheme) private var colorScheme
     @ObservedObject private var estate = EstateReferenceStore.shared
     private var isPad: Bool { UIDevice.current.userInterfaceIdiom == .pad }
@@ -61,7 +62,7 @@ struct HomeView: View {
 
     private var homeHeading: some View {
         VStack(spacing: 6) {
-            Text("LADANG SELENDANG 3").font(.caption.weight(.semibold)).tracking(2)
+            Text(estateName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? "Your Estate" : estateName).font(.caption.weight(.semibold)).tracking(2)
                 .foregroundStyle(.secondary)
             Text("Planters Book")
                 .font(isPad ? .system(size: iPadHeadingSize, weight: .bold, design: .rounded) : .largeTitle.weight(.bold))

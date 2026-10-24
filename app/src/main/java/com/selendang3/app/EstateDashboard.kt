@@ -49,9 +49,10 @@ import androidx.compose.ui.unit.dp
 
 private const val Pending = "—"
 
-/** Slide 1 layout only. No Berabong reference values are used as Selendang 3 data. */
+/** Estate metrics are calculated from the user’s imported records. */
 @Composable
 fun EstateDashboard(estateUpdate: EstatePackage? = null) {
+    val estateName = rememberEstateName()
     val ageProfile = remember(estateUpdate) { estateAgeProfile(estateUpdate) }
     val topography = remember(estateUpdate) { estateTopography(estateUpdate) }
     val averageSph = remember(estateUpdate) { estateAverageSph(estateUpdate) }
@@ -74,7 +75,7 @@ fun EstateDashboard(estateUpdate: EstatePackage? = null) {
                     Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp),
                     verticalArrangement = Arrangement.spacedBy(16.dp),
                 ) {
-                    Text("ESTATE DETAILS · SELENDANG 3", fontWeight = FontWeight.Bold,
+                    Text("ESTATE DETAILS · $estateName", fontWeight = FontWeight.Bold,
                         style = MaterialTheme.typography.titleLarge)
                     Text(estateUpdate?.reportingPeriod ?: "Reporting period: pending", style = MaterialTheme.typography.bodyMedium)
                     Text("Age Profile, Topography, YPH, Average SPH, Soil Type, Rainfall, Workforce, Ratios and FFB cost use synced estate records. Other panels may still be pending. — means unavailable.",

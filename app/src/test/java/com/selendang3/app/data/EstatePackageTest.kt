@@ -7,7 +7,7 @@ import org.junit.Test
 
 class EstatePackageTest {
     private fun fixture(): JSONObject = JSONObject().put("schemaVersion", 1)
-        .put("estateId", "selendang-3").put("revision", 1)
+        .put("estateId", "local-estate").put("revision", 1)
         .put("reportingPeriod", "Fictional example")
         .put("exportedAt", "2026-10-20T00:00:00Z")
         .put("sections", JSONArray(EstatePackages.sectionIds.map { id ->
@@ -21,7 +21,10 @@ class EstatePackageTest {
         assertEquals("0", update.tables.first().rows[1][0])
     }
     @Test(expected = IllegalArgumentException::class)
-    fun wrongEstateRejected() { EstatePackages.parse(fixture().put("estateId", "other").toString()) }
+    fun blankEstateRejected() { EstatePackages.parse(fixture().put("estateId", " ").toString()) }
+    @Test fun customEstateAccepted() {
+        assertEquals(1L, EstatePackages.parse(fixture().put("estateId", "my-estate").toString()).revision)
+    }
     @Test(expected = IllegalArgumentException::class)
     fun futureSchemaRejected() { EstatePackages.parse(fixture().put("schemaVersion", 2).toString()) }
     @Test(expected = IllegalArgumentException::class)

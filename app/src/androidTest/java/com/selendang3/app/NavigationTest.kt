@@ -11,7 +11,7 @@ class NavigationTest {
     @Test fun detailsShowsPanelsAndPhoneDashboardOpensSummary() {
         compose.onNodeWithText("Crop Data (mt/ha)").assertDoesNotExist()
         compose.onNodeWithText("Estate Details").performScrollTo().performClick()
-        compose.onNodeWithText("ESTATE DETAILS · SELENDANG 3").assertIsDisplayed()
+        compose.onNodeWithText("ESTATE DETAILS · Your Estate").assertIsDisplayed()
         compose.onNodeWithText("Age Profile").performScrollTo().assertIsDisplayed()
         compose.onNodeWithText("Rainfall").performScrollTo().assertIsDisplayed()
         compose.onNodeWithText("OER (%)").performScrollTo().assertIsDisplayed()
@@ -67,5 +67,21 @@ class NavigationTest {
         compose.onNodeWithText("Crop sent to mill (t)").assertDoesNotExist()
         compose.onNodeWithText("Today Crop Production").assertDoesNotExist()
         compose.onNodeWithText("Upload PDF · coming next").assertDoesNotExist()
+    }
+
+    @Test fun estateNameCanBeChangedInSettings() {
+        try {
+            compose.onNodeWithText("Settings").performScrollTo().performClick()
+            compose.onNodeWithText("Estate name").performScrollTo().performTextClearance()
+            compose.onNodeWithText("Estate name").performTextInput("Example Estate")
+            compose.onNodeWithText("Save Estate Name").performScrollTo().performClick()
+            compose.onNodeWithText("Estate name saved on this device.").performScrollTo().assertIsDisplayed()
+            compose.onNodeWithText("‹  Back").performClick()
+            compose.onNodeWithText("Example Estate").assertIsDisplayed()
+            compose.onNodeWithText("Estate Details").performScrollTo().performClick()
+            compose.onNodeWithText("ESTATE DETAILS · Example Estate").assertIsDisplayed()
+        } finally {
+            compose.activity.getSharedPreferences("user_settings", 0).edit().remove("estate_name").apply()
+        }
     }
 }

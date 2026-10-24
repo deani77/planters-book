@@ -39,12 +39,12 @@ struct EstateReference: Decodable {
         guard data.count <= 2*1024*1024 else { throw ProductionError.invalid("Estate update exceeds 2 MB.") }
         let result = try JSONDecoder().decode(EstateReference.self, from: data)
         let expected: Set<String> = ["overview","fields","ages","soil","rainfall","abw","roads"]
-        guard result.schemaVersion == 1, result.estateId == "selendang-3", result.revision > 0,
+        guard result.schemaVersion == 1, !result.estateId.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty, result.estateId.count <= 100, result.revision > 0,
               !result.reportingPeriod.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty, result.reportingPeriod.count <= 100,
               !result.exportedAt.isEmpty, result.exportedAt.count <= 50,
               result.sections.count == 7, Set(result.sections.map(\.id)) == expected,
               result.sections.reduce(0, { $0 + $1.rows.count }) <= 10000 else {
-            throw ProductionError.invalid("Invalid estate update or wrong estate.")
+            throw ProductionError.invalid("Invalid estate update.")
         }
         for table in result.sections {
             guard (1...20).contains(table.columns.count), Set(table.columns).count == table.columns.count,

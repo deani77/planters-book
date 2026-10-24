@@ -12,10 +12,10 @@ The AI app may require internet and send the document to its own service. Plante
 
 Only the PDF explicitly selected by the user is shared, with a temporary readable file URL. Android exposes only its dedicated PDF cache directory via a non-exported FileProvider. Cached PDF copies older than 24 hours are removed on the next PDF selection (not by a background timer).
 
-The first implementation extracts the seven legacy reference sections: overview, fields, ages, soil, rainfall, abw and roads. It does not yet import arbitrary operational reports. The schema still uses the legacy estate identifier; custom estate setup is separate migration work.
+The first implementation extracts the seven legacy reference sections: overview, fields, ages, soil, rainfall, abw and roads. It does not yet import arbitrary operational reports. Imports accept custom estate identifiers. Users set their display name in Estate Data Management.
 
 ## Validation
 
-Swift source syntax parsing passes. Existing estate schema validation tests cover pending cells, wrong estate identifiers, duplicate sections and invalid row widths. Full iOS typechecking was blocked by the execution environment denying Xcode's Swift macro plugin sandbox. Android builds and device sharing tests have not been run locally. No APK was created.
+Swift source syntax parsing passes. Existing estate schema validation tests cover pending cells, invalid estate identifiers, duplicate sections and invalid row widths. Full iOS typechecking was blocked by the execution environment denying Xcode's Swift macro plugin sandbox. Android builds and device sharing tests have not been run locally. No APK was created.
 
 Device checks still required: PDF picker cancellation, oversized/invalid files, compatible and incompatible AI apps, receiving app dropping text, paste valid/invalid results, import cancellation, and saved data surviving app restart.

@@ -2,6 +2,8 @@
 
 Offline estate management for individual planters, estate managers and smallholders, with native Android and iOS apps.
 
+Set your estate name in **Settings → Estate Data Management → Estate name → Save Estate Name**. It is saved on this device and displayed on Home and Estate Details. Before setup, the heading reads **Your Estate**.
+
 ## Data ownership
 
 Normal use is intended to require no VPS, account or internet connection. Users will import files from their device or enter their own records. Data is stored locally.
@@ -15,13 +17,13 @@ Normal use is intended to require no VPS, account or internet connection. Users 
 - Local production storage models are inherited; manual entry forms still need to be exposed through Data Input.
 - The Settings screens no longer request a server address or token.
 
-This is an initial migration from Selendang-3-Apps, not a completed standalone release. The current import schema still requires `estateId: "selendang-3"` and all seven reference sections. See [example format](sample-data/estate-update.example.json). CSV, Excel and Markdown import are not implemented.
+This is an initial migration from Selendang-3-Apps, not a completed standalone release. The import schema accepts a nonblank estate identifier (up to 100 characters) and requires all seven reference sections. See [example format](sample-data/estate-update.example.json). CSV, Excel and Markdown import are not implemented.
 
-Legacy server code, sync models, fixed field lists, branding and documentation remain in the repository pending migration. The server is not needed for the new local estate import flow.
+Legacy server code, sync models, fixed field lists and documentation remain in the repository pending migration. The server is not needed for the new local estate import flow.
 
 ## Agreed next work
 
-1. Custom estate and field setup, with no fixed Selendang estate identity.
+1. Complete estate and field setup forms.
 2. Bottom navigation: Home, Estate, Field, Data Input, Tools, Settings.
 3. All data entry and editing through Data Input.
 4. Crop budgets and daily/weekly/monthly harvesting input; estate-level weeding and manuring input.

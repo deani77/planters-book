@@ -36,7 +36,7 @@ fun UserSettingsScreen(themeChoice: String, onThemeChange: (String) -> Unit) {
 
                 }
                 "About" -> {
-                    Text("S3 Estate Info", style = MaterialTheme.typography.titleMedium)
+                    Text("Planters Book", style = MaterialTheme.typography.titleMedium)
                     Text("v${BuildConfig.VERSION_NAME}")
                     Text("Android estate information application. Initial Alpha interface.")
                 }
