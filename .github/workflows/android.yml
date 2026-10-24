@@ -1,4 +1,4 @@
-name: Android test APK
+name: Android checks and requested APK
 
 on:
   push:
@@ -11,7 +11,7 @@ permissions:
 
 jobs:
   build:
-    if: github.event_name != 'pull_request' || github.event.pull_request.draft == false
+    if: github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
@@ -43,7 +43,7 @@ jobs:
           script: ./gradlew --no-daemon connectedDebugAndroidTest
       - uses: actions/upload-artifact@v4
         with:
-          name: S3-Estate-Info-v0.11-Alpha-debug
+          name: Planters-Book-debug
           path: app/build/outputs/apk/debug/app-debug.apk
           if-no-files-found: error
           retention-days: 14
@@ -55,7 +55,7 @@ jobs:
           if-no-files-found: ignore
 
   source-checks:
-    if: github.event_name == 'pull_request' && github.event.pull_request.draft == true
+    if: github.event_name != 'workflow_dispatch'
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:

@@ -15,14 +15,14 @@ Backgrounds currently use original palm illustrations with a different palette p
 Install JDK 17 and Android SDK platform 35/build tools 35.0.0. Android Studio can provide these. Set `ANDROID_HOME`, or create an ignored `local.properties` containing your `sdk.dir` path. Open the repository root in Android Studio.
 
 ```sh
-./gradlew testDebugUnitTest lintDebug assembleDebug assembleDebugAndroidTest
+./gradlew testDebugUnitTest lintDebug
 ```
 
 Windows: use `gradlew.bat`. Gradle 8.11.1 downloads through the official wrapper and verifies the distribution checksum. Dependency versions are pinned in the build scripts. Build output: `app/build/outputs/apk/debug/app-debug.apk`.
 
 ## GitHub test APK
 
-The **Android test APK** workflow runs on main pushes, pull requests and manual dispatch. It compiles the app and instrumentation tests, runs rainfall unit tests and Android lint, then uploads **Selendang3-v0.1-Alpha-debug**. Download and extract that artifact from a successful Actions run to get the APK. GitHub may require sign-in to download artifacts; retention is 14 days. This is an automatically debug-signed test build, not a production release. Future updates for real users need a securely retained release signing identity. No release signing keys are included.
+The **Android checks and requested APK** workflow runs unit tests and lint on pushes and pull requests without creating APKs. Only manual dispatch builds APKs, runs instrumentation tests, and uploads **Planters-Book-debug**. Dispatch this job only when the user explicitly requests an APK. See [APK policy](android-apk-policy.md). Download and extract that artifact from a successful Actions run to get the APK. GitHub may require sign-in to download artifacts; retention is 14 days. This is an automatically debug-signed test build, not a production release. Future updates for real users need a securely retained release signing identity. No release signing keys are included.
 
 To run the navigation smoke test on a connected emulator or Android device:
 
@@ -30,7 +30,7 @@ To run the navigation smoke test on a connected emulator or Android device:
 ./gradlew connectedDebugAndroidTest
 ```
 
-CI compiles this smoke test but does not currently run an emulator. Phone/emulator visual and runtime testing is still required.
+The manually requested APK job runs an emulator. Do not run connected instrumentation tests during routine work because they create APKs.
 
 ## Private data
 
