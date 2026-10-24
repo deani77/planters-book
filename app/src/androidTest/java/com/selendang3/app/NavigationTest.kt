@@ -28,7 +28,7 @@ class NavigationTest {
         compose.onNodeWithText("Estate Cost").performScrollTo().assertIsDisplayed()
         compose.onNodeWithText("Age Profile").assertDoesNotExist()
         compose.onNodeWithText("‹  Back").performClick()
-        compose.onNodeWithText("S3 Estate Info").assertIsDisplayed()
+        compose.onAllNodesWithText("Planters Book").assertCountEquals(2)
     }
     @Test fun homeModulesAndAboutInSettings() {
         compose.onNodeWithText("Reports").assertDoesNotExist()
@@ -47,7 +47,10 @@ class NavigationTest {
         compose.onNodeWithText("‹  Back").performClick()
         compose.onNodeWithText("Settings").performScrollTo().performClick()
         compose.onNodeWithText("Suggestions").assertDoesNotExist()
-        compose.onNodeWithText("Estate Data Sync").performScrollTo().assertIsDisplayed()
+        compose.onNodeWithText("Local Estate Data").performScrollTo().assertIsDisplayed()
+        compose.onNodeWithText("Import Estate File").performScrollTo().assertIsDisplayed()
+        compose.onNodeWithText("Server update address").assertDoesNotExist()
+        compose.onNodeWithText("Access token").assertDoesNotExist()
         compose.onNodeWithText("About").performScrollTo().performClick()
         compose.onNodeWithText("Android estate information application. Initial Alpha interface.").assertIsDisplayed()
         compose.onNodeWithText("‹ Settings").performScrollTo().performClick()

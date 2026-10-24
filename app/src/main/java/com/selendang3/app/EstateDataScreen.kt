@@ -11,7 +11,6 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.selendang3.app.data.*
@@ -24,14 +23,10 @@ fun EstateDataControls() {
     val context = LocalContext.current
     val db = remember(context) { EstateDatabase.get(context) }
     val snapshot by remember(db) { db.estateDao().observeSnapshot() }.collectAsStateWithLifecycle(null)
-    val preferences = remember(context) { context.getSharedPreferences("server_settings", 0) }
-    var address by remember { mutableStateOf(preferences.getString("address", "") ?: "") }
-    // Intentionally not persisted; no shared credential is embedded in the APK.
-    var accessToken by remember { mutableStateOf("") }
     var busy by remember { mutableStateOf(false) }
     var message by remember { mutableStateOf<String?>(null) }
     var preview by remember { mutableStateOf<EstatePackage?>(null) }
-    var source by remember { mutableStateOf("VPS") }
+    var source by remember { mutableStateOf("Local file") }
     val scope = rememberCoroutineScope()
     val exporter = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("application/json")) { uri ->
         val content = snapshot?.content
@@ -52,39 +47,37 @@ fun EstateDataControls() {
         }
     }
 
-    Text("Estate Data Sync", style = MaterialTheme.typography.titleLarge)
+    val importer = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
+        if (uri != null) {
+            busy = true
+            message = null
+            scope.launch {
+                try {
+                    val update = withContext(Dispatchers.IO) {
+                        val input = context.contentResolver.openInputStream(uri)
+                            ?: throw IllegalArgumentException("Could not open the selected file.")
+                        input.use { EstatePackages.parse(EstatePackages.read(it)) }
+                    }
+                    EstatePackages.requireNewer(update.revision, snapshot?.revision)
+                    source = "Local file"
+                    preview = update
+                } catch (cancelled: CancellationException) { throw cancelled
+                } catch (failure: Exception) {
+                    message = failure.message ?: "Import failed. Saved data is unchanged."
+                } finally { busy = false }
+            }
+        }
+    }
+    Text("Local Estate Data", style = MaterialTheme.typography.titleLarge)
     Text(snapshot?.let { "Saved revision ${it.revision} · ${it.source}\nUpdated: ${DateFormat.getDateTimeInstance().format(Date(it.updatedAt))}" }
         ?: "No estate data imported yet.")
-    OutlinedButton(onClick = { exporter.launch("S3-estate-data-r${snapshot?.revision}.json") },
-        enabled = snapshot != null && !busy, modifier = Modifier.fillMaxWidth()) { Text("Export Estate Data") }
-    Text("Estate data is downloaded from the VPS only and stays available offline. Data entry and uploads are unavailable.",
+    Text("Import an estate JSON file from this device. Data stays on this device and works offline.",
         style = MaterialTheme.typography.bodySmall)
-    HorizontalDivider()
-    Text("Server connection", style = MaterialTheme.typography.titleLarge)
-    Text("Enter your trusted server's full HTTPS update address.")
-    OutlinedTextField(address, { address = it }, label = { Text("Server update address") }, singleLine = true,
-        enabled = !busy, modifier = Modifier.fillMaxWidth())
-    OutlinedTextField(accessToken, { accessToken = it }, label = { Text("Access token") }, singleLine = true,
-        visualTransformation = PasswordVisualTransformation(), enabled = !busy, modifier = Modifier.fillMaxWidth())
-    Text("The access token is kept only for this Settings session. Use a token issued privately by the server administrator.", style = MaterialTheme.typography.bodySmall)
-    Button(onClick = {
-        preferences.edit().putString("address", address.trim()).apply()
-        val requestedAddress = address
-        val requestedToken = accessToken
-        busy = true
-        message = null
-        scope.launch {
-            try {
-                val update = withContext(Dispatchers.IO) { EstatePackages.parse(EstateServer.download(requestedAddress, requestedToken)) }
-                if (snapshot == null || update.revision > snapshot!!.revision) { source = "VPS"; preview = update }
-                else require(update.revision == snapshot!!.revision) { "Server estate revision is older than this phone." }
-                message = if (preview != null) "Estate data downloaded. Review and confirm the new update." else "Estate data is up to date and available offline."
-            } catch (cancelled: CancellationException) { throw cancelled
-            } catch (_: Exception) { message = "Estate download failed; saved estate data is unchanged."
-            } finally { busy = false }
-        }
-    }, enabled = !busy && address.isNotBlank() && accessToken.isNotBlank(), modifier = Modifier.fillMaxWidth()) { Text("Sync Now") }
-    if (busy) { LinearProgressIndicator(Modifier.fillMaxWidth()); Text("Downloading estate data…") }
+    Button(onClick = { importer.launch(arrayOf("application/json", "text/plain", "application/octet-stream")) },
+        enabled = !busy, modifier = Modifier.fillMaxWidth()) { Text("Import Estate File") }
+    OutlinedButton(onClick = { exporter.launch("Planters-Book-estate-r${snapshot?.revision}.json") },
+        enabled = snapshot != null && !busy, modifier = Modifier.fillMaxWidth()) { Text("Export Estate Data") }
+    if (busy) { LinearProgressIndicator(Modifier.fillMaxWidth()); Text("Processing local data…") }
     message?.let { Text(it) }
 
     preview?.let { update ->

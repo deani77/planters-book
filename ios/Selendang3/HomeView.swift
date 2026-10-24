@@ -63,7 +63,7 @@ struct HomeView: View {
         VStack(spacing: 6) {
             Text("LADANG SELENDANG 3").font(.caption.weight(.semibold)).tracking(2)
                 .foregroundStyle(.secondary)
-            Text("Planter’s Log")
+            Text("Planters Book")
                 .font(isPad ? .system(size: iPadHeadingSize, weight: .bold, design: .rounded) : .largeTitle.weight(.bold))
                 .foregroundStyle(EstateTheme.accent)
         }
@@ -127,7 +127,7 @@ struct HomeView: View {
 
     private var homeFooter: some View {
         VStack(spacing: 4) {
-            Text("S3 Estate Info").foregroundStyle(.secondary)
+            Text("Planters Book").foregroundStyle(.secondary)
             if let data = estate.reference { Text("Estate revision \(data.revision) saved") }
             else { Text("No estate data saved") }
             Text("v0.4 Alpha · iPhone and iPad\nEstate data and production drafts are saved offline")
@@ -152,7 +152,7 @@ struct ModuleView: View {
             VStack(alignment: .leading, spacing: 16) {
                 Text(title).font(.title.bold())
                 Text(title == "About"
-                     ? "S3 Estate Info\niPhone and iPad · v0.4 Alpha"
+                     ? "Planters Book\niPhone and iPad · v0.4 Alpha"
                      : "This section is awaiting implementation and verified estate records.")
             }
             .frame(maxWidth: .infinity, alignment: .leading)

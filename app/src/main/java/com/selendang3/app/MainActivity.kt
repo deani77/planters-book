@@ -52,7 +52,7 @@ val mainSections = listOf(
     Section("production", "Field Details", "Field dashboard and records by field."),
     Section("upkeep", "Upkeep and Cultivation", "Estate work dashboard, excluding crop production."),
     Section("reports", "Crop Production", "Field production, daily drafts and period totals."),
-    Section("settings", "Settings", "Offline data synchronization"),
+    Section("settings", "Settings", "Local data import and preferences"),
     Section("tools", "Planter Tools", "Offline plantation calculators."),
 )
 
@@ -76,14 +76,12 @@ fun EstateApp() {
     val dao = remember(context) { EstateDatabase.get(context).estateDao() }
     val snapshot by remember(dao) { dao.observeSnapshot() }.collectAsStateWithLifecycle(null)
     val estateUpdate = remember(snapshot?.content) { snapshot?.let { EstatePackages.parse(it.content) } }
-    val sync by remember(dao) { dao.observeSync() }.collectAsStateWithLifecycle(null)
-    val online by remember(context) { connectivity(context) }.collectAsStateWithLifecycle(false)
     val nav = rememberNavController()
     val entry by nav.currentBackStackEntryAsState()
     val route = entry?.destination?.route ?: "home"
     val allSections = mainSections + estateSections
     val title = when (route) {
-        "home" -> "Planter’s Log"
+        "home" -> "Planters Book"
         "dashboard" -> "Estate Dashboard"
         "estate-records" -> "All Estate Records"
         else -> allSections.firstOrNull { it.route == route }?.title ?: "Estate Details"
@@ -159,12 +157,11 @@ fun EstateApp() {
                     }
                 }
                 if (route == "home") {
-                    Text("S3 Estate Info", style = MaterialTheme.typography.bodySmall,
+                    Text("Planters Book", style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.fillMaxWidth().padding(top = 8.dp), textAlign = TextAlign.Center)
                 }
-                val lastSync = sync?.lastSuccessEpochMillis?.let { DateFormat.getDateTimeInstance().format(Date(it)) }
-                Text("v${BuildConfig.VERSION_NAME}  •  ${if (online) "Online" else "Offline"}\nLast update: ${snapshot?.let { DateFormat.getDateTimeInstance().format(Date(it.updatedAt)) + " · " + it.source } ?: "No data yet"}\nLast VPS sync: ${lastSync ?: "Not synced yet"}",
+                Text("v${BuildConfig.VERSION_NAME}  •  Local storage\nLast update: ${snapshot?.let { DateFormat.getDateTimeInstance().format(Date(it.updatedAt)) + " · " + it.source } ?: "No data yet"}",
                     style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.fillMaxWidth().padding(vertical = 16.dp), textAlign = TextAlign.Center)
             }

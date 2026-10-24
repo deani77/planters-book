@@ -1,66 +1,36 @@
-# S3 Estate Info
+# Planters Book
 
-Android application foundation and approved home-screen reference for **v0.2 Alpha**.
+Offline estate management for individual planters, estate managers and smallholders, with native Android and iOS apps.
 
-The initial Kotlin + Jetpack Compose project now includes home-screen navigation, seven Estate Information sections, and an empty Room offline-storage foundation. Actual estate records are not bundled. Android now supports reviewed JSON file imports, private exports, and manually configured HTTPS snapshot downloads into the same offline store. VPS deployment, server accounts and automatic background synchronization are pending. See [estate data updates](docs/data-updates.md). iOS remains a starter without these import features.
+## Data ownership
 
-See [Android build and APK instructions](docs/android-development.md). GitHub Actions builds a debug APK for manual testing; this is not a production release.
+Normal use is intended to require no VPS, account or internet connection. Users will import files from their device or enter their own records. Data is stored locally.
 
-Backgrounds currently use palm illustrations with distinct palettes per main tab. Approved plantation photographs remain to be added.
+## Current implementation
 
-## Approved home screen
+- Android and iOS: Settings → Import Estate File opens the device file picker.
+- Estate JSON files are validated before showing a replacement preview; confirmation saves the data locally.
+- Imports are limited to 2 MB and must have a newer revision than the saved copy.
+- Android also exports the saved estate JSON file.
+- Local production storage models are inherited; manual entry forms still need to be exposed through Data Input.
+- The Settings screens no longer request a server address or token.
 
-- **Title:** S3 Estate Info only. Do not display a company name.
-- **Background:** Oil palm plantation photograph, with an overlay as needed to keep text and buttons readable.
-- **Primary button:** Estate Dashboard — larger than the other buttons and centered horizontally. Dashboard contents are **TBD**, pending further requirements.
-- **Secondary buttons:** Six smaller buttons in a two-column grid beneath the primary button.
-- **Footer:** Display **v0.2 Alpha**, online/offline status, and the last successful offline-data synchronization time. Before the first successful synchronization, show **Not synced yet**. Any example synchronization date is a placeholder.
-- **Offline intent:** Previously synchronized information should remain available without internet access. Refresh offline data through Settings; implementation details remain to be defined.
+This is an initial migration from Selendang-3-Apps, not a completed standalone release. The current import schema still requires `estateId: "selendang-3"` and all seven reference sections. See [example format](sample-data/estate-update.example.json). CSV, Excel and Markdown import are not implemented.
 
-| Button | Intended contents |
-| --- | --- |
-| **Estate Dashboard** | Contents TBD |
-| Estate Information | Estate information, including rainfall |
-| Estate Production | Production information |
-| Upkeep and Cultivation | Upkeep work, including weeding, manuring, pest and disease management |
-| Reports | Estate reports |
-| Settings | Application settings and offline data synchronization |
-| About | Application information and version details |
+Legacy server code, sync models, fixed field lists, branding and documentation remain in the repository pending migration. The server is not needed for the new local estate import flow.
 
-## Layout reference
+## Agreed next work
 
-The diagram shows hierarchy and placement only. The intended background is an oil palm plantation photograph.
+1. Custom estate and field setup, with no fixed Selendang estate identity.
+2. Bottom navigation: Home, Estate, Field, Data Input, Tools, Settings.
+3. All data entry and editing through Data Input.
+4. Crop budgets and daily/weekly/monthly harvesting input; estate-level weeding and manuring input.
+5. Dashboards and reports driven by local records.
+6. Portable backup and restore; optional user-owned cloud backups later.
 
-```text
-+---------------------------------------+
-|          S3 Estate Info            |
-|                                       |
-|   +-------------------------------+   |
-|   |       Estate Dashboard        |   |
-|   |         Contents TBD          |   |
-|   +-------------------------------+   |
-|                                       |
-| +-----------------+ +---------------+ |
-| | Estate          | | Estate        | |
-| | Information     | | Production    | |
-| +-----------------+ +---------------+ |
-| +-----------------+ +---------------+ |
-| | Upkeep and      | | Reports       | |
-| | Cultivation     | |               | |
-| +-----------------+ +---------------+ |
-| +-----------------+ +---------------+ |
-| | Settings        | | About         | |
-| +-----------------+ +---------------+ |
-|                                       |
-| v0.1 Alpha  |  Online / Offline        |
-| Last successful sync: Not synced yet  |
-+---------------------------------------+
-```
+## Development
 
-## Mockup availability
+- [Android build instructions](docs/android-development.md)
+- [iOS build instructions](ios/README.md)
 
-The latest generated mockup image from the planning conversation was not accessible when this reference was added. No replacement image is presented as the approved original. The requirements and schematic above preserve the approved layout until the original image can be supplied.
-
-## Public repository, private estate data
-
-Keep this repository public for collaboration. Publish design references and, if needed later, clearly fictional sample data only. Do not commit actual estate operational records, financial information, personal information, credentials, or private database exports.
+Keep real estate records and private exports out of this public repository.
