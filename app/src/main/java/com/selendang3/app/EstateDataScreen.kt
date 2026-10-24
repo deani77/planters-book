@@ -68,7 +68,7 @@ fun EstateDataControls() {
             }
         }
     }
-    Text("Local Estate Data", style = MaterialTheme.typography.titleLarge)
+    Text("Estate Data Management", style = MaterialTheme.typography.titleLarge)
     Text(snapshot?.let { "Saved revision ${it.revision} · ${it.source}\nUpdated: ${DateFormat.getDateTimeInstance().format(Date(it.updatedAt))}" }
         ?: "No estate data imported yet.")
     Text("Import an estate JSON file from this device. Data stays on this device and works offline.",

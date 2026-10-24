@@ -32,7 +32,7 @@ struct UserSettingsView: View {
             } footer: {
                 Text("Profile and appearance are saved on this device.")
             }
-            Section("Local Estate Data") {
+            Section("Estate Data Management") {
                 Text("Import an estate JSON file from this device. Data stays on this device and works offline.")
                     .font(.footnote)
                 if let reference = estate.reference {

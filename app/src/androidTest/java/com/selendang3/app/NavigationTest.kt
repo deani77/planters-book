@@ -47,7 +47,7 @@ class NavigationTest {
         compose.onNodeWithText("‹  Back").performClick()
         compose.onNodeWithText("Settings").performScrollTo().performClick()
         compose.onNodeWithText("Suggestions").assertDoesNotExist()
-        compose.onNodeWithText("Local Estate Data").performScrollTo().assertIsDisplayed()
+        compose.onNodeWithText("Estate Data Management").performScrollTo().assertIsDisplayed()
         compose.onNodeWithText("Import Estate File").performScrollTo().assertIsDisplayed()
         compose.onNodeWithText("Server update address").assertDoesNotExist()
         compose.onNodeWithText("Access token").assertDoesNotExist()
