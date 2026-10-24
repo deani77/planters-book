@@ -7,7 +7,7 @@ struct ProductionView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 20) {
-                Text("VPS data · Read-only · Available offline")
+                Text("Local data · Read-only · Available offline")
                     .font(.footnote).foregroundStyle(.secondary)
                 GroupBox("Crop Production Dashboard") {
                     TimelineView(.periodic(from: Date(), by: 60)) { context in
@@ -15,7 +15,7 @@ struct ProductionView: View {
                     }.padding(.top, 8)
                 }
                 Text("Field Crop Records").font(.headline)
-                Text("Select a field to view its report. Refresh records in Settings → Estate Data Sync.")
+                Text("Select a field to view its report. Import records in Settings → Estate Data Management.")
                     .font(.footnote).foregroundStyle(.secondary)
                 LazyVGrid(columns: columns, spacing: 10) {
                     ForEach(estateFieldCodes(estate.reference), id: \.self) { code in
@@ -30,7 +30,7 @@ struct ProductionView: View {
                     }
                 }
                 if estateFieldCodes(estate.reference).isEmpty {
-                    Text("No field reports saved. Download estate data from the VPS in Settings.")
+                    Text("No field reports saved. Import estate data in Settings → Estate Data Management.")
                         .font(.footnote)
                 }
             }.padding()
@@ -45,23 +45,25 @@ private struct FieldCropReportView: View {
     let code: String
     @ObservedObject private var estate = EstateReferenceStore.shared
     var body: some View {
-        List {
-            Section {
-                Text("VPS report · Read-only")
-                Text(estate.reference?.reportingPeriod ?? "No saved estate report")
-                    .font(.footnote).foregroundStyle(.secondary)
-            }
-            let tables = estateFieldCropTables(estate.reference, code: code)
-            if tables.isEmpty { Text("Crop records pending for this field.") }
-            ForEach(tables) { table in
-                Section(table.id == "fields" ? "Crop, harvesting and productivity" : table.title) {
-                    ForEach(table.rows.indices, id: \.self) { index in
-                        ForEach(table.columns.indices, id: \.self) { column in
-                            LabeledContent(table.columns[column], value: table.rows[index][column]?.text ?? "Pending")
+        TimelineView(.periodic(from: Date(), by: 60)) { context in
+            let summary = CropProductionTableData(reference: estate.reference, today: context.date).fieldSummary(code: code)
+            List {
+                Section {
+                    Text("Local report · Read-only")
+                    if let summary = summary { Text(summary.note).font(.footnote).foregroundStyle(.secondary) }
+                }
+                if let summary = summary {
+                    ForEach(summary.groups) { group in
+                        Section(group.title) {
+                            ForEach(group.rows) { row in LabeledContent(row.label, value: row.value) }
+                            if group.title == "Harvesting" {
+                                Text(summary.crewNote).font(.footnote).foregroundStyle(.secondary)
+                            }
                         }
                     }
-                }
+                } else { Text("Crop records pending for this field.") }
             }
         }.estateScreen().navigationTitle(code + " · Crop Records")
     }
 }
+

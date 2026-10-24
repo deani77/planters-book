@@ -44,4 +44,20 @@ class AnnualRainfallTest {
         assertNull(estateAnnualRainfall(data,LocalDate.of(2026,11,1)).first().totalMm)
         assertNull(estateAnnualRainfall(null,october).first().totalMm)
     }
+    @Test fun chartHighlightsCompletedYearsAndHandlesTiesPendingAndZero() {
+        val input = listOf(AnnualRainfall(2026,9,9.0), AnnualRainfall(2025,12,180.0), AnnualRainfall(2024,12,120.0),
+            AnnualRainfall(2023,12,240.0), AnnualRainfall(2022,12,120.0))
+        val bars = rainfallChartBars(input)
+        assertEquals(RainfallHighlight.YTD, bars.first { it.year == 2026 }.highlight)
+        assertEquals(RainfallHighlight.HIGHEST, bars.first { it.year == 2023 }.highlight)
+        assertEquals(setOf(2022,2024), bars.filter { it.highlight == RainfallHighlight.LOWEST }.map { it.year }.toSet())
+        assertFalse(rainfallChartBars(input.map { if (it.year == 2024) it.copy(totalMm = null) else it }).any { it.year == 2024 })
+        val equal = rainfallChartBars(input.map { it.copy(totalMm = 120.0) })
+        assertTrue(equal.all { it.highlight in listOf(RainfallHighlight.FULL_YEAR, RainfallHighlight.YTD) })
+        val zero = rainfallChartBars(listOf(AnnualRainfall(2025,12,10.0), AnnualRainfall(2024,12,0.0)))
+        assertEquals(RainfallHighlight.LOWEST, zero.first { it.year == 2024 }.highlight)
+        assertTrue(rainfallChartBars(listOf(AnnualRainfall(2025,12,null), AnnualRainfall(2024,12,Double.NaN))).isEmpty())
+        assertEquals(RainfallHighlight.FULL_YEAR, rainfallChartBars(listOf(AnnualRainfall(2025,12,10.0))).single().highlight)
+    }
 }
+

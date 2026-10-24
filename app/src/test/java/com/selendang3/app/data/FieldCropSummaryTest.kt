@@ -1,0 +1,45 @@
+package com.selendang3.app.data
+
+import org.json.JSONArray
+import org.json.JSONObject
+import org.junit.Assert.*
+import org.junit.Test
+import java.time.LocalDate
+
+class FieldCropSummaryTest {
+    private val today = LocalDate.of(2026, 10, 24)
+    private fun fixture(): EstatePackage {
+        val budget = JSONArray()
+        listOf("A", "B").forEach { code -> (1..12).forEach { month ->
+            budget.put(JSONObject().put("field", code).put("year", 2026).put("month", month).put("tonnes", if (code == "A") 100 else 200))
+        } }
+        val root = JSONObject().put("cropBudget", JSONObject().put("year", 2026).put("monthlyBudget", budget))
+            .put("cropProductionReport", JSONObject().put("reportDate", "2026-10-21").put("fields", JSONArray()
+                .put(JSONObject().put("field", "A").put("sentToMillMtdMt", 120).put("sentToMillYtdMt", 1200)
+                    .put("roundsMtd", 2.5).put("mtPerHarvesterDayMtd", 1.2).put("haPerHarvesterDayMtd", 3.4))
+                .put(JSONObject().put("field", "B").put("sentToMillMtdMt", 180).put("sentToMillYtdMt", 2400))))
+        return EstatePackage(1, "Fictional data", "", listOf(EstateTable("fields", listOf("Field code", "Area (ha)"),
+            listOf(listOf("A", "100"), listOf("B", "42")))), root.toString())
+    }
+    @Test fun summaryUsesOrderedRequestedMetricsAndRoundsCrewUp() {
+        val summary = fieldCropSummary(fixture(), today, "A")!!
+        assertEquals(listOf(2, 5, 2, 2), summary.groups.map { it.rows.size })
+        assertEquals(listOf("A", "100.00"), summary.groups[0].rows.map { it.value })
+        assertEquals(listOf("100.00", "1000.00", "1200.00", "120.00", "1200.00"), summary.groups[1].rows.map { it.value })
+        assertEquals(listOf("5", "2.50"), summary.groups[2].rows.map { it.value })
+        assertEquals(listOf("1.20", "3.40"), summary.groups[3].rows.map { it.value })
+        assertTrue(summary.crewNote.contains("4.76 harvesters"))
+        assertTrue(summary.note.contains("2026-10-21"))
+        assertEquals("2", fieldCropSummary(fixture(), today, "B")!!.groups[2].rows[0].value)
+    }
+    @Test fun unavailableFutureAndWrongFieldValuesAreNotSubstituted() {
+        assertNull(fieldCropSummary(fixture(), today, "UNKNOWN"))
+        val future = fieldCropSummary(fixture(), LocalDate.of(2026, 8, 1), "A")!!
+        assertTrue(future.groups[1].rows.all { it.value == "Pending" })
+        assertTrue(future.groups[3].rows.all { it.value == "Pending" })
+        val b = fieldCropSummary(fixture(), today, "B")!!
+        assertTrue(b.groups[3].rows.all { it.value == "Pending" })
+        assertEquals("180.00", b.groups[1].rows[3].value)
+    }
+}
+

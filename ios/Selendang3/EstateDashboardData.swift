@@ -145,7 +145,7 @@ struct EstateDashboardData {
         var calendar = Calendar(identifier:.gregorian); calendar.timeZone = TimeZone(identifier:"Asia/Kuala_Lumpur")!
         let year = calendar.component(.year,from:today), cutoff = calendar.component(.month,from:today)-1
         let months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"]
-        var rows: [[String]] = []
+        var entries: [(year: Int, end: Int, total: Double?)] = []
         for y in stride(from:year,through:year-4,by:-1) {
             let end = y == year ? cutoff : 12
             var values: [Int:Double] = [:], duplicate = false
@@ -158,12 +158,26 @@ struct EstateDashboardData {
                     }
                 }
             }
-            let total: Double? = end > 0 && values.count == end && !duplicate ? values.values.reduce(0,+) : nil
-            let period = y != year ? "Full year" : end == 0 ? "No completed month" : "YTD Jan–"+months[end-1]
-            rows.append([String(y),period,Self.number(total)])
+            let sum = values.values.reduce(0,+)
+            let total: Double? = end > 0 && values.count == end && !duplicate && sum.isFinite ? sum : nil
+            entries.append((y,end,total))
         }
-        return EstateDashboardPanel(title:"Rainfall",headers:["Year","Period","Total (mm)"],rows:rows,note:"Five calendar years, newest first. Current month excluded; missing months remain Pending.")
+        let full = entries.filter { $0.end == 12 }.compactMap { $0.total }
+        let low = full.min(), high = full.max()
+        let distinct = full.count >= 2 && high! - low! > 1e-7
+        let rows = entries.map { entry -> [String] in
+            let period = entry.year != year ? "Full year" : entry.end == 0 ? "No completed month" : "YTD Jan–"+months[entry.end-1]
+            return [String(entry.year),period,Self.number(entry.total)]
+        }
+        let bars = entries.compactMap { entry -> DashboardBar? in
+            guard let total = entry.total else { return nil }
+            let series = entry.end < 12 ? "Current YTD" : distinct && abs(total - high!) < 1e-7 ? "Highest full year" : distinct && abs(total - low!) < 1e-7 ? "Lowest full year" : "Full year"
+            return DashboardBar(category:String(entry.year),series:series,value:total)
+        }
+        return EstateDashboardPanel(title:"Rainfall",headers:["Year","Period","Total (mm)"],rows:rows,
+            note:"Five calendar years. Current month excluded; missing months remain Pending. High/low colours compare completed full years; the current-year YTD is separate. Tied extremes share a colour; equal totals have no distinct extreme. Table newest first.",bars:bars,unit:"mm")
     }
+
     private var workforce: EstateDashboardPanel {
         let staff = count(overview("Workforce staff")), local = count(overview("Workforce local workers")), foreign = count(overview("Workforce foreign workers"))
         let direct = count(overview("Workforce total workers")), contractors = count(overview("Workforce contract workers"))
@@ -198,6 +212,25 @@ struct EstateDashboardData {
         }
         return EstateDashboardPanel(title:"Kos FFB/TAN",headers:["Measure","Actual YTD","Budget Year"],rows:rows,
             note:"Actual YTD through \(actualPeriod ?? "Pending") vs Budget Year \(budgetYear ?? "Pending"). Operation Cost = Penjagaan + Membaja + Pungutan; General Charges = Perbelanjaan Am.",bars:bars,unit:"RM/tonne")
+    }
+
+    var areaSummary: EstateDashboardPanel {
+        let sourcePeriod = period("Estate area reporting period")
+        let current = String(format: "%04d-%02d", reportCalendar.component(.year, from: today), reportCalendar.component(.month, from: today))
+        let perimeter = numeric(overview("Perimeter area (ha)"))
+        let mature = numeric(overview("Mature area (ha)"))
+        let complete = sourcePeriod != nil && sourcePeriod! <= current && perimeter != nil && perimeter! > 0 && mature != nil && mature! <= perimeter!
+        let format = NumberFormatter(); format.locale = Locale(identifier: "en_US_POSIX")
+        format.numberStyle = .decimal; format.usesGroupingSeparator = true; format.groupingSize = 3
+        format.groupingSeparator = ","; format.decimalSeparator = "."
+        format.minimumFractionDigits = 2; format.maximumFractionDigits = 2
+        func label(_ value: Double?) -> String {
+            guard complete, let value = value else { return "Pending" }
+            return format.string(from: NSNumber(value: value)) ?? "Pending"
+        }
+        return EstateDashboardPanel(title: "Estate Area", headers: ["Measure", "Area (ha)"], rows: [
+            ["Perimeter Hectare", label(perimeter)], ["Mature Hectare", label(mature)]
+        ], note: complete ? "Reporting period: " + sourcePeriod! : "Awaiting verified estate area records.")
     }
 
     private var reportCalendar: Calendar {
@@ -326,7 +359,7 @@ struct EstateDashboardData {
                 ["YTD / Year Budget", Self.number(annualBudgetProgress), "%"]
             ], note: yieldPeriod + (currentCrop.map { " · MTD through " + $0.reportDate } ?? "")),
             EstateDashboardPanel(title: "Harvesting Coverage", headers: [], rows: [
-                ["Report day", Self.number(nonnegative(currentCrop?.totals.hectaresToday)), "ha"], ["MTD", Self.number(nonnegative(currentCrop?.totals.hectaresMtd)), "ha"],
+                ["Hectare Completed", Self.number(nonnegative(currentCrop?.totals.hectaresMtd)), "ha"],
                 ["Completed rounds", Self.number(nonnegative(currentCrop?.totals.roundsMtd)), "rounds"]
             ], note: currentCrop.map { "Report: " + $0.reportDate } ?? "Reporting period pending"),
             EstateDashboardPanel(title: "Harvester Productivity", headers: [], rows: [
@@ -398,3 +431,4 @@ private func fieldRecordTables(_ reference: EstateReference?, code: String, crop
         return EstateReferenceTable(id: table.id, columns: indices.map { table.columns[$0] }, rows: rows.map { row in indices.map { row[$0] } })
     }
 }
+

@@ -34,6 +34,7 @@ import com.selendang3.app.data.EstateWorkerRatios
 import com.selendang3.app.data.estateWorkerRatios
 import com.selendang3.app.data.FfbCostComparison
 import com.selendang3.app.data.estateFfbCosts
+import com.selendang3.app.data.estateAreaSummary
 import com.selendang3.app.data.EstatePackage
 import com.selendang3.app.data.EstateAgeProfile
 import com.selendang3.app.data.EstateTopography
@@ -63,6 +64,7 @@ fun EstateDashboard(estateUpdate: EstatePackage? = null) {
             while (true) { value = estateRainfallToday(); delay(60_000) }
         }
     }
+    val estateArea = remember(estateUpdate, today) { estateAreaSummary(estateUpdate, today) }
     val rainfall = remember(estateUpdate, today) { estateAnnualRainfall(estateUpdate, today) }
     val workforce = remember(estateUpdate) { estateWorkforce(estateUpdate) }
     val workerRatios = remember(estateUpdate) { estateWorkerRatios(estateUpdate) }
@@ -77,8 +79,16 @@ fun EstateDashboard(estateUpdate: EstatePackage? = null) {
                 ) {
                     Text("ESTATE DETAILS · $estateName", fontWeight = FontWeight.Bold,
                         style = MaterialTheme.typography.titleLarge)
+                    DashboardPanel("Estate Area") {
+                        DashboardTable(listOf("Measure", "Area (ha)"), listOf(
+                            listOf("Perimeter Hectare", estateArea?.let { String.format(Locale.US, "%,.2f", it.perimeterHa).trim() } ?: Pending),
+                            listOf("Mature Hectare", estateArea?.let { String.format(Locale.US, "%,.2f", it.matureHa).trim() } ?: Pending)
+                        ), minimumWidth = 320)
+                        Text(estateArea?.let { "Reporting period: ${it.period}" } ?: "Awaiting verified estate area records.",
+                            Modifier.padding(12.dp), style = MaterialTheme.typography.bodySmall)
+                    }
                     Text(estateUpdate?.reportingPeriod ?: "Reporting period: pending", style = MaterialTheme.typography.bodyMedium)
-                    Text("Age Profile, Topography, YPH, Average SPH, Soil Type, Rainfall, Workforce, Ratios and FFB cost use synced estate records. Other panels may still be pending. — means unavailable.",
+                    Text("Age Profile, Topography, YPH, Average SPH, Soil Type, Rainfall, Workforce, Ratios and FFB cost use locally saved estate records. Other panels may still be pending. — means unavailable.",
                         style = MaterialTheme.typography.bodySmall)
                     HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
                     if (wide) {
@@ -142,7 +152,7 @@ private fun ProfilePanels(ageProfile: EstateAgeProfile?, topography: EstateTopog
             ChartPending("Terrain distribution")
             DashboardTable(listOf("Terrain", "Area (ha)", "Share"),
                 listOf("Flat", "Hilly", "Undulating").map { listOf(it, Pending, Pending) })
-            Text("Sync complete terrain records using the current estate area.",
+            Text("Import complete terrain records using the current estate area.",
                 Modifier.padding(12.dp), style = MaterialTheme.typography.bodySmall)
         } else {
             val colors = listOf(Color(0xFF49ACC3), Color(0xFFA46436), Color(0xFF4B8C42))
@@ -186,7 +196,7 @@ private fun ProfilePanels(ageProfile: EstateAgeProfile?, topography: EstateTopog
     }
     DashboardPanel("Soil Type") {
         if (soilSeries == null) {
-            Text("Sync soil series records using the current estate area.", Modifier.padding(12.dp))
+            Text("Import soil series records using the current estate area.", Modifier.padding(12.dp))
         } else {
             DashboardTable(listOf("Soil series", "Area (ha)", "Share", "Reference class"),
                 soilSeries.bands.map { listOf(it.name, String.format(Locale.US, "%,.2f", it.area),
@@ -209,13 +219,14 @@ private fun ProfilePanels(ageProfile: EstateAgeProfile?, topography: EstateTopog
 @Composable
 private fun PeopleAndRainfallPanels(rainfall: List<AnnualRainfall>, workforce: EstateWorkforce?, workerRatios: EstateWorkerRatios?) {
     DashboardPanel("Rainfall") {
+        RainfallBarChart(rainfall)
         DashboardTable(listOf("Year", "Period", "Rainfall (mm)"), rainfall.mapIndexed { index, row ->
             val period = if (index > 0) "Full year" else if (row.throughMonth == 0) "YTD · no completed month"
                 else "YTD through " + Month.of(row.throughMonth).getDisplayName(TextStyle.FULL, Locale.ENGLISH)
             listOf(row.year.toString(), period,
                 row.totalMm?.let { String.format(Locale.US, "%,.2f", it) } ?: "Pending")
         })
-        Text("Five years, newest first. Current-year YTD ends at the last completed month (Malaysia time). Totals need every month in the stated period; missing data remains Pending.",
+        Text("Five years; table newest first. Current-year YTD ends at the last completed month (Malaysia time). High/low colours compare completed full years. Tied extremes share a colour; equal totals have no distinct extreme. Missing data remains Pending.",
             style = MaterialTheme.typography.bodySmall, modifier = Modifier.padding(12.dp))
     }
     DashboardPanel("Workforce") {
@@ -316,3 +327,4 @@ private fun DashboardTable(headers: List<String>, rows: List<List<String>>, mini
         }
     }
 }
+

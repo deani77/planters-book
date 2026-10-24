@@ -1,20 +1,18 @@
-# S3 Estate Info for iPhone and iPad
+# Planters Book for iPhone and iPad
 
-Native SwiftUI app for iOS 16 or later. Estate operational data is read-only and supplied by the private VPS.
+Native SwiftUI app for iOS 16 or later. Estate reports read locally imported data; no VPS is required.
 
 ## Navigation
-- Home and Estate Dashboard display saved server summaries, retaining source dates and units.
+- Home and Estate Dashboard display saved local summaries, retaining source dates and units.
 - Estate Details contains estate reference panels and saved source tables. OER (%) retains Actual/Budget YTD only. Checkroll Average and Cost Breakdown panels are removed.
 - Field Details shows basic field identity, area, palms, planting/age and explicitly field-keyed soil/infrastructure records.
 - Crop Production shows the responsive Target/Actual table and field pills. Tapping a field opens its saved crop, harvesting, productivity and bunch-weight records. No manual forms, date-entry filters or upload controls are exposed.
 - Upkeep and Cultivation shows saved estate work summaries; missing measures stay Pending.
 - Planter Tools provides six offline calculators: Plant Density, Chemical Dosage per Pump, Fertilizer Requirement, Nozzle Calibration, Work Costing and Unit Conversion. Calculator inputs never alter estate records.
-- Settings contains Inbox, User Profile, Appearance, About and Estate Data Sync.
+- Settings contains Inbox, User Profile, Appearance, Suggestions, About and Estate Data Management. Users set their own estate name, import JSON files, or share a PDF with a compatible AI app and review its returned JSON before importing.
 
-## Server-only operation (build 33)
-Sync Now downloads the estate snapshot via HTTPS GET. It does not invoke legacy production sync, upload pending local drafts or expose conflict-upload actions. New snapshot revisions require review and confirmation, validate before atomic replacement, and preserve the prior revision. Downloaded records remain available offline. Tokens stay in the active Settings session. Old production draft files remain untouched and are not read into operational screens. Personal profile and appearance settings remain local preferences.
-
-Android uses the same server-only operation. Local estate-file import is removed for now; exporting an offline backup remains available. A future import mode can be restored when needed after VPS service ends.
+## Local data operation
+Estate Data Management imports JSON files selected on the device. New revisions are validated and reviewed before replacement; the previous revision is retained. Reports, charts and calculators read saved data offline. The PDF-to-AI flow requires a compatible external app and may use that app's internet service. Suggestions opens the user's email app; neither feature requires a Planters Book VPS. Existing draft storage is retained; full manual data entry forms remain separate work.
 
 ## Crop table
 Crop (mt), Yield (mt/ha) and Achievement (%) views fit phone/iPad widths with This Month, Year to Date and Full Year columns. Daily and backlog columns are omitted. Full-year achievement = actual YTD / annual target. YTD targets add monthly budgets from January through the report month. Totals calculate yield from summed mass / area. Unknown measures and zero denominators stay Pending. No operational records are bundled into the app.
@@ -40,3 +38,13 @@ Formula references: https://opb.mpob.gov.my/case-study-of-a-high-income-smallhol
 All inputs remain temporary and isolated from estate records; no server request is made by these tools. Tests cover partial bag rounding, zero costs, invalid populations/denominators, calibration scaling and conversion round trips.
 
 Calculator number inputs use a decimal point and permit correctly grouped thousands (for example, 1,000.50). Ambiguous or malformed comma inputs are rejected rather than interpreted as a smaller dose or population.
+
+## Field Crop Records (build 37)
+Each field pill opens a concise read-only report: field code; hectare; monthly, YTD and annual crop budgets (mt); actual MTD/YTD (mt); required harvesters; monthly harvesting rounds; and productivity in mt/manday and ha/manday. All budget values use the same report month as the crop actuals. Required harvesters = field hectares / 21 ha per harvester; display the unrounded ratio in the note and round the whole-worker requirement up. Missing or future report figures remain Pending. Basic field area is used for crew planning, while report metrics remain dated to their source. No server schema or data update is required.
+
+Build 38 simplifies Harvesting Coverage to Hectare Completed (ha, using the saved monthly cumulative hectares) and Completed rounds. The daily Report day metric is removed on every variant.
+
+Build 39 adds Estate Area directly beneath the Estate Details heading. Perimeter Hectare and Mature Hectare read dated, owner-confirmed overview records (Estate area reporting period, Perimeter area (ha), Mature area (ha)). Areas display in hectares with comma grouping and two decimals. Invalid, duplicate, future or unreconciled records remain Pending. Source values come from the user's local import and are not bundled with the app.
+
+Build 40 presents the latest five calendar years of rainfall as vertical bars, with the exact totals and periods retained below. Green highlights the highest completed full-year total and orange the lowest; other full years are blue and current-year YTD is grey. High/low comparisons exclude partial YTD. All tied extremes share a role; equal or single full-year totals have no distinct extreme. Missing/incomplete years have no fabricated zero bar. Current-month readings remain excluded. Colours adapt to light/dark appearance, and High/Low/YTD text and accessibility labels accompany the colours.
+

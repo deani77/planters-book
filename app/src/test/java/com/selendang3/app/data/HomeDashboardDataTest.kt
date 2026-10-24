@@ -84,7 +84,7 @@ class HomeDashboardDataTest {
         val input = fixture().copy(json = json)
         val cards = operationalDashboardCards(input, today)
         assertEquals(listOf("2.75", "1.25"), cards[0].metrics.take(2).map { it.value })
-        assertEquals(listOf("100.00", "2000.00", "2.00"), cards[1].metrics.map { it.value })
+        assertEquals(listOf("2000.00", "2.00"), cards[1].metrics.map { it.value })
         assertEquals("Report: 2026-10-21", cards[1].period)
         assertEquals(listOf("2.50", "3.00"), cards[2].metrics.map { it.value })
         assertEquals("80.00", cards[3].metrics.single().value)
@@ -95,3 +95,4 @@ class HomeDashboardDataTest {
         assertEquals("Pending", future[3].metrics.single().value)
     }
 }
+

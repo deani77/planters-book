@@ -118,7 +118,7 @@ struct IPadHomeDashboardCard: View {
                 .foregroundStyle(EstateTheme.accent)
                 summaryCard(cards[0], indices: [0, 1, 2, 3], emphasized: true)
                 HStack(alignment: .top, spacing: 10) {
-                    summaryCard(cards[1], indices: [0, 1, 2])
+                    summaryCard(cards[1], indices: [0, 1])
                     summaryCard(cards[2], indices: [0, 1])
                 }.fixedSize(horizontal: false, vertical: true)
                 HStack(alignment: .top, spacing: 10) {
@@ -183,3 +183,4 @@ struct IPadHomeDashboardCard: View {
     }
 
 }
+

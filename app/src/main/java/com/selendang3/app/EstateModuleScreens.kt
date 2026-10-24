@@ -35,7 +35,7 @@ fun FieldDetailsScreen(update: EstatePackage?) {
                     if (group.size == 1) Spacer(Modifier.weight(1f))
                 }
             }
-            if (codes.isEmpty()) Text("Import estate records through Settings → Estate Data Sync to see field buttons.")
+            if (codes.isEmpty()) Text("Import estate records through Settings → Estate Data Management to see field buttons.")
         } else {
             TextButton(onClick = { selected = null }) { Text("‹ All Fields") }
             Text(field, style = MaterialTheme.typography.titleLarge)

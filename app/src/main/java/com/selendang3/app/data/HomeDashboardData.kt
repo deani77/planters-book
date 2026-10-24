@@ -71,8 +71,7 @@ fun operationalDashboardCards(update: EstatePackage?, today: LocalDate): List<Op
             OperationalMetric("YTD / Year Budget", number(annualBudgetProgress), "%")
         ), yieldPeriod + (reports.cropDate?.let { " · MTD through $it" } ?: "")),
         OperationalCard("Harvesting Coverage", listOf(
-            OperationalMetric("Report day", number(reports.current("hectaresToday")), "ha"),
-            OperationalMetric("MTD", number(reports.current("hectaresMtd")), "ha"),
+            OperationalMetric("Hectare Completed", number(reports.current("hectaresMtd")), "ha"),
             OperationalMetric("Completed rounds", number(reports.current("roundsMtd")), "rounds")
         ), reports.cropDate?.let { "Report: $it" } ?: "Reporting period pending"),
         OperationalCard("Harvester Productivity", listOf(
@@ -123,3 +122,4 @@ private class OperationalReports(update: EstatePackage?, private val today: Loca
     }
     val manuringNote: String get() = if (manuringProgress != null) "YTD through ${date(manuring)} · Applied mt / annual programme mt" else "Reporting period pending"
 }
+

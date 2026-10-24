@@ -33,3 +33,25 @@ fun estateAnnualRainfall(update: EstatePackage?, today: LocalDate = estateRainfa
         AnnualRainfall(year, cutoff, total)
     }
 }
+
+enum class RainfallHighlight(val label: String) {
+    HIGHEST("Highest full year"), LOWEST("Lowest full year"), FULL_YEAR("Full year"), YTD("Current YTD")
+}
+data class RainfallChartBar(val year: Int, val totalMm: Double, val highlight: RainfallHighlight)
+fun rainfallChartBars(records: List<AnnualRainfall>): List<RainfallChartBar> {
+    val available = records.filter { it.totalMm?.let { value -> value.isFinite() && value >= 0 } == true }
+    val full = available.filter { it.throughMonth == 12 }.map { it.totalMm!! }
+    val high = full.maxOrNull(); val low = full.minOrNull()
+    val distinct = full.size >= 2 && high != null && low != null && high - low > 1e-7
+    return available.map { row ->
+        val value = row.totalMm!!
+        val highlight = when {
+            row.throughMonth < 12 -> RainfallHighlight.YTD
+            distinct && kotlin.math.abs(value - high!!) < 1e-7 -> RainfallHighlight.HIGHEST
+            distinct && kotlin.math.abs(value - low!!) < 1e-7 -> RainfallHighlight.LOWEST
+            else -> RainfallHighlight.FULL_YEAR
+        }
+        RainfallChartBar(row.year, value, highlight)
+    }
+}
+

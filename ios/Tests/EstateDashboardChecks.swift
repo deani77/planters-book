@@ -148,7 +148,7 @@ func reportCards(_ input: [String:Any], date: Date = october) throws -> [EstateD
 }
 let populated = try reportCards(reportFixture)
 precondition(populated[0].rows[0][1] == "2.75" && populated[0].rows[1][1] == "1.25")
-precondition(populated[1].rows.map { $0[1] } == ["100.00","2000.00","2.00"])
+precondition(populated[1].rows.map { $0[1] } == ["2000.00","2.00"])
 precondition(populated[1].note == "Report: 2026-10-21")
 precondition(populated[2].rows.map { $0[1] } == ["2.50","3.00"])
 precondition(populated[3].rows[0][1] == "80.00")
@@ -166,7 +166,7 @@ let incompleteMonth = try reportCards(bad)
 precondition(incompleteMonth[0].rows[0][1] == "Pending")
 bad["cropProductionReport"] = ["reportDate":"2026-10-21","totals":["hectaresMtd":-1]] as [String:Any]
 let negativeArea = try reportCards(bad)
-precondition(negativeArea[1].rows[1][1] == "Pending")
+precondition(negativeArea[1].rows[0][1] == "Pending")
 print("Report-backed dashboard and stale/missing-data checks passed")
 
 var tableFixture = reportFixture
@@ -218,3 +218,64 @@ precondition(cropField.allSatisfy { $0.rows.count == 1 && $0.rows[0][0]?.text ==
 precondition(estateFieldCropTables(routedReference,code:"UNKNOWN").isEmpty)
 precondition(routedReference.sections[1].columns.count == 6) // Projection leaves stored records intact.
 print("Basic field versus crop record routing checks passed")
+
+var fieldFixture = tableFixture
+var fieldReport = fieldFixture["cropProductionReport"] as! [String:Any]
+fieldReport["fields"] = [["field":"A","sentToMillMtdMt":120,"sentToMillYtdMt":1200,"roundsMtd":2.5,"mtPerHarvesterDayMtd":1.2,"haPerHarvesterDayMtd":3.4]]
+fieldFixture["cropProductionReport"] = fieldReport
+let fieldSummary = try cropTable(fieldFixture).fieldSummary(code:"A")!
+precondition(fieldSummary.groups.map(\.rows.count) == [2,5,2,2])
+precondition(fieldSummary.groups[0].rows.map(\.value) == ["A","100.00"])
+precondition(fieldSummary.groups[1].rows.map(\.value) == ["100.00","1000.00","1200.00","120.00","1200.00"])
+precondition(fieldSummary.groups[2].rows.map(\.value) == ["5","2.50"])
+precondition(fieldSummary.crewNote.contains("4.76 harvesters"))
+precondition(fieldSummary.groups[3].rows.map(\.value) == ["1.20","3.40"])
+let unknownField = try cropTable(fieldFixture).fieldSummary(code:"UNKNOWN")
+precondition(unknownField == nil)
+let futureField = try cropTable(fieldFixture,date:august).fieldSummary(code:"A")!
+precondition(futureField.groups[1].rows.allSatisfy { $0.value == "Pending" })
+precondition(futureField.groups[3].rows.allSatisfy { $0.value == "Pending" })
+print("Field crop summary: ordered metrics, monthly/YTD/year budgets, 21 ha crew ceiling and dated productivity passed")
+
+var estateAreaFixture = fixture
+var areaSections = estateAreaFixture["sections"] as! [[String:Any]]
+areaSections[0] = section("overview", ["Item","Details"], [
+    ["Estate area reporting period","2026-09"], ["Perimeter area (ha)",1200], ["Mature area (ha)",1000]])
+estateAreaFixture["sections"] = areaSections
+func areaPanel(_ input: [String:Any]) throws -> EstateDashboardPanel {
+    EstateDashboardData(reference:try EstateReference.parse(JSONSerialization.data(withJSONObject:input)),today:october).areaSummary
+}
+let estateAreaPanel = try areaPanel(estateAreaFixture)
+precondition(estateAreaPanel.rows == [["Perimeter Hectare","1,200.00"],["Mature Hectare","1,000.00"]])
+precondition(estateAreaPanel.note.contains("2026-09"))
+areaSections[0] = section("overview", ["Item","Details"], [["Estate area reporting period","2026-09"], ["Perimeter area (ha)",900], ["Mature area (ha)",1000]])
+estateAreaFixture["sections"] = areaSections
+let invalidAreaPanel = try areaPanel(estateAreaFixture)
+precondition(invalidAreaPanel.rows.allSatisfy { $0[1] == "Pending" })
+print("Estate area summary: source period, hectare formatting and area reconciliation passed")
+
+var rainChartFixture = fixture
+var rainSections = rainChartFixture["sections"] as! [[String:Any]]
+let annualMonthly: [Int:Double] = [2022:10,2023:20,2024:10,2025:15,2026:1]
+let rainRows: [[Any]] = (2022...2026).flatMap { year in months.map { [year,$0,annualMonthly[year]!] as [Any] } }
+rainSections[4] = section("rainfall", ["Year","Month / total","Rainfall (mm)"], rainRows)
+rainChartFixture["sections"] = rainSections
+let rainChart = panel("Rainfall",try dashboard(rainChartFixture))
+precondition(rainChart.bars.count == 5 && rainChart.unit == "mm")
+precondition(rainChart.bars.first { $0.category == "2026" }!.series == "Current YTD")
+precondition(rainChart.bars.first { $0.category == "2026" }!.value == 9)
+precondition(rainChart.bars.first { $0.category == "2023" }!.series == "Highest full year")
+precondition(Set(rainChart.bars.filter { $0.series == "Lowest full year" }.map(\.category)) == Set(["2022","2024"]))
+let missingRainRows = rainRows.filter { !(($0[0] as! Int) == 2024 && ($0[1] as! String) == "Dec") }
+rainSections[4] = section("rainfall", ["Year","Month / total","Rainfall (mm)"], missingRainRows)
+rainChartFixture["sections"] = rainSections
+let missingRain = panel("Rainfall",try dashboard(rainChartFixture))
+precondition(!missingRain.bars.contains { $0.category == "2024" })
+precondition(missingRain.rows.first { $0[0] == "2024" }![2] == "Pending")
+let equalRainRows: [[Any]] = (2022...2026).flatMap { year in months.map { [year,$0,10] as [Any] } }
+rainSections[4] = section("rainfall", ["Year","Month / total","Rainfall (mm)"], equalRainRows)
+rainChartFixture["sections"] = rainSections
+let equalRain = panel("Rainfall",try dashboard(rainChartFixture))
+precondition(equalRain.bars.allSatisfy { $0.series == "Full year" || $0.series == "Current YTD" })
+print("Rainfall chart: high/low ties, current YTD separation and missing-year gaps passed")
+

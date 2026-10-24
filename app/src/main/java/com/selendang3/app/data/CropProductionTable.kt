@@ -5,7 +5,7 @@ import java.time.LocalDate
 import java.util.Locale
 
 data class CropTableRow(val field: String, val area: String, val values: List<String>)
-data class CropTable(val note: String, val rows: List<CropTableRow>, val total: CropTableRow?)
+data class CropTable(val note: String, val rows: List<CropTableRow>, val total: CropTableRow?, val reportDate: String? = null)
 val cropTableGroups = listOf(
     "Target · mt" to listOf("This Month", "Year to Date", "Full Year"),
     "Target Yield · mt/ha" to listOf("This Month", "Year to Date", "Full Year"),
@@ -63,6 +63,37 @@ fun cropProductionTable(update: EstatePackage?, today: LocalDate): CropTable {
         (0..2).map { index -> sum(identities.map { targets(it.first)[index] }) },
         (0..1).map { index -> sum(identities.map { actual(it.first)[index] }) })
     val note = date?.let { "${it.format(java.time.format.DateTimeFormatter.ofPattern("MMMM yyyy", Locale.US))} · Actual through $it. Full Year achievement = actual YTD / annual target." }
-        ?: "Import a dated crop report in Settings → Estate Data Sync. Missing values remain Pending."
-    return CropTable(note, rows, total)
+        ?: "Import a dated crop report in Settings → Estate Data Management. Missing values remain Pending."
+    return CropTable(note, rows, total, date?.toString())
 }
+
+data class FieldCropSummaryRow(val label: String, val value: String)
+data class FieldCropSummaryGroup(val title: String, val rows: List<FieldCropSummaryRow>)
+data class FieldCropSummary(val note: String, val crewNote: String, val groups: List<FieldCropSummaryGroup>)
+fun fieldCropSummary(update: EstatePackage?, today: LocalDate, code: String): FieldCropSummary? {
+    val table = cropProductionTable(update, today)
+    val field = table.rows.firstOrNull { it.field == code } ?: return null
+    val fields = update?.tables?.firstOrNull { it.id == "fields" }
+    val key = fields?.columns?.indexOf("Field code") ?: -1
+    val areaIndex = fields?.columns?.indexOf("Area (ha)") ?: -1
+    val area = if (key >= 0 && areaIndex >= 0) fields!!.rows.firstOrNull { it[key] == code }?.get(areaIndex)?.replace(",", "")?.toDoubleOrNull()?.takeIf { it.isFinite() && it >= 0 } else null
+    val report = if (table.reportDate != null) update?.let { JSONObject(it.json).optJSONObject("cropProductionReport") } else null
+    val records = report?.optJSONArray("fields")
+    val matches = (0 until (records?.length() ?: 0)).mapNotNull { records?.optJSONObject(it) }.filter { it.optString("field") == code }
+    val source = matches.singleOrNull()
+    fun label(key: String): String = (source?.opt(key) as? Number)?.toDouble()?.takeIf { it.isFinite() && it >= 0 }?.let { String.format(Locale.US, "%.2f", it) } ?: "Pending"
+    val ratio = area?.div(21.0)
+    val crew = ratio?.let { String.format(Locale.US, "%.0f", kotlin.math.ceil(it)) } ?: "Pending"
+    val crewNote = ratio?.let { "Field hectares ÷ 21 ha/harvester = ${String.format(Locale.US, "%.2f", it)} harvesters. Whole-worker requirement is rounded up." }
+        ?: "A verified field area is required for the 21 ha/harvester ratio."
+    val note = table.reportDate?.let { "Crop report: $it. Budgets use the same report month." } ?: "Crop report pending. Import estate data in Settings → Estate Data Management."
+    return FieldCropSummary(note, crewNote, listOf(
+        FieldCropSummaryGroup("Field Profile", listOf(FieldCropSummaryRow("Field Code", code), FieldCropSummaryRow("Hectare (ha)", field.area))),
+        FieldCropSummaryGroup("Crop Budget and Actual", listOf(
+            FieldCropSummaryRow("Budget This Month (mt)", field.values[0]), FieldCropSummaryRow("Budget YTD (mt)", field.values[1]),
+            FieldCropSummaryRow("Year Budget (mt)", field.values[2]), FieldCropSummaryRow("Actual MTD (mt)", field.values[6]), FieldCropSummaryRow("Actual YTD (mt)", field.values[7]))),
+        FieldCropSummaryGroup("Harvesting", listOf(FieldCropSummaryRow("Required Harvesters (people)", crew), FieldCropSummaryRow("Harvesting Rounds This Month (rounds)", label("roundsMtd")))),
+        FieldCropSummaryGroup("Harvester Productivity", listOf(FieldCropSummaryRow("Tonnes per mandays (mt/manday)", label("mtPerHarvesterDayMtd")), FieldCropSummaryRow("Hectare per mandays (ha/manday)", label("haPerHarvesterDayMtd"))))
+    ))
+}
+

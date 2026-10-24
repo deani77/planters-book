@@ -31,7 +31,7 @@ struct CropProductionTableData {
         return date
     }
     var note: String {
-        guard let date = reportDate else { return "Import a dated crop report in Settings → Estate Data Sync. Missing values remain Pending." }
+        guard let date = reportDate else { return "Import a dated crop report in Settings → Estate Data Management. Missing values remain Pending." }
         let format = DateFormatter(); format.locale = Locale(identifier: "en_US_POSIX")
         format.calendar = calendar; format.timeZone = calendar.timeZone; format.dateFormat = "MMMM yyyy"
         return format.string(from: date) + " · Actual through " + reference!.cropProductionReport!.reportDate +
@@ -96,3 +96,49 @@ struct CropProductionTableData {
         return row("TOTAL", area: sum(fields.map { $0.1 }), target: target, actual: actual)
     }
 }
+
+struct FieldCropSummaryRow: Identifiable {
+    let label: String
+    let value: String
+    var id: String { label }
+}
+struct FieldCropSummaryGroup: Identifiable {
+    let title: String
+    let rows: [FieldCropSummaryRow]
+    var id: String { title }
+}
+struct FieldCropSummary {
+    let note: String
+    let crewNote: String
+    let groups: [FieldCropSummaryGroup]
+}
+extension CropProductionTableData {
+    func fieldSummary(code: String) -> FieldCropSummary? {
+        guard let field = sourceFields.first(where: { $0.0 == code }) else { return nil }
+        let values = row(code, area: field.1, target: targets(code), actual: actual(code))
+        let matches = reportDate != nil ? (reference?.cropProductionReport?.fields?.filter { $0.field == code } ?? []) : []
+        let source = matches.count == 1 ? matches[0] : nil
+        let ratio = field.1.flatMap { valid($0 / 21) }
+        let crew = ratio.map { String(format: "%.0f", locale: Locale(identifier: "en_US_POSIX"), ceil($0)) } ?? "Pending"
+        let crewNote = ratio.map { "Field hectares ÷ 21 ha/harvester = " + EstateDashboardData.number($0) + " harvesters. Whole-worker requirement is rounded up." } ?? "A verified field area is required for the 21 ha/harvester ratio."
+        let note = reportDate != nil ? "Crop report: " + reference!.cropProductionReport!.reportDate + ". Budgets use the same report month." : "Crop report pending. Import estate data in Settings → Estate Data Management."
+        return FieldCropSummary(note: note, crewNote: crewNote, groups: [
+            FieldCropSummaryGroup(title: "Field Profile", rows: [
+                FieldCropSummaryRow(label: "Field Code", value: code),
+                FieldCropSummaryRow(label: "Hectare (ha)", value: values.area)]),
+            FieldCropSummaryGroup(title: "Crop Budget and Actual", rows: [
+                FieldCropSummaryRow(label: "Budget This Month (mt)", value: values.values[0]),
+                FieldCropSummaryRow(label: "Budget YTD (mt)", value: values.values[1]),
+                FieldCropSummaryRow(label: "Year Budget (mt)", value: values.values[2]),
+                FieldCropSummaryRow(label: "Actual MTD (mt)", value: values.values[6]),
+                FieldCropSummaryRow(label: "Actual YTD (mt)", value: values.values[7])]),
+            FieldCropSummaryGroup(title: "Harvesting", rows: [
+                FieldCropSummaryRow(label: "Required Harvesters (people)", value: crew),
+                FieldCropSummaryRow(label: "Harvesting Rounds This Month (rounds)", value: EstateDashboardData.number(valid(source?.roundsMtd)))]),
+            FieldCropSummaryGroup(title: "Harvester Productivity", rows: [
+                FieldCropSummaryRow(label: "Tonnes per mandays (mt/manday)", value: EstateDashboardData.number(valid(source?.mtPerHarvesterDayMtd))),
+                FieldCropSummaryRow(label: "Hectare per mandays (ha/manday)", value: EstateDashboardData.number(valid(source?.haPerHarvesterDayMtd)))])
+        ])
+    }
+}
+

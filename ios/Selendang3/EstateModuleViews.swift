@@ -8,7 +8,7 @@ struct EstateRecordsView: View {
                 ForEach(reference.sections) { table in
                     NavigationLink(table.title) { EstateRecordTableView(table: table) }
                 }
-            } else { Text("No estate data imported. Open Settings → Estate Data Sync.") }
+            } else { Text("No estate data imported. Open Settings → Estate Data Management.") }
         }
         .estateScreen().navigationTitle("All Estate Records")
     }
@@ -69,7 +69,7 @@ struct FieldDetailsView: View {
                     }
                 }
                 if estateFieldCodes(estate.reference).isEmpty {
-                    Text("Import estate records through Settings → Estate Data Sync to see field buttons.")
+                    Text("Import estate records through Settings → Estate Data Management to see field buttons.")
                 }
             }.padding()
         }

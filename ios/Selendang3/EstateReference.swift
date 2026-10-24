@@ -95,6 +95,9 @@ struct EstateManuringReport: Decodable {
 }
 
 struct EstateCropField: Decodable {
+    let roundsMtd: Double?
+    let mtPerHarvesterDayMtd: Double?
+    let haPerHarvesterDayMtd: Double?
     let field: String
     let sentToMillMtdMt: Double?
     let sentToMillYtdMt: Double?
@@ -109,3 +112,4 @@ struct EstateCropBudgetMonth: Decodable {
     let month: Int
     let tonnes: Double?
 }
+
