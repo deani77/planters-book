@@ -224,17 +224,17 @@ var fieldReport = fieldFixture["cropProductionReport"] as! [String:Any]
 fieldReport["fields"] = [["field":"A","sentToMillMtdMt":120,"sentToMillYtdMt":1200,"roundsMtd":2.5,"mtPerHarvesterDayMtd":1.2,"haPerHarvesterDayMtd":3.4]]
 fieldFixture["cropProductionReport"] = fieldReport
 let fieldSummary = try cropTable(fieldFixture).fieldSummary(code:"A")!
-precondition(fieldSummary.groups.map(\.rows.count) == [2,5,2,2])
+precondition(fieldSummary.groups.map(\.rows.count) == [2,5,2,2,2])
 precondition(fieldSummary.groups[0].rows.map(\.value) == ["A","100.00"])
 precondition(fieldSummary.groups[1].rows.map(\.value) == ["100.00","1000.00","1200.00","120.00","1200.00"])
-precondition(fieldSummary.groups[2].rows.map(\.value) == ["5","2.50"])
+precondition(fieldSummary.groups[3].rows.map(\.value) == ["5","2.50"])
 precondition(fieldSummary.crewNote.contains("4.76 harvesters"))
-precondition(fieldSummary.groups[3].rows.map(\.value) == ["1.20","3.40"])
+precondition(fieldSummary.groups[4].rows.map(\.value) == ["1.20","3.40"])
 let unknownField = try cropTable(fieldFixture).fieldSummary(code:"UNKNOWN")
 precondition(unknownField == nil)
 let futureField = try cropTable(fieldFixture,date:august).fieldSummary(code:"A")!
 precondition(futureField.groups[1].rows.allSatisfy { $0.value == "Pending" })
-precondition(futureField.groups[3].rows.allSatisfy { $0.value == "Pending" })
+precondition(futureField.groups[4].rows.allSatisfy { $0.value == "Pending" })
 print("Field crop summary: ordered metrics, monthly/YTD/year budgets, 21 ha crew ceiling and dated productivity passed")
 
 var estateAreaFixture = fixture
@@ -278,4 +278,27 @@ rainChartFixture["sections"] = rainSections
 let equalRain = panel("Rainfall",try dashboard(rainChartFixture))
 precondition(equalRain.bars.allSatisfy { $0.series == "Full year" || $0.series == "Current YTD" })
 print("Rainfall chart: high/low ties, current YTD separation and missing-year gaps passed")
+
+var abwFixture = fieldFixture
+var abwSections = abwFixture["sections"] as! [[String:Any]]
+let abwColumns = ["Field code","Year","YTD ABW (kg/bunch)"]
+let abwRows: [[Any]] = [["A",2026,12.34],["A",2025,11.25],["B",2026,0]]
+func abwGroup(_ rows: [[Any]], code: String = "A") throws -> FieldCropSummaryGroup {
+    abwSections[5] = section("abw",abwColumns,rows)
+    abwFixture["sections"] = abwSections
+    return try cropTable(abwFixture).fieldSummary(code:code)!.groups[2]
+}
+let abw = try abwGroup(abwRows)
+precondition(abw.title == "Average Bunch Weight")
+precondition(abw.rows.map(\.label) == ["2026 YTD (kg/bunch)","2025 YTD (kg/bunch)"])
+precondition(abw.rows.map(\.value) == ["12.34","11.25"])
+precondition(abw.note.contains("cutoff unconfirmed"))
+let zeroAbw = try abwGroup(abwRows,code:"B")
+precondition(zeroAbw.rows.map(\.value) == ["0.00","Pending"])
+let duplicateAbw = try abwGroup(abwRows + [["A",2026,99]])
+precondition(duplicateAbw.rows[0].value == "Pending")
+let invalidAbw = try abwGroup([["A",2026,-1],["A",2025,NSNull()],["A",2027,55]])
+precondition(invalidAbw.rows.allSatisfy { $0.value == "Pending" })
+print("Field ABW: YTD comparison, placement, zero/missing, duplicates and future year checks passed")
+
 

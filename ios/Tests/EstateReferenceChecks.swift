@@ -22,9 +22,4 @@ do { _ = try EstateReference.parse(encoded(duplicateSections)); fatalError("Dupl
 var invalidRows = estateFixture(); sections = invalidRows["sections"] as! [[String:Any]]
 sections[0]["rows"] = [["A","B"]]; invalidRows["sections"] = sections
 do { _ = try EstateReference.parse(encoded(invalidRows)); fatalError("Wrong row width accepted") } catch {}
-let endpoint = try EstateSyncEndpoint(address:" https://example.com/v1/estates/selendang-3/snapshot\n",token:" example-token\n")
-precondition(endpoint.token == "example-token")
-for address in ["http://example.com/v1/estates/selendang-3/snapshot", "https://user:password@example.com/v1/estates/selendang-3/snapshot", "https://example.com/v1/estates/other/snapshot", "https://example.com/v1/estates/selendang-3/snapshot?token=secret"] {
-    do { _ = try EstateSyncEndpoint(address:address,token:"example"); fatalError("Unsafe endpoint accepted") } catch {}
-}
 print("Estate reference validation checks passed")

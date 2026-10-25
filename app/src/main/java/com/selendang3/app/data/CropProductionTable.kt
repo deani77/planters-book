@@ -68,8 +68,26 @@ fun cropProductionTable(update: EstatePackage?, today: LocalDate): CropTable {
 }
 
 data class FieldCropSummaryRow(val label: String, val value: String)
-data class FieldCropSummaryGroup(val title: String, val rows: List<FieldCropSummaryRow>)
+data class FieldCropSummaryGroup(val title: String, val rows: List<FieldCropSummaryRow>, val note: String = "")
 data class FieldCropSummary(val note: String, val crewNote: String, val groups: List<FieldCropSummaryGroup>)
+private fun fieldAbwSummary(update: EstatePackage?, today: LocalDate, code: String): FieldCropSummaryGroup {
+    val table = update?.tables?.firstOrNull { it.id == "abw" }
+    val columns = table?.columns.orEmpty()
+    val codeIndex = columns.indexOf("Field code")
+    val yearIndex = columns.indexOf("Year")
+    val valueIndex = columns.indexOf("YTD ABW (kg/bunch)")
+    val rows = table?.rows.orEmpty()
+    fun cell(row: List<String?>, index: Int) = row.getOrNull(index)?.trim()
+    fun year(row: List<String?>) = cell(row, yearIndex)?.toIntOrNull()?.takeIf { it in 1900..today.year }
+    val latest = rows.mapNotNull(::year).maxOrNull() ?: today.year
+    val values = listOf(latest, latest - 1).map { target ->
+        val matches = rows.filter { cell(it, codeIndex) == code && year(it) == target }
+        val value = matches.singleOrNull()?.let { cell(it, valueIndex)?.toDoubleOrNull() }?.takeIf { it.isFinite() && it >= 0 }
+        FieldCropSummaryRow("$target YTD (kg/bunch)", value?.let { String.format(Locale.US, "%.2f", it) } ?: "Pending")
+    }
+    return FieldCropSummaryGroup("Average Bunch Weight", values,
+        "Cumulative/YTD source averages. Reporting cutoff unconfirmed; these figures may cover a different period from the crop report.")
+}
 fun fieldCropSummary(update: EstatePackage?, today: LocalDate, code: String): FieldCropSummary? {
     val table = cropProductionTable(update, today)
     val field = table.rows.firstOrNull { it.field == code } ?: return null
@@ -92,8 +110,10 @@ fun fieldCropSummary(update: EstatePackage?, today: LocalDate, code: String): Fi
         FieldCropSummaryGroup("Crop Budget and Actual", listOf(
             FieldCropSummaryRow("Budget This Month (mt)", field.values[0]), FieldCropSummaryRow("Budget YTD (mt)", field.values[1]),
             FieldCropSummaryRow("Year Budget (mt)", field.values[2]), FieldCropSummaryRow("Actual MTD (mt)", field.values[6]), FieldCropSummaryRow("Actual YTD (mt)", field.values[7]))),
+        fieldAbwSummary(update, today, code),
         FieldCropSummaryGroup("Harvesting", listOf(FieldCropSummaryRow("Required Harvesters (people)", crew), FieldCropSummaryRow("Harvesting Rounds This Month (rounds)", label("roundsMtd")))),
         FieldCropSummaryGroup("Harvester Productivity", listOf(FieldCropSummaryRow("Tonnes per mandays (mt/manday)", label("mtPerHarvesterDayMtd")), FieldCropSummaryRow("Hectare per mandays (ha/manday)", label("haPerHarvesterDayMtd"))))
     ))
 }
+
 

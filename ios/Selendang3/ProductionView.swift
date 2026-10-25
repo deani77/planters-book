@@ -56,6 +56,7 @@ private struct FieldCropReportView: View {
                     ForEach(summary.groups) { group in
                         Section(group.title) {
                             ForEach(group.rows) { row in LabeledContent(row.label, value: row.value) }
+                            if !group.note.isEmpty { Text(group.note).font(.footnote).foregroundStyle(.secondary) }
                             if group.title == "Harvesting" {
                                 Text(summary.crewNote).font(.footnote).foregroundStyle(.secondary)
                             }
@@ -66,4 +67,5 @@ private struct FieldCropReportView: View {
         }.estateScreen().navigationTitle(code + " · Crop Records")
     }
 }
+
 

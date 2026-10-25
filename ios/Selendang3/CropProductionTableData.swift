@@ -105,6 +105,7 @@ struct FieldCropSummaryRow: Identifiable {
 struct FieldCropSummaryGroup: Identifiable {
     let title: String
     let rows: [FieldCropSummaryRow]
+    var note: String = ""
     var id: String { title }
 }
 struct FieldCropSummary {
@@ -113,6 +114,31 @@ struct FieldCropSummary {
     let groups: [FieldCropSummaryGroup]
 }
 extension CropProductionTableData {
+    private func abwSummary(code: String) -> FieldCropSummaryGroup {
+        let table = reference?.sections.first { $0.id == "abw" }
+        let columns = table?.columns ?? []
+        let codeIndex = columns.firstIndex(of: "Field code")
+        let yearIndex = columns.firstIndex(of: "Year")
+        let valueIndex = columns.firstIndex(of: "YTD ABW (kg/bunch)")
+        let currentYear = calendar.component(.year, from: today)
+        func cell(_ row: [EstateReferenceCell?], _ index: Int?) -> String? {
+            guard let index = index, row.indices.contains(index) else { return nil }
+            return row[index]?.text.trimmingCharacters(in: .whitespacesAndNewlines)
+        }
+        func year(_ row: [EstateReferenceCell?]) -> Int? {
+            guard let text = cell(row, yearIndex), let year = Int(text), (1900...currentYear).contains(year) else { return nil }
+            return year
+        }
+        let rows = table?.rows ?? []
+        let latest = rows.compactMap(year).max() ?? currentYear
+        let values = [latest, latest - 1].map { target -> FieldCropSummaryRow in
+            let matches = rows.filter { cell($0, codeIndex) == code && year($0) == target }
+            let value = matches.count == 1 ? cell(matches[0], valueIndex).flatMap(Double.init).flatMap(valid) : nil
+            return FieldCropSummaryRow(label: "\(target) YTD (kg/bunch)", value: EstateDashboardData.number(value))
+        }
+        return FieldCropSummaryGroup(title: "Average Bunch Weight", rows: values,
+            note: "Cumulative/YTD source averages. Reporting cutoff unconfirmed; these figures may cover a different period from the crop report.")
+    }
     func fieldSummary(code: String) -> FieldCropSummary? {
         guard let field = sourceFields.first(where: { $0.0 == code }) else { return nil }
         let values = row(code, area: field.1, target: targets(code), actual: actual(code))
@@ -132,6 +158,7 @@ extension CropProductionTableData {
                 FieldCropSummaryRow(label: "Year Budget (mt)", value: values.values[2]),
                 FieldCropSummaryRow(label: "Actual MTD (mt)", value: values.values[6]),
                 FieldCropSummaryRow(label: "Actual YTD (mt)", value: values.values[7])]),
+            abwSummary(code: code),
             FieldCropSummaryGroup(title: "Harvesting", rows: [
                 FieldCropSummaryRow(label: "Required Harvesters (people)", value: crew),
                 FieldCropSummaryRow(label: "Harvesting Rounds This Month (rounds)", value: EstateDashboardData.number(valid(source?.roundsMtd)))]),
@@ -141,4 +168,5 @@ extension CropProductionTableData {
         ])
     }
 }
+
 

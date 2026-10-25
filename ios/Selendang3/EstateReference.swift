@@ -57,22 +57,6 @@ struct EstateReference: Decodable {
     }
 }
 
-struct EstateSyncEndpoint {
-    let snapshot: URL
-    let token: String
-    init(address: String, token: String) throws {
-        let cleanAddress = address.trimmingCharacters(in: .whitespacesAndNewlines)
-        let cleanToken = token.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard let url = URLComponents(string: cleanAddress), url.scheme == "https", url.host?.isEmpty == false,
-              url.user == nil, url.password == nil, url.query == nil, url.fragment == nil,
-              url.path == "/v1/estates/selendang-3/snapshot", let snapshot = url.url,
-              !cleanToken.isEmpty, !cleanToken.contains("\r"), !cleanToken.contains("\n") else {
-            throw ProductionError.invalid("Enter the full HTTPS snapshot address and the access token only (without Bearer).")
-        }
-        self.snapshot = snapshot; self.token = cleanToken
-    }
-}
-
 // Optional report extensions keep older offline snapshots compatible.
 struct EstateCropReport: Decodable {
     let reportDate: String

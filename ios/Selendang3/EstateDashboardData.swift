@@ -385,7 +385,7 @@ struct EstateDashboardData {
 
     var panels: [EstateDashboardPanel] {
         [ages,land("Terrain",title:"Topography"),yph,sph,land("Soil series",title:"Soil Type"),rainfall,workforce,ratios,costs,
-         EstateDashboardPanel(title:"FFB Quality",headers:["Category","Value"],rows:["Ripe Bunches (%)","Unripe (%)","Empty & Rotten (%)","Stone/Trash (ton)"].map { [$0,"Pending"] }),
+         EstateDashboardPanel(title:"FFB Quality",headers:["Category","This Month (%)","YTD (%)"],rows:["Ripe","Underipe","Unripe","Reject"].map { [$0,"Pending","Pending"] }),
          EstateDashboardPanel(title:"OER (%)",headers:["Period","Actual (%)","Budget (%)"],rows:[["YTD","Pending","Pending"]],
              note:"Awaiting approved OER records.",unit:"%")]
 
@@ -431,4 +431,5 @@ private func fieldRecordTables(_ reference: EstateReference?, code: String, crop
         return EstateReferenceTable(id: table.id, columns: indices.map { table.columns[$0] }, rows: rows.map { row in indices.map { row[$0] } })
     }
 }
+
 

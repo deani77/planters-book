@@ -6,7 +6,7 @@ import kotlinx.coroutines.flow.Flow
 import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 
-// Empty by default. Operational data must come from a future authenticated import.
+// Empty by default. Users provide operational data through local imports and entry forms.
 @Entity(tableName = "estate_fields")
 data class EstateField(
     @PrimaryKey val code: String,

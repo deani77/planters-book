@@ -23,23 +23,42 @@ class FieldCropSummaryTest {
     }
     @Test fun summaryUsesOrderedRequestedMetricsAndRoundsCrewUp() {
         val summary = fieldCropSummary(fixture(), today, "A")!!
-        assertEquals(listOf(2, 5, 2, 2), summary.groups.map { it.rows.size })
+        assertEquals(listOf(2, 5, 2, 2, 2), summary.groups.map { it.rows.size })
         assertEquals(listOf("A", "100.00"), summary.groups[0].rows.map { it.value })
         assertEquals(listOf("100.00", "1000.00", "1200.00", "120.00", "1200.00"), summary.groups[1].rows.map { it.value })
-        assertEquals(listOf("5", "2.50"), summary.groups[2].rows.map { it.value })
-        assertEquals(listOf("1.20", "3.40"), summary.groups[3].rows.map { it.value })
+        assertEquals(listOf("5", "2.50"), summary.groups[3].rows.map { it.value })
+        assertEquals(listOf("1.20", "3.40"), summary.groups[4].rows.map { it.value })
         assertTrue(summary.crewNote.contains("4.76 harvesters"))
         assertTrue(summary.note.contains("2026-10-21"))
-        assertEquals("2", fieldCropSummary(fixture(), today, "B")!!.groups[2].rows[0].value)
+        assertEquals("2", fieldCropSummary(fixture(), today, "B")!!.groups[3].rows[0].value)
     }
     @Test fun unavailableFutureAndWrongFieldValuesAreNotSubstituted() {
         assertNull(fieldCropSummary(fixture(), today, "UNKNOWN"))
         val future = fieldCropSummary(fixture(), LocalDate.of(2026, 8, 1), "A")!!
         assertTrue(future.groups[1].rows.all { it.value == "Pending" })
-        assertTrue(future.groups[3].rows.all { it.value == "Pending" })
+        assertTrue(future.groups[4].rows.all { it.value == "Pending" })
         val b = fieldCropSummary(fixture(), today, "B")!!
-        assertTrue(b.groups[3].rows.all { it.value == "Pending" })
+        assertTrue(b.groups[4].rows.all { it.value == "Pending" })
         assertEquals("180.00", b.groups[1].rows[3].value)
     }
+    @Test fun abwUsesCumulativeFieldValuesAndDoesNotInventMissingData() {
+        fun abw(rows: List<List<String?>>, code: String = "A"): FieldCropSummaryGroup {
+            val original = fixture()
+            val update = original.copy(tables = original.tables + EstateTable("abw",
+                listOf("Field code", "Year", "YTD ABW (kg/bunch)"), rows))
+            return fieldCropSummary(update, today, code)!!.groups[2]
+        }
+        val rows = listOf(listOf("A", "2026", "12.34"), listOf("A", "2025", "11.25"), listOf("B", "2026", "0"))
+        val group = abw(rows)
+        assertEquals("Average Bunch Weight", group.title)
+        assertEquals(listOf("2026 YTD (kg/bunch)", "2025 YTD (kg/bunch)"), group.rows.map { it.label })
+        assertEquals(listOf("12.34", "11.25"), group.rows.map { it.value })
+        assertTrue(group.note.contains("cutoff unconfirmed"))
+        assertEquals(listOf("0.00", "Pending"), abw(rows, "B").rows.map { it.value })
+        assertEquals("Pending", abw(rows + listOf(listOf("A", "2026", "99"))).rows[0].value)
+        assertTrue(abw(listOf(listOf("A", "2026", "-1"), listOf("A", "2025", null),
+            listOf("A", "2027", "55"))).rows.all { it.value == "Pending" })
+    }
 }
+
 
