@@ -69,6 +69,7 @@ private fun FieldCropReport(update: EstatePackage?, code: String, back: () -> Un
                     Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                         Text(group.title, style = MaterialTheme.typography.titleMedium)
                         group.rows.forEach { row -> Text("${row.label}: ${row.value}") }
+                        if (group.note.isNotEmpty()) Text(group.note, style = MaterialTheme.typography.bodySmall)
                         if (group.title == "Harvesting") Text(summary.crewNote, style = MaterialTheme.typography.bodySmall)
                     }
                 }
@@ -76,4 +77,5 @@ private fun FieldCropReport(update: EstatePackage?, code: String, back: () -> Un
         }
     }
 }
+
 

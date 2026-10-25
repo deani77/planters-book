@@ -260,9 +260,9 @@ private fun PeopleAndRainfallPanels(rainfall: List<AnnualRainfall>, workforce: E
 private fun ProductionPanels(ffbCost: FfbCostComparison?) {
     DashboardPanel("Kos FFB/TAN") { FfbCostPanel(ffbCost) }
     DashboardPanel("FFB Quality") {
-        DashboardTable(listOf("Category", "Value"), listOf(
-            listOf("Ripe Bunches (%)", Pending), listOf("Unripe (%)", Pending),
-            listOf("Empty & Rotten (%)", Pending), listOf("Stone/Trash (ton)", Pending),
+        DashboardTable(listOf("Category", "This Month (%)", "YTD (%)"), listOf(
+            listOf("Ripe", Pending, Pending), listOf("Underipe", Pending, Pending),
+            listOf("Unripe", Pending, Pending), listOf("Reject", Pending, Pending),
         ))
     }
     DashboardPanel("OER (%)") {
@@ -327,4 +327,5 @@ private fun DashboardTable(headers: List<String>, rows: List<List<String>>, mini
         }
     }
 }
+
 

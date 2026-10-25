@@ -1,9 +1,6 @@
 name: iOS simulator build
 on:
   pull_request:
-    paths:
-      - 'ios/**'
-      - '.github/workflows/ios.yml'
   push:
     branches: [main]
     paths:
@@ -14,6 +11,7 @@ permissions:
   contents: read
 jobs:
   build:
+    name: iOS build and checks
     runs-on: macos-15
     timeout-minutes: 20
     steps:
@@ -41,3 +39,4 @@ jobs:
           swift "$RUNNER_TEMP/PlanterToolsChecks.swift"
       - name: Build for iOS Simulator
         run: xcodebuild -project ios/Selendang3.xcodeproj -scheme Selendang3 -configuration Debug -sdk iphonesimulator -destination 'generic/platform=iOS Simulator' CODE_SIGNING_ALLOWED=NO build
+

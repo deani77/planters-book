@@ -12,15 +12,41 @@
     "ios-home-summary-parity": "ea2354313237409ec5c4c03b56f2639a3e72608d",
     "ios-report-dashboard": "a3ccbbf9ed240bf7e435f4ba66a67961f42cbb04",
     "ios-swiftui-starter": "59021f9dbc8ec097a387277815ff220a2bf999ed",
-    "main": "571e02d90af85a565677fb3c5607248387c2ad36",
+    "main": "d17ce6283a58a06053cf2e8d7910d79f77c9c94b",
     "production-two-way-sync": "c27dfcce82b1f0073ddd427710cb22244ebdac08",
-    "s3-oil-palm-app-icon": "c58dc03d5dbe8ffde77bd84daa2837ba7c1150d2"
+    "s3-oil-palm-app-icon": "c58dc03d5dbe8ffde77bd84daa2837ba7c1150d2",
+    "ffb-quality-categories": "8c957ff75ba62acac6974a050187324dd44d0dcb",
+    "field-abw-details": "ea01fcf20413b9446976e6c81b2af6737f3d04a1",
+    "protect-main-checks": "e6de974923e4a95b88f7c7da931f429e2b04b8e6"
   },
   "already_ported": [
     {
       "source_branch": "field-crop-summary",
       "source_commit": "18e2df29416bd79d39b8ca1f6da05b101ce021e5",
       "target_commit": "f46e6b52b2aff85a5c44a8bf8efade06aef873e8"
+    }
+  ],
+  "proposed_ports": [
+    {
+      "source_pr": 11,
+      "source_commits": [
+        "1fdab2c65b54d935b0fb06e45c2f20f69eda5d7d",
+        "8c957ff75ba62acac6974a050187324dd44d0dcb"
+      ],
+      "adaptation": "FFB quality categories and monthly/YTD labels; no operational values bundled."
+    },
+    {
+      "source_pr": 13,
+      "source_commit": "ea01fcf20413b9446976e6c81b2af6737f3d04a1",
+      "adaptation": "Cumulative field ABW from local JSON imports; no VPS dependency."
+    },
+    {
+      "source_pr": 12,
+      "source_commits": [
+        "b2a22f750ee106fa7756c539c9fb6a81693af1a6",
+        "e6de974923e4a95b88f7c7da931f429e2b04b8e6"
+      ],
+      "adaptation": "Distinct check names, iOS checks on all PRs and Android ready_for_review trigger. Automatic APK build/emulator job excluded; manual-only APK policy retained."
     }
   ]
 }
