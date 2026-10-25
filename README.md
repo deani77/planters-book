@@ -6,7 +6,7 @@ Set an estate name in Settings → Estate Data Management. The name and estate r
 
 ## Data ownership
 
-Estate information and production drafts are stored locally. Users can enter records in the app or prepare their own workbook and import it. Normal use requires no VPS, account, server address, access token, or internet connection.
+Estate information and production drafts are stored locally. Users supply estate records through local imports. The existing production draft storage is retained; exposing the full Data Input forms remains follow-up work. Normal use requires no VPS, account, server address, access token, or internet connection.
 
 ## Current implementation
 
@@ -17,6 +17,14 @@ Estate information and production drafts are stored locally. Users can enter rec
 - Existing local production draft storage and data fields are preserved.
 
 Workbook details and limits are in docs/data-updates.md. The sample JSON format remains available at sample-data/estate-update.example.json.
+
+## Planned Data Input work
+
+- Complete estate and field setup forms.
+- Add the agreed Home, Estate, Field, Data Input, Tools and Settings navigation.
+- Keep all editing in Data Input, with field reports read-only.
+- Capture field crop records daily, weekly and monthly; capture weeding and manuring at estate level.
+- Drive dashboards and reports from user records and support portable backup and restore.
 
 ## Development
 

@@ -5,11 +5,11 @@ Planters Book stores estate data on the device. Users can enter or prepare their
 ## Workbook workflow
 
 1. In Settings → Estate Data Management, choose Download Excel Template.
-2. Fill the Metadata sheet, then enter estate reference rows on the Overview, Fields, Ages, Soil, Rainfall, Abw, and Roads sheets. The first row on each data sheet contains its column labels. Keep the sheet order and names.
+2. Fill the Metadata sheet, then enter estate reference rows on the Overview, Fields, Ages, Soil, Rainfall, Abw, and Roads sheets. The first row on each data sheet contains its column labels. Keep the sheet names; worksheet relationships identify the data even when an editor changes file numbering or display order.
 3. Optional structured reports can be included on Optional JSON using a key and a JSON value. Supported keys are yph, cropProductionReport, cropProductionReportHistory, manuringReport, and cropBudget.
-4. Choose Import Estate File, select the workbook, review the full preview, and confirm. Import replaces the current snapshot. The app retains its previous snapshot locally.
+4. Choose Import Estate File, select the workbook, review the tables and optional report values, and confirm. Import replaces the current snapshot. The app retains its previous snapshot locally.
 
-The workbook carries the same estate data fields as the JSON format. A blank cell means pending/missing; enter 0 when the measured value is zero. Formula results are read as cell values; the app does not calculate formulas. Use plain values, avoid merged cells in data tables, and do not rename or reorder the sheets. Keep workbooks below 8 MB expanded size and within the existing 10,000 row / 1,000-character cell limits.
+The workbook carries the same estate data fields as the JSON format. Data outside column headings, broken cell references, and malformed optional reports are rejected. A blank cell means pending/missing; enter 0 when the measured value is zero. Formula results are read as cell values; the app does not calculate formulas. Use plain values, avoid merged cells in data tables, and do not rename the template sheets. Keep workbooks below 8 MB expanded size and within the existing 10,000 row / 1,000-character cell limits.
 
 ## JSON format
 

@@ -63,7 +63,7 @@ struct UserSettingsView: View {
                     LazyVStack(alignment: .leading, spacing: 12) {
                         if let update = pendingEstate {
                             Text("Revision \(update.revision) · \(update.reportingPeriod)").font(.headline)
-                            Text("This replaces all saved estate reference sections. Check every figure against the source PDF. Empty sections will clear previous records.")
+                            Text("This replaces all estate tables and optional reports. Empty tables and omitted reports clear previous values. Check every figure against your source file.")
                             ForEach(update.sections) { table in
                                 Text(table.title).font(.headline)
                                 if table.rows.isEmpty { Text("No records — Pending").foregroundStyle(.secondary) }
@@ -76,6 +76,10 @@ struct UserSettingsView: View {
                                     Divider()
                                 }
                             }
+                        }
+                        ForEach(optionalReportPreviews) { report in
+                            Text(report.id).font(.headline)
+                            Text(report.text).font(.caption).textSelection(.enabled)
                         }
                     }.padding()
                 }
@@ -100,6 +104,17 @@ struct UserSettingsView: View {
             }
     }
 
+    private var optionalReportPreviews: [EstateReportPreview] {
+        guard let data = pendingEstateData,
+              let root = (try? JSONSerialization.jsonObject(with: data)) as? [String: Any] else { return [] }
+        return ["yph", "cropProductionReport", "cropProductionReportHistory", "manuringReport", "cropBudget"].compactMap { key in
+            guard let value = root[key], !(value is NSNull),
+                  let bytes = try? JSONSerialization.data(withJSONObject: value, options: [.prettyPrinted, .sortedKeys]),
+                  let text = String(data: bytes, encoding: .utf8) else { return nil }
+            return EstateReportPreview(id: key, text: text)
+        }
+    }
+
     private func importEstateFile(_ result: Result<[URL], Error>) {
         do {
             guard let selected = try result.get().first else { return }
@@ -109,7 +124,7 @@ struct UserSettingsView: View {
             defer { try? input.close() }
             let raw = try input.read(upToCount: 8 * 1024 * 1024 + 1) ?? Data()
             guard raw.count <= 8 * 1024 * 1024 else { throw ProductionError.invalid("Workbook exceeds 8 MB.") }
-            let data = selected.pathExtension.lowercased() == "xlsx" ? try EstateXlsx.parse(raw) : raw
+            let data = try EstateXlsx.readEstate(raw)
             let update = try EstateReference.parse(data)
             guard update.revision > (estate.reference?.revision ?? 0) else {
                 throw ProductionError.invalid("This revision is already saved or older.")
@@ -231,3 +246,9 @@ private struct SettingsPlaceholder: View {
     }
 }
 
+
+
+private struct EstateReportPreview: Identifiable {
+    let id: String
+    let text: String
+}

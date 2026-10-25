@@ -3,26 +3,44 @@ import ZIPFoundation
 
 private final class WorkbookXMLReader: NSObject, XMLParserDelegate {
     private(set) var rows: [[String]] = []
+    private(set) var sharedStrings: [String]
+    private(set) var elements: [(String, [String: String])] = []
+    private(set) var failure: String?
     private var row: [Int: String]?
     private var column = 0
+    private var nextColumn = 0
     private var cellType = ""
     private var cellText = ""
     private var capture = false
-    private(set) var sharedStrings: [String] = []
     private var inStringItem = false
     private var itemText = ""
     private var inValue = false
+    private var hasFormula = false
 
     init(shared: [String] = []) { sharedStrings = shared }
+    private func fail(_ parser: XMLParser, _ message: String) {
+        failure = message
+        parser.abortParsing()
+    }
     func parser(_ parser: XMLParser, didStartElement name: String, namespaceURI: String?, qualifiedName qName: String?, attributes: [String: String] = [:]) {
-        switch name {
-        case "row": row = [:]
+        let tag = name.split(separator: ":").last.map(String.init) ?? name
+        switch tag {
+        case "sheet", "Relationship":
+            let normalized = Dictionary(attributes.map { (String($0.key.split(separator: ":").last ?? Substring($0.key)), $0.value) }, uniquingKeysWith: { first, _ in first })
+            elements.append((tag, normalized))
+        case "row": row = [:]; nextColumn = 0
         case "c":
-            column = Self.columnIndex(attributes["r"] ?? "A1")
+            if let ref = attributes["r"] {
+                guard let col = Self.columnIndex(ref) else { fail(parser, "Invalid workbook cell reference."); return }
+                column = col
+            } else { column = nextColumn }
+            nextColumn = column + 1
             cellType = attributes["t"] ?? ""
             cellText = ""
+            hasFormula = false
+        case "f": hasFormula = true
         case "si": inStringItem = true; itemText = ""
-        case "v", "t": capture = true; inValue = name == "v"
+        case "v", "t": capture = true; inValue = tag == "v"
         default: break
         }
     }
@@ -31,16 +49,28 @@ private final class WorkbookXMLReader: NSObject, XMLParserDelegate {
         if inStringItem && capture && !inValue { itemText += string }
     }
     func parser(_ parser: XMLParser, didEndElement name: String, namespaceURI: String?, qualifiedName qName: String?) {
-        switch name {
+        let tag = name.split(separator: ":").last.map(String.init) ?? name
+        switch tag {
         case "v", "t": capture = false; inValue = false
         case "c":
+            guard cellType != "e", cellType != "b", !hasFormula || !cellText.isEmpty else {
+                fail(parser, "Use plain values; the workbook contains an error or an uncalculated formula."); return
+            }
             let value: String
-            if cellType == "s", let index = Int(cellText), sharedStrings.indices.contains(index) {
+            if cellType == "s" {
+                guard let index = Int(cellText), sharedStrings.indices.contains(index) else {
+                    fail(parser, "Invalid shared string reference."); return
+                }
                 value = sharedStrings[index]
             } else { value = cellText }
-            row?[column] = value
+            guard column < 20 || value.isEmpty else { fail(parser, "Estate tables support at most 20 columns."); return }
+            if !value.isEmpty {
+                guard row?[column] == nil else { fail(parser, "Duplicate cell reference."); return }
+                row?[column] = value
+            }
         case "row":
             if let row {
+                guard rows.count <= 10000 else { fail(parser, "Too many workbook rows."); return }
                 let lastColumn = row.keys.max() ?? -1
                 rows.append(lastColumn >= 0 ? (0...lastColumn).map { row[$0] ?? "" } : [])
             }
@@ -49,18 +79,37 @@ private final class WorkbookXMLReader: NSObject, XMLParserDelegate {
         default: break
         }
     }
-    private static func columnIndex(_ reference: String) -> Int {
+    private static func columnIndex(_ reference: String) -> Int? {
+        let bytes = Array(reference.utf8)
+        let letters = bytes.prefix { (65...90).contains($0) }
+        let digits = bytes.dropFirst(letters.count)
+        guard (1...3).contains(letters.count), !digits.isEmpty, digits.allSatisfy({ (48...57).contains($0) }) else { return nil }
         var result = 0
-        for char in reference.prefix(while: { $0.isLetter }) {
-            result = result * 26 + Int(char.uppercased().unicodeScalars.first!.value) - 64
-        }
-        return max(result - 1, 0)
+        for byte in letters { result = result * 26 + Int(byte) - 64 }
+        return (1...16384).contains(result) ? result - 1 : nil
     }
 }
 
 enum EstateXlsx {
     private static let sections = ["overview", "fields", "ages", "soil", "rainfall", "abw", "roads"]
     private static let optionalKeys: Set<String> = ["yph", "cropProductionReport", "cropProductionReportHistory", "manuringReport", "cropBudget"]
+
+    static func readEstate(_ data: Data) throws -> Data {
+        guard data.count <= 8 * 1024 * 1024 else { throw ProductionError.invalid("Estate file exceeds 8 MB.") }
+        return data.prefix(2) == Data([80, 75]) ? try parse(data) : data
+    }
+
+    private static func xml(_ data: Data, shared: [String] = []) throws -> WorkbookXMLReader {
+        guard let decoded = String(data: data, encoding: .utf8), !decoded.contains("\0") else { throw ProductionError.invalid("Use UTF-8 workbook XML.") }
+        let text = decoded.uppercased()
+        guard !text.contains("<!DOCTYPE"), !text.contains("<!ENTITY") else { throw ProductionError.invalid("Workbook XML declarations are not supported.") }
+        let reader = WorkbookXMLReader(shared: shared)
+        let parser = XMLParser(data: data)
+        parser.delegate = reader
+        parser.shouldResolveExternalEntities = false
+        guard parser.parse(), reader.failure == nil else { throw ProductionError.invalid(reader.failure ?? "Invalid workbook XML.") }
+        return reader
+    }
 
     static func parse(_ data: Data) throws -> Data {
         guard data.count <= 8 * 1024 * 1024 else { throw ProductionError.invalid("Workbook exceeds 8 MB.") }
@@ -69,11 +118,14 @@ enum EstateXlsx {
         catch { throw ProductionError.invalid("This is not a valid .xlsx workbook.") }
         var files: [String: Data] = [:]
         var expanded = 0
+        var count = 0
         for entry in archive {
-            if entry.type == .directory { continue }
-            guard !entry.path.hasPrefix("/"), !entry.path.contains("../"), files.count < 64 else {
+            count += 1
+            guard count <= 128, !entry.path.hasPrefix("/"), !entry.path.split(separator: "/").contains(".."), !entry.path.contains("\\") else {
                 throw ProductionError.invalid("Invalid workbook contents.")
             }
+            if entry.type == .directory { continue }
+            guard entry.type == .file, files[entry.path] == nil else { throw ProductionError.invalid("Duplicate or invalid workbook part.") }
             var contents = Data()
             _ = try archive.extract(entry) { chunk in
                 expanded += chunk.count
@@ -82,22 +134,40 @@ enum EstateXlsx {
             }
             files[entry.path] = contents
         }
-        let shared = try files["xl/sharedStrings.xml"].map { bytes -> [String] in
-            let reader = WorkbookXMLReader()
-            let parser = XMLParser(data: bytes); parser.delegate = reader
-            guard parser.parse() else { throw ProductionError.invalid("Invalid workbook shared strings.") }
-            return reader.sharedStrings
-        } ?? []
-        func sheet(_ n: Int) throws -> [[String]] {
-            guard let bytes = files["xl/worksheets/sheet\(n).xml"] else { throw ProductionError.invalid("Workbook is missing sheet \(n).") }
-            let reader = WorkbookXMLReader(shared: shared)
-            let parser = XMLParser(data: bytes); parser.delegate = reader
-            parser.shouldResolveExternalEntities = false
-            guard parser.parse() else { throw ProductionError.invalid("Invalid workbook sheet.") }
-            return reader.rows
+        func part(_ name: String) throws -> Data {
+            guard let bytes = files[name] else { throw ProductionError.invalid("Workbook is missing \(name).") }
+            return bytes
         }
-        let metadata = try sheet(1).dropFirst().reduce(into: [String: String]()) { result, row in
-            if let key = row.first, row.count > 1 { result[key.trimmingCharacters(in: .whitespacesAndNewlines)] = row[1].trimmingCharacters(in: .whitespacesAndNewlines) }
+        var relationships: [String: [String: String]] = [:]
+        for (_, attributes) in try xml(part("xl/_rels/workbook.xml.rels")).elements {
+            guard let id = attributes["Id"], relationships[id] == nil else { throw ProductionError.invalid("Duplicate worksheet relationship.") }
+            relationships[id] = attributes
+        }
+        var sheets: [String: String] = [:]
+        for (_, attributes) in try xml(part("xl/workbook.xml")).elements {
+            let name = (attributes["name"] ?? "").trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+            if sections.contains(name) || name == "metadata" || name == "optional json" {
+                guard sheets[name] == nil, let id = attributes["id"], let relationship = relationships[id],
+                      relationship["TargetMode"] != "External", relationship["Type"]?.hasSuffix("/worksheet") == true,
+                      let target = relationship["Target"], !target.isEmpty, !target.contains("\\"), !target.split(separator: "/").contains("..") else {
+                    throw ProductionError.invalid("Invalid worksheet relationship.")
+                }
+                let path = target.hasPrefix("/") ? String(target.dropFirst()) : "xl/" + (target.hasPrefix("./") ? String(target.dropFirst(2)) : target)
+                guard path.hasPrefix("xl/") else { throw ProductionError.invalid("Invalid worksheet target.") }
+                sheets[name] = path
+            }
+        }
+        let shared = try files["xl/sharedStrings.xml"].map { try xml($0).sharedStrings } ?? []
+        func sheet(_ name: String) throws -> [[String]] {
+            guard let path = sheets[name] else { throw ProductionError.invalid("Workbook is missing the \(name) sheet.") }
+            return try xml(part(path), shared: shared).rows
+        }
+        func hasData(_ row: [String]) -> Bool { row.contains { !$0.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty } }
+        var metadata: [String: String] = [:]
+        for row in try sheet("metadata").dropFirst().filter(hasData) {
+            let key = (row.first ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
+            guard !key.isEmpty, row.count <= 2, metadata[key] == nil else { throw ProductionError.invalid("Duplicate or invalid metadata key.") }
+            metadata[key] = row.count > 1 ? row[1].trimmingCharacters(in: .whitespacesAndNewlines) : ""
         }
         guard let revision = Int(metadata["revision"] ?? ""), revision > 0 else {
             throw ProductionError.invalid("Enter a positive whole-number revision on the Metadata sheet.")
@@ -105,34 +175,42 @@ enum EstateXlsx {
         var root: [String: Any] = [
             "schemaVersion": 1, "estateId": metadata["estateId"].flatMap { $0.isEmpty ? nil : $0 } ?? "local-estate",
             "revision": revision, "reportingPeriod": metadata["reportingPeriod"] ?? "",
-            "exportedAt": metadata["exportedAt"] ?? ISO8601DateFormatter().string(from: Date())
+            "exportedAt": metadata["exportedAt"].flatMap { $0.isEmpty ? nil : $0 } ?? ISO8601DateFormatter().string(from: Date())
         ]
         var tables: [[String: Any]] = []
-        for (index, name) in sections.enumerated() {
-            let rows = try sheet(index + 2)
-            guard let header = rows.first, !header.isEmpty, header.allSatisfy({ !$0.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }) else {
-                throw ProductionError.invalid("The \(name) sheet needs nonblank column headings.")
-            }
-            let values: [[Any]] = rows.dropFirst().filter { $0.contains(where: { !$0.isEmpty }) }.map { row in
-                header.indices.map { column in
-                    guard row.indices.contains(column), !row[column].isEmpty else { return NSNull() }
-                    return row[column]
-                }
+        for name in sections {
+            let rows = try sheet(name)
+            guard let rawHeader = rows.first else { throw ProductionError.invalid("The \(name) sheet needs column headings.") }
+            let header = rawHeader.map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+            guard !header.isEmpty, header.allSatisfy({ !$0.isEmpty }) else { throw ProductionError.invalid("The \(name) sheet has blank headings.") }
+            var values: [[Any]] = []
+            for row in rows.dropFirst().filter(hasData) {
+                guard row.count <= header.count else { throw ProductionError.invalid("The \(name) sheet has values outside the headings.") }
+                values.append(header.indices.map { col -> Any in
+                    guard row.indices.contains(col), !row[col].isEmpty else { return NSNull() }
+                    return row[col]
+                })
             }
             tables.append(["id": name, "columns": header, "rows": values])
         }
         root["sections"] = tables
-        if files["xl/worksheets/sheet9.xml"] != nil {
-            for row in try sheet(9).dropFirst() where row.count > 1 {
-                let key = row[0].trimmingCharacters(in: .whitespacesAndNewlines)
-                let json = row[1].trimmingCharacters(in: .whitespacesAndNewlines)
-                if optionalKeys.contains(key), let value = json.data(using: .utf8),
-                   let object = try? JSONSerialization.jsonObject(with: value) {
+        if sheets["optional json"] != nil {
+            var seen: Set<String> = []
+            for row in try sheet("optional json").dropFirst().filter(hasData) {
+                let key = (row.first ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
+                guard row.count <= 2, optionalKeys.contains(key), seen.insert(key).inserted else { throw ProductionError.invalid("Unknown or duplicate optional report key.") }
+                let json = row.count > 1 ? row[1].trimmingCharacters(in: .whitespacesAndNewlines) : ""
+                if !json.isEmpty {
+                    guard let bytes = json.data(using: .utf8) else { throw ProductionError.invalid("Invalid optional report JSON.") }
+                    let object = try JSONSerialization.jsonObject(with: bytes)
+                    guard (key == "cropProductionReportHistory" ? object is [Any] : object is [String: Any]) else { throw ProductionError.invalid("Invalid optional report shape.") }
                     root[key] = object
                 }
             }
         }
-        return try JSONSerialization.data(withJSONObject: root, options: [.sortedKeys])
+        let result = try JSONSerialization.data(withJSONObject: root, options: [.sortedKeys])
+        _ = try EstateReference.parse(result)
+        return result
     }
     static func template() throws -> Data {
         var sheets: [[[String]]] = [

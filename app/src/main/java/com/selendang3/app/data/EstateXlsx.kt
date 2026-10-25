@@ -1,12 +1,11 @@
 package com.selendang3.app.data
 
-import android.util.Xml
 import org.json.JSONArray
 import org.json.JSONObject
 import org.xmlpull.v1.XmlPullParser
 import java.io.ByteArrayOutputStream
 import java.io.InputStream
-import java.nio.charset.StandardCharsets
+import org.xmlpull.v1.XmlPullParserFactory
 import java.util.zip.ZipEntry
 import java.util.zip.ZipInputStream
 import java.util.zip.ZipOutputStream
@@ -16,14 +15,32 @@ object EstateXlsx {
     private val sections = listOf("overview", "fields", "ages", "soil", "rainfall", "abw", "roads")
     private val optional = setOf("yph", "cropProductionReport", "cropProductionReportHistory", "manuringReport", "cropBudget")
 
+    /** Detect by content because document providers may return a generic MIME type. */
+    fun readEstate(input: InputStream): String {
+        val output = ByteArrayOutputStream()
+        val buffer = ByteArray(8192)
+        while (true) {
+            val count = input.read(buffer)
+            if (count < 0) break
+            require(output.size() + count <= MAX_EXPANDED) { "Estate file exceeds 8 MB." }
+            output.write(buffer, 0, count)
+        }
+        val bytes = output.toByteArray()
+        return if (bytes.size >= 4 && bytes[0] == 80.toByte() && bytes[1] == 75.toByte())
+            parse(bytes.inputStream()) else EstatePackages.read(bytes.inputStream())
+    }
+
     fun parse(input: InputStream): String {
         val files = linkedMapOf<String, ByteArray>()
         var expanded = 0
+        var entries = 0
         ZipInputStream(input).use { zip ->
             while (true) {
                 val entry = zip.nextEntry ?: break
-                require(!entry.isDirectory && !entry.name.startsWith("/") && !entry.name.contains("../")) { "Invalid workbook contents." }
-                require(files.size < 64) { "Workbook contains too many parts." }
+                require(++entries <= 128) { "Workbook contains too many parts." }
+                require(!entry.name.startsWith("/") && !entry.name.split('/').contains("..") && !entry.name.contains('\\')) { "Invalid workbook contents." }
+                if (entry.isDirectory) continue
+                require(!files.containsKey(entry.name)) { "Duplicate workbook part." }
                 val out = ByteArrayOutputStream()
                 val buffer = ByteArray(8192)
                 while (true) {
@@ -36,10 +53,33 @@ object EstateXlsx {
                 files[entry.name] = out.toByteArray()
             }
         }
-        val shared = files["xl/sharedStrings.xml"]?.let { readShared(it) } ?: emptyList()
-        fun sheet(number: Int) = files["xl/worksheets/sheet" + number + ".xml"]?.let { readSheet(it, shared) }
-            ?: throw IllegalArgumentException("Workbook is missing sheet " + number + ".")
-        val meta = sheet(1).drop(1).associate { it.getOrNull(0).orEmpty().trim() to it.getOrNull(1).orEmpty().trim() }
+        fun part(path: String) = files[path] ?: throw IllegalArgumentException("Workbook is missing " + path + ".")
+        val relationshipRows = attributes(part("xl/_rels/workbook.xml.rels"), "Relationship")
+        require(relationshipRows.all { !it["Id"].isNullOrEmpty() } && relationshipRows.map { it["Id"] }.distinct().size == relationshipRows.size) { "Duplicate or invalid worksheet relationship." }
+        val relationships = relationshipRows.associateBy { it["Id"] }
+        val sheets = linkedMapOf<String, String>()
+        for (entry in attributes(part("xl/workbook.xml"), "sheet")) {
+            val name = entry["name"].orEmpty().trim().lowercase(java.util.Locale.ROOT)
+            require(name.isNotBlank() && name !in sheets) { "Duplicate or invalid worksheet name." }
+            val relationship = relationships[entry["id"]] ?: throw IllegalArgumentException("Missing worksheet relationship.")
+            if (name in sections || name == "metadata" || name == "optional json") {
+                require(relationship["TargetMode"] != "External" && relationship["Type"].orEmpty().endsWith("/worksheet")) { "Use local worksheet data." }
+                val target = relationship["Target"].orEmpty()
+                require(target.isNotEmpty() && !target.contains('\\') && !target.split('/').contains("..")) { "Invalid worksheet target." }
+                val path = if (target.startsWith("/")) target.drop(1) else "xl/" + target.removePrefix("./")
+                require(path.startsWith("xl/")) { "Invalid worksheet target." }
+                sheets[name] = path
+            }
+        }
+        val shared = files["xl/sharedStrings.xml"]?.let(::readShared) ?: emptyList()
+        fun sheet(name: String) = readSheet(part(sheets[name] ?: throw IllegalArgumentException("Workbook is missing the " + name + " sheet.")), shared)
+        val meta = linkedMapOf<String, String>()
+        sheet("metadata").drop(1).filter { it.any(String::isNotBlank) }.forEach { row ->
+            require(row.size <= 2) { "Metadata requires key and value columns." }
+            val key = row.getOrNull(0).orEmpty().trim()
+            require(key.isNotEmpty() && key !in meta) { "Duplicate or blank metadata key." }
+            meta[key] = row.getOrNull(1).orEmpty().trim()
+        }
         val revision = meta["revision"]?.toLongOrNull() ?: 0
         require(revision > 0) { "Enter a positive whole-number revision on the Metadata sheet." }
         val root = JSONObject().put("schemaVersion", 1)
@@ -47,29 +87,48 @@ object EstateXlsx {
             .put("revision", revision).put("reportingPeriod", meta["reportingPeriod"].orEmpty())
             .put("exportedAt", meta["exportedAt"].orEmpty().ifBlank { java.time.Instant.now().toString() })
         val tables = JSONArray()
-        sections.forEachIndexed { index, section ->
-            val rows = sheet(index + 2)
+        sections.forEach { section ->
+            val rows = sheet(section)
             require(rows.isNotEmpty()) { "The " + section + " sheet needs a header row." }
             val columns = rows.first().map(String::trim)
             require(columns.isNotEmpty() && columns.all(String::isNotBlank)) { "The " + section + " sheet has blank headings." }
             val values = JSONArray()
             rows.drop(1).filter { it.any(String::isNotBlank) }.forEach { row ->
                 require(row.size <= columns.size) { "The " + section + " sheet has values outside the headings." }
-                values.put(JSONArray(columns.indices.map { col ->
-                    row.getOrNull(col)?.takeIf(String::isNotEmpty) ?: JSONObject.NULL
-                }))
+                values.put(JSONArray(columns.indices.map { col -> row.getOrNull(col)?.takeIf(String::isNotEmpty) ?: JSONObject.NULL }))
             }
             tables.put(JSONObject().put("id", section).put("columns", JSONArray(columns)).put("rows", values))
         }
         root.put("sections", tables)
-        if (files.containsKey("xl/worksheets/sheet9.xml")) {
-            sheet(9).drop(1).forEach { row ->
-                val key = row.getOrNull(0)?.trim().orEmpty()
+        if ("optional json" in sheets) {
+            val seen = mutableSetOf<String>()
+            sheet("optional json").drop(1).filter { it.any(String::isNotBlank) }.forEach { row ->
+                require(row.size <= 2) { "Optional JSON requires key and JSON columns." }
+                val key = row.getOrNull(0).orEmpty().trim()
                 val json = row.getOrNull(1)?.trim().orEmpty()
-                if (key in optional && json.isNotBlank()) root.put(key, org.json.JSONTokener(json).nextValue())
+                require(key in optional && seen.add(key)) { "Unknown or duplicate optional report key." }
+                if (json.isNotBlank()) {
+                    val wrapped = JSONArray("[" + json + "]")
+                    require(wrapped.length() == 1) { "Enter one JSON value per optional report." }
+                    val value = wrapped.get(0)
+                    require(if (key == "cropProductionReportHistory") value is JSONArray else value is JSONObject) { "Invalid optional report shape." }
+                    root.put(key, value)
+                }
             }
         }
-        return root.toString()
+        // Use the same bounds and validation as JSON imports before allowing preview.
+        return EstatePackages.parse(root.toString()).json
+    }
+
+    private fun attributes(bytes: ByteArray, tag: String): List<Map<String, String>> = xml(bytes) { p ->
+        val result = mutableListOf<Map<String, String>>()
+        while (p.eventType != XmlPullParser.END_DOCUMENT) {
+            if (p.eventType == XmlPullParser.START_TAG && p.name == tag) {
+                result += (0 until p.attributeCount).associate { p.getAttributeName(it) to p.getAttributeValue(it) }
+            }
+            p.next()
+        }
+        result
     }
 
     fun writeTemplate(output: java.io.OutputStream) {
@@ -120,36 +179,69 @@ object EstateXlsx {
     }
 
     private fun readSheet(bytes: ByteArray, shared: List<String>): List<List<String>> = xml(bytes) { p ->
-        val rows = mutableListOf<List<String>>(); var row: MutableMap<Int, String>? = null
-        var col = 0; var type = ""; var inValue = false; var value = StringBuilder()
+        val rows = mutableListOf<List<String>>()
+        var row: MutableMap<Int, String>? = null
+        var col = 0
+        var nextCol = 0
+        var type = ""
+        var formula = false
+        var inValue = false
+        var value = StringBuilder()
         while (p.eventType != XmlPullParser.END_DOCUMENT) {
             when (p.eventType) {
                 XmlPullParser.START_TAG -> when (p.name) {
-                    "row" -> row = sortedMapOf()
-                    "c" -> { col = columnIndex(p.getAttributeValue(null, "r") ?: "A1"); type = p.getAttributeValue(null, "t") ?: ""; value = StringBuilder() }
+                    "row" -> { row = sortedMapOf(); nextCol = 0 }
+                    "c" -> {
+                        col = p.getAttributeValue(null, "r")?.let(::columnIndex) ?: nextCol
+                        nextCol = col + 1
+                        type = p.getAttributeValue(null, "t") ?: ""
+                        formula = false
+                        value = StringBuilder()
+                    }
+                    "f" -> formula = true
                     "v", "t" -> if (row != null) inValue = true
                 }
                 XmlPullParser.TEXT, XmlPullParser.CDSECT -> if (inValue) value.append(p.text)
                 XmlPullParser.END_TAG -> when (p.name) {
                     "v", "t" -> inValue = false
-                    "c" -> { val raw = value.toString(); row?.put(col, if (type == "s") shared.getOrNull(raw.toIntOrNull() ?: -1).orEmpty() else raw) }
-                    "row" -> row?.let { cells -> rows += (0..(cells.keys.maxOrNull() ?: -1)).map { cells[it].orEmpty() } }
+                    "c" -> {
+                        val raw = value.toString()
+                        require(type != "e" && type != "b" && (!formula || raw.isNotEmpty())) { "Use plain values; the workbook contains an error or an uncalculated formula." }
+                        val cell = if (type == "s") {
+                            shared.getOrNull(raw.toIntOrNull() ?: -1) ?: throw IllegalArgumentException("Invalid shared string reference.")
+                        } else raw
+                        require(col < 20 || cell.isEmpty()) { "Estate tables support at most 20 columns." }
+                        if (cell.isNotEmpty()) {
+                            require(row?.containsKey(col) != true) { "Duplicate cell reference." }
+                            row?.put(col, cell)
+                        }
+                    }
+                    "row" -> row?.let { cells ->
+                        require(rows.size <= 10000) { "Too many workbook rows." }
+                        rows += (0..(cells.keys.maxOrNull() ?: -1)).map { cells[it].orEmpty() }
+                    }
                 }
-            }; p.next()
+            }
+            p.next()
         }
         rows
     }
 
     private fun <T> xml(data: ByteArray, block: (XmlPullParser) -> T): T {
-        val p = Xml.newPullParser()
-        p.setFeature(XmlPullParser.FEATURE_PROCESS_NAMESPACES, true)
+        val text = Charsets.UTF_8.newDecoder().decode(java.nio.ByteBuffer.wrap(data)).toString()
+        require(!text.contains('\u0000') && !text.contains("<!DOCTYPE", ignoreCase = true) && !text.contains("<!ENTITY", ignoreCase = true)) { "Workbook XML declarations are not supported." }
+        val p = XmlPullParserFactory.newInstance().apply { isNamespaceAware = true }.newPullParser()
         p.setFeature(XmlPullParser.FEATURE_PROCESS_DOCDECL, false)
-        p.setInput(data.inputStream(), StandardCharsets.UTF_8.name()); p.nextTag()
+        p.setInput(data.inputStream(), null)
+        p.nextTag()
         return block(p)
     }
     private fun columnIndex(ref: String): Int {
+        val letters = ref.takeWhile { it in 'A'..'Z' }
+        val digits = ref.drop(letters.length)
+        require(letters.length in 1..3 && digits.isNotEmpty() && digits.all { it in '0'..'9' }) { "Invalid workbook cell reference." }
         var n = 0
-        ref.takeWhile(Char::isLetter).forEach { n = n * 26 + (it.uppercaseChar() - 'A' + 1) }
+        letters.forEach { n = n * 26 + (it - 'A' + 1) }
         require(n in 1..16384) { "Invalid workbook cell reference." }
         return n - 1
     }
@@ -161,3 +253,4 @@ object EstateXlsx {
     private fun escape(s: String) = s.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
         .replace("\"", "&quot;").replace("'", "&apos;")
 }
+

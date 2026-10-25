@@ -1,0 +1,87 @@
+package com.selendang3.app.data
+
+import java.io.ByteArrayOutputStream
+import java.util.zip.ZipEntry
+import java.util.zip.ZipInputStream
+import java.util.zip.ZipOutputStream
+import org.json.JSONObject
+import org.junit.Assert.*
+import org.junit.Test
+
+class EstateXlsxTest {
+    private fun template(): MutableMap<String, ByteArray> {
+        val out = ByteArrayOutputStream()
+        EstateXlsx.writeTemplate(out)
+        val files = linkedMapOf<String, ByteArray>()
+        ZipInputStream(out.toByteArray().inputStream()).use { zip ->
+            while (true) {
+                val entry = zip.nextEntry ?: break
+                files[entry.name] = zip.readBytes()
+            }
+        }
+        return files
+    }
+    private fun pack(files: Map<String, ByteArray>): ByteArray {
+        val out = ByteArrayOutputStream()
+        ZipOutputStream(out).use { zip ->
+            files.forEach { (path, bytes) -> zip.putNextEntry(ZipEntry(path)); zip.write(bytes); zip.closeEntry() }
+        }
+        return out.toByteArray()
+    }
+    private fun sheet(rows: List<List<String>>): ByteArray {
+        fun escape(s: String) = s.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
+        val content = rows.mapIndexed { r, row ->
+            "<row>" + row.mapIndexed { c, value ->
+                "<c r=\"" + ('A'.code + c).toChar() + (r + 1) + "\" t=\"inlineStr\"><is><t>" + escape(value) + "</t></is></c>"
+            }.joinToString("") + "</row>"
+        }.joinToString("")
+        return ("<worksheet xmlns=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\"><sheetData>" + content + "</sheetData></worksheet>").toByteArray()
+    }
+    private fun parsed(files: Map<String, ByteArray>) = EstatePackages.parse(EstateXlsx.readEstate(pack(files).inputStream()))
+    private fun rejects(files: Map<String, ByteArray>) {
+        try { parsed(files); fail("Invalid workbook was accepted") } catch (_: Exception) {}
+    }
+    @Test fun generatedTemplateAndGenericFileDetectionRoundTrip() {
+        val files = template()
+        files["xl/"] = byteArrayOf() // valid ZIP directory entries from other editors
+        val update = parsed(files)
+        assertEquals(7, update.tables.size)
+        assertTrue(update.tables.all { it.rows.isEmpty() })
+        assertEquals(update.json, EstateXlsx.readEstate(update.json.byteInputStream()))
+    }
+    @Test fun followsWorksheetRelationshipsAndKeepsZeroAndMissingCells() {
+        val files = template()
+        files["xl/worksheets/custom-overview.xml"] = sheet(listOf(listOf("Item", "Value"), listOf("Zero", "0"), listOf("Pending", "")))
+        files.remove("xl/worksheets/sheet2.xml")
+        val path = "xl/_rels/workbook.xml.rels"
+        files[path] = files.getValue(path).toString(Charsets.UTF_8).replace("worksheets/sheet2.xml", "worksheets/custom-overview.xml").toByteArray()
+        val rows = parsed(files).tables.first { it.id == "overview" }.rows
+        assertEquals(listOf("Zero", "0"), rows[0])
+        assertEquals(listOf("Pending", null), rows[1])
+    }
+    @Test fun readsSharedStringsAndRejectsBrokenReferences() {
+        val files = template()
+        files["xl/sharedStrings.xml"] = "<sst><si><t>Value</t></si><si><r><t>Estate </t></r><r><t>name</t></r></si></sst>".toByteArray()
+        files["xl/worksheets/sheet2.xml"] = "<worksheet><sheetData><row><c r=\"A1\" t=\"s\"><v>0</v></c></row><row><c r=\"A2\" t=\"s\"><v>1</v></c></row></sheetData></worksheet>".toByteArray()
+        assertEquals("Estate name", parsed(files).tables.first().rows[0][0])
+        files["xl/worksheets/sheet2.xml"] = files.getValue("xl/worksheets/sheet2.xml").toString(Charsets.UTF_8).replace("<v>1</v>", "<v>99</v>").toByteArray()
+        rejects(files)
+    }
+    @Test fun optionalReportsAreKeptAndMalformedDataIsRejected() {
+        val files = template()
+        val report = "{\"reportDate\":\"2026-10-01\",\"appliedYtdMt\":10}"
+        files["xl/worksheets/sheet9.xml"] = sheet(listOf(listOf("key", "json"), listOf("manuringReport", report)))
+        assertEquals(10, JSONObject(parsed(files).json).getJSONObject("manuringReport").getInt("appliedYtdMt"))
+        files["xl/worksheets/sheet9.xml"] = sheet(listOf(listOf("key", "json"), listOf("manuringReport", "{broken")))
+        rejects(files)
+    }
+    @Test fun rejectsUnheadedValuesAndInvalidReferencesWithoutDroppingData() {
+        val files = template()
+        files["xl/worksheets/sheet2.xml"] = sheet(listOf(listOf("Value"), listOf("A", "Unexpected")))
+        rejects(files)
+        files["xl/worksheets/sheet2.xml"] = "<worksheet><sheetData><row><c r=\"AAAAAAAAAAAA1\"><v>1</v></c></row></sheetData></worksheet>".toByteArray()
+        rejects(files)
+        files["xl/worksheets/sheet2.xml"] = "<!DOCTYPE worksheet [<!ENTITY x 'text'>]><worksheet/>".toByteArray()
+        rejects(files)
+    }
+}

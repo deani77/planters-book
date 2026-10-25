@@ -37,6 +37,15 @@ jobs:
         run: |
           cat ios/Selendang3/PlanterCalculations.swift ios/Tests/PlanterToolsChecks.swift > "$RUNNER_TEMP/PlanterToolsChecks.swift"
           swift "$RUNNER_TEMP/PlanterToolsChecks.swift"
+      - name: Check XLSX imports and rejected data
+        run: |
+          workbook_checks_dir="$RUNNER_TEMP/planters-workbook-checks"
+          mkdir -p "$workbook_checks_dir/Sources/WorkbookChecks"
+          cp ios/Tests/WorkbookChecks.Package.swift "$workbook_checks_dir/Package.swift"
+          cp ios/Selendang3/ProductionData.swift ios/Selendang3/EstateReference.swift ios/Selendang3/EstateDashboardData.swift ios/Selendang3/EstateXlsx.swift "$workbook_checks_dir/Sources/WorkbookChecks/"
+          cp ios/Tests/EstateXlsxChecks.swift "$workbook_checks_dir/Sources/WorkbookChecks/main.swift"
+          swift run --package-path "$workbook_checks_dir" WorkbookChecks
       - name: Build for iOS Simulator
         run: xcodebuild -project ios/Selendang3.xcodeproj -scheme Selendang3 -configuration Debug -sdk iphonesimulator -destination 'generic/platform=iOS Simulator' CODE_SIGNING_ALLOWED=NO build
+
 

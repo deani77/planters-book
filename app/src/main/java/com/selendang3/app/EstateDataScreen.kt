@@ -75,9 +75,7 @@ fun EstateDataControls() {
                         val input = context.contentResolver.openInputStream(uri)
                             ?: throw IllegalArgumentException("Could not open the selected file.")
                         input.use {
-                            val mime = context.contentResolver.getType(uri).orEmpty()
-                            if (mime.contains("spreadsheet") || mime.contains("excel")) EstatePackages.parse(EstateXlsx.parse(it))
-                            else EstatePackages.parse(EstatePackages.read(it))
+                            EstatePackages.parse(EstateXlsx.readEstate(it))
                         }
                     }
                     EstatePackages.requireNewer(update.revision, snapshot?.revision)
@@ -121,13 +119,23 @@ fun EstateDataControls() {
     message?.let { Text(it) }
 
     preview?.let { update ->
+        val reports = remember(update.json) {
+            val root = org.json.JSONObject(update.json)
+            listOf("yph", "cropProductionReport", "cropProductionReportHistory", "manuringReport", "cropBudget").mapNotNull { key ->
+                if (!root.has(key) || root.isNull(key)) null else key to when (val value = root.get(key)) {
+                    is org.json.JSONObject -> value.toString(2)
+                    is org.json.JSONArray -> value.toString(2)
+                    else -> value.toString()
+                }
+            }
+        }
         AlertDialog(onDismissRequest = { if (!busy) preview = null },
             title = { Text("Review estate update") },
             text = {
                 LazyColumn(Modifier.heightIn(max = 400.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     item {
                         Text("$source · revision ${update.revision}\n${update.reportingPeriod}\nExported: ${update.exportedAt}")
-                        Text("This replaces all saved sections. Check every figure against the source PDF. Empty sections clear previous records.")
+                        Text("This replaces all estate tables and optional reports. Empty tables and omitted reports clear previous values. Check every figure against your source file.")
                     }
                     update.tables.forEach { table ->
                         item { Text(estateSections.first { it.route == table.id }.title, style = MaterialTheme.typography.titleMedium) }
@@ -138,6 +146,10 @@ fun EstateDataControls() {
                                 HorizontalDivider()
                             }
                         }
+                    }
+                    reports.forEach { (key, json) ->
+                        item { Text(key, style = MaterialTheme.typography.titleMedium) }
+                        items(json.lines()) { line -> Text(line, style = MaterialTheme.typography.bodySmall) }
                     }
                 }
             },
@@ -178,3 +190,4 @@ fun EstateSectionData(section: Section, update: EstatePackage?) {
         }
     }
 }
+
