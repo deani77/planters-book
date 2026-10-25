@@ -80,7 +80,7 @@ object EstateXlsx {
         sections.forEach { sheets += listOf(listOf("Value")) }
         sheets += listOf(listOf("key", "json"), listOf("yph", ""), listOf("cropProductionReport", ""),
             listOf("cropProductionReportHistory", ""), listOf("manuringReport", ""), listOf("cropBudget", ""))
-        val names = listOf("Metadata") + sections.map { it.replaceFirstChar(Char::uppercase) } + "Optional JSON"
+        val names = listOf("Metadata") + sections.map { it.replaceFirstChar { first -> first.uppercase() } } + "Optional JSON"
         ZipOutputStream(output).use { zip ->
             fun add(path: String, text: String) {
                 zip.putNextEntry(ZipEntry(path)); zip.write(text.toByteArray(Charsets.UTF_8)); zip.closeEntry()
