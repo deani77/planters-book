@@ -23,11 +23,15 @@ func pack(_ files: [String: Data]) throws -> Data {
 }
 func sheet(_ rows: [[String]]) -> Data {
     func escape(_ value: String) -> String { value.replacingOccurrences(of: "&", with: "&amp;").replacingOccurrences(of: "<", with: "&lt;") }
-    let xml = rows.enumerated().map { r, row in
-        "<row>" + row.enumerated().map { c, value in
-            "<c r=\"" + String(UnicodeScalar(65 + c)!) + String(r + 1) + "\" t=\"inlineStr\"><is><t>" + escape(value) + "</t></is></c>"
-        }.joined() + "</row>"
-    }.joined()
+    var xml = ""
+    for (r, row) in rows.enumerated() {
+        xml += "<row>"
+        for (c, value) in row.enumerated() {
+            let ref = String(UnicodeScalar(65 + c)!) + String(r + 1)
+            xml += "<c r=\"\(ref)\" t=\"inlineStr\"><is><t>\(escape(value))</t></is></c>"
+        }
+        xml += "</row>"
+    }
     return Data(("<worksheet><sheetData>" + xml + "</sheetData></worksheet>").utf8)
 }
 func parsed(_ files: [String: Data]) throws -> EstateReference { try EstateReference.parse(EstateXlsx.readEstate(pack(files))) }
