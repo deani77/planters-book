@@ -1,7 +1,0 @@
-[Unit]
-Description=Back up S3 Estate Info records and access registry
-
-[Service]
-Type=oneshot
-ExecStart=/opt/s3-estate/backup.sh
-UMask=0077

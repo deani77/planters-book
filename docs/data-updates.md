@@ -1,41 +1,31 @@
-# Estate data: VPS now, file import later
+# Local estate data and Excel import
 
-Android v0.2 Alpha supports the same complete snapshot through Settings → Import Estate Data or an HTTPS VPS download. Both paths preview the revision, period and row counts, then write the same Room database in a transaction. Offline reads do not require the VPS. Real records are never included in the public repository or APK.
+Planters Book stores estate data on the device. Users can enter or prepare their own records and import a completed XLSX workbook or a JSON estate file. Importing works offline; no VPS account, server address, access token, or network connection is required.
 
-## Phone workflow
+## Workbook workflow
 
-1. Obtain a prepared JSON update from the estate administrator. Raw Excel and Markdown are source documents, not directly importable.
-2. Open Settings → Import Estate Data, select the file, check its source, period and row counts, then confirm. This replaces all seven Estate Information sections, including empty sections.
-3. Browse the sections offline. Null cells display Pending; measured zero is preserved as zero.
-4. Use Export Estate Data to save the current snapshot privately before changing devices or hosts. An export can initialize another phone. The app also retains one previous snapshot internally, but does not yet expose a rollback button.
+1. In Settings → Estate Data Management, choose Download Excel Template.
+2. Fill the Metadata sheet, then enter estate reference rows on the Overview, Fields, Ages, Soil, Rainfall, Abw, and Roads sheets. The first row on each data sheet contains its column labels. Keep the sheet order and names.
+3. Optional structured reports can be included on Optional JSON using a key and a JSON value. Supported keys are yph, cropProductionReport, cropProductionReportHistory, manuringReport, and cropBudget.
+4. Choose Import Estate File, select the workbook, review the full preview, and confirm. Import replaces the current snapshot. The app retains its previous snapshot locally.
 
-Updates require a strictly higher positive integer revision. Duplicate or older revisions are rejected, including at the database transaction boundary. Invalid files, failed downloads and cancelled previews leave the saved dataset intact. A revision orders snapshots, not individual rows; the administrator must carry forward all current data. Structural validation cannot establish the accuracy of estate figures. Resolve the known source discrepancies before publishing official updates.
+The workbook carries the same estate data fields as the JSON format. A blank cell means pending/missing; enter 0 when the measured value is zero. Formula results are read as cell values; the app does not calculate formulas. Use plain values, avoid merged cells in data tables, and do not rename or reorder the sheets. Keep workbooks below 8 MB expanded size and within the existing 10,000 row / 1,000-character cell limits.
 
-## Shared file/API format
+## JSON format
 
-See [fictional example](../sample-data/estate-update.example.json). Format version is independent of app version.
+See the fictional example at ../sample-data/estate-update.example.json. Format version is independent of app version.
 
-- `schemaVersion`: integer 1.
-- `estateId`: `selendang-3`.
-- `revision`: increasing positive integer, preserved when exporting and migrating hosts.
-- `reportingPeriod`: short human-readable description of the supplied records.
-- `exportedAt`: ISO-8601 timestamp with timezone.
-- `sections`: exactly one each of `overview`, `fields`, `ages`, `soil`, `rainfall`, `abw`, `roads`.
-- Each section has `columns` (1–20 unique text labels) and `rows` (arrays with the same number of cells). Include units and reporting year in the labels or rows. Cells are text, numbers or null. No computed formulas, HTML or executable content is interpreted.
-- Maximum 2 MB UTF-8, 10,000 rows in total, 1,000 characters per text cell. Pending sections use empty rows. The importer checks format and bounds; it does not recalculate or certify source totals.
+- schemaVersion: integer 1.
+- estateId: local identifier, 1–100 characters.
+- revision: increasing positive whole number.
+- reportingPeriod: nonblank description, up to 100 characters.
+- exportedAt: ISO-8601 timestamp with timezone.
+- sections: exactly one each of overview, fields, ages, soil, rainfall, abw, and roads.
+- Every section contains 1–20 unique column labels and rows of matching width. Cells are text, finite numbers, or null.
+- Optional report fields (yph, production reports/history, manuring report, and crop budget) remain supported.
 
-This first format is for displaying estate reference tables. It does not yet populate production dashboards, charts, accounts or staff data-entry services. iOS remains a starter; its importer/sync implementation is a separate follow-up.
+JSON imports are limited to 2 MB; the workbook reader caps expanded workbook content at 8 MB. Both formats are validated before preview. Invalid or older revisions leave the saved data unchanged. An import is a full replacement, not a merge. Confirm the figures and keep your own private backup before sharing or changing devices.
 
-## VPS connection contract
+## Data ownership
 
-The phone accepts an administrator-supplied full HTTPS address, for example `https://YOUR-DOMAIN/v1/estates/selendang-3/snapshot`, plus a privately issued read-only Bearer token. It sends GET with `Authorization: Bearer …` and `Accept: application/json`; the server returns the same JSON file with HTTP 200. It does not upload phone records. Redirects are refused, and ordinary TLS certificate verification remains enabled. Tokens are held only in memory for the Settings session; the non-secret address is saved on-device. They are never put in an APK, URL, public repository, export or log.
-
-The private VPS service is configured separately; reusable code and operating instructions are in [server](../server/README.md). It supports HTTPS, per-user revocable read-only tokens, rate limits, administrator publication and daily local backups. Live credentials are kept outside this repository. Automatic off-server backups still need an external destination. Use an administrator-generated high-entropy read-only token for initial tests, not an account password. Do not expose the database directly. The current local user profile is not server authentication. Staff tokens can be issued or revoked through the server administrator's command line. A web administration/upload page, password-based accounts and automatic background synchronization remain unimplemented. Actual estate figures still require review before publication.
-
-## When VPS service ends
-
-Export the last verified complete snapshot, save it outside the VPS, and distribute it only to authorized staff. Continue publishing newer complete snapshots with increasing revisions for manual imports. File imports update the Last update label and do not falsely update Last VPS sync. Server failures do not clear cached data. If migrating instead, retain the domain, API format, estate ID and revision sequence. Restore backups and test the replacement server before switching DNS. The phone's local cache is not a backup strategy.
-
-## Validation
-
-CI runs package-parser unit tests, Android lint and APK compilation, then runs navigation, database migration and rejected-update preservation tests on an Android API 29 emulator. You can also run `./gradlew connectedDebugAndroidTest` on a connected device/emulator. Exercise a real file selection, server download and export on a phone before wider use. Do not claim the VPS is live or synchronized until a confirmed import succeeds.
+The estate snapshot and one previous snapshot are stored locally on Android and iOS. Production entries and their existing persistence fields are preserved. The apps do not send these records to a Planters Book server. Keep private estate records and completed workbooks out of the public repository.

@@ -47,6 +47,24 @@ fun EstateDataControls() {
         }
     }
 
+    val templateExporter = rememberLauncherForActivityResult(
+        ActivityResultContracts.CreateDocument("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+    ) { uri ->
+        if (uri != null) scope.launch {
+            busy = true
+            try {
+                withContext(Dispatchers.IO) {
+                    val output = context.contentResolver.openOutputStream(uri, "wt")
+                        ?: throw IllegalArgumentException("Could not create workbook.")
+                    output.use { EstateXlsx.writeTemplate(it) }
+                }
+                message = "Excel template created. Fill in the sheets, then import it here."
+            } catch (cancelled: CancellationException) { throw cancelled
+            } catch (_: Exception) { message = "Could not create the Excel template."
+            } finally { busy = false }
+        }
+    }
+
     val importer = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
         if (uri != null) {
             busy = true
@@ -56,7 +74,11 @@ fun EstateDataControls() {
                     val update = withContext(Dispatchers.IO) {
                         val input = context.contentResolver.openInputStream(uri)
                             ?: throw IllegalArgumentException("Could not open the selected file.")
-                        input.use { EstatePackages.parse(EstatePackages.read(it)) }
+                        input.use {
+                            val mime = context.contentResolver.getType(uri).orEmpty()
+                            if (mime.contains("spreadsheet") || mime.contains("excel")) EstatePackages.parse(EstateXlsx.parse(it))
+                            else EstatePackages.parse(EstatePackages.read(it))
+                        }
                     }
                     EstatePackages.requireNewer(update.revision, snapshot?.revision)
                     source = "Local file"
@@ -72,10 +94,12 @@ fun EstateDataControls() {
     EstateProfileControls()
     Text(snapshot?.let { "Saved revision ${it.revision} · ${it.source}\nUpdated: ${DateFormat.getDateTimeInstance().format(Date(it.updatedAt))}" }
         ?: "No estate data imported yet.")
-    Text("Import an estate JSON file from this device. Data stays on this device and works offline.",
+    Text("Import a filled Excel workbook or estate JSON file. Data stays on this device and works offline.",
         style = MaterialTheme.typography.bodySmall)
-    Button(onClick = { importer.launch(arrayOf("application/json", "text/plain", "application/octet-stream")) },
+    Button(onClick = { importer.launch(arrayOf("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "application/json", "text/plain", "application/octet-stream")) },
         enabled = !busy, modifier = Modifier.fillMaxWidth()) { Text("Import Estate File") }
+    OutlinedButton(onClick = { templateExporter.launch("Planters-Book-estate-template.xlsx") },
+        enabled = !busy, modifier = Modifier.fillMaxWidth()) { Text("Download Excel Template") }
     OutlinedButton(onClick = { exporter.launch("Planters-Book-estate-r${snapshot?.revision}.json") },
         enabled = snapshot != null && !busy, modifier = Modifier.fillMaxWidth()) { Text("Export Estate Data") }
     PdfAiControls(

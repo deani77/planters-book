@@ -150,7 +150,7 @@ fun EstateApp() {
                     mainSections.filter { it.route != "information" && it.route != "settings" && it.route != "reports" && it.route != "production" && it.route != "upkeep" && it.route != "tools" }.forEach { section ->
                         composable(section.route) {
                             val message = when(section.route) {
-                                "settings" -> "Offline storage is ready. Data import and synchronization are not configured yet."
+                                "settings" -> "Manage your estate information with local file imports and on-device records."
                                 else -> section.description
                             }
                             InfoCard(section.title, message)
