@@ -8,7 +8,7 @@ private final class WorkbookXMLReader: NSObject, XMLParserDelegate {
     private var cellType = ""
     private var cellText = ""
     private var capture = false
-    private var sharedStrings: [String] = []
+    private(set) var sharedStrings: [String] = []
     private var inStringItem = false
     private var itemText = ""
     private var inValue = false
