@@ -231,7 +231,6 @@ object EstateXlsx {
         val text = Charsets.UTF_8.newDecoder().decode(java.nio.ByteBuffer.wrap(data)).toString()
         require(!text.contains('\u0000') && !text.contains("<!DOCTYPE", ignoreCase = true) && !text.contains("<!ENTITY", ignoreCase = true)) { "Workbook XML declarations are not supported." }
         val p = XmlPullParserFactory.newInstance().apply { isNamespaceAware = true }.newPullParser()
-        p.setFeature(XmlPullParser.FEATURE_PROCESS_DOCDECL, false)
         p.setInput(data.inputStream(), null)
         p.nextTag()
         return block(p)
