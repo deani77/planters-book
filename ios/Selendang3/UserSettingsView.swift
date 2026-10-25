@@ -46,7 +46,9 @@ struct UserSettingsView: View {
             importEstateFile(result)
         }
         .fileExporter(isPresented: $showWorkbookExporter, document: workbookDocument,
-                      contentType: EstateWorkbookDocument.xlsxType, defaultFilename: "Planters-Book-estate-template")
+                      contentType: EstateWorkbookDocument.xlsxType, defaultFilename: "Planters-Book-estate-template") { result in
+            if case .failure(let error) = result { dataMessage = error.localizedDescription }
+        }
         .sheet(isPresented: $showEstatePreview) { estatePreview }
         .onAppear { editedEstateName = estateName }
         .estateScreen().navigationTitle("Settings")
