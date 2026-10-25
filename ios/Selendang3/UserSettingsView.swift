@@ -42,7 +42,9 @@ struct UserSettingsView: View {
 
         }
         .fileImporter(isPresented: $showFileImporter, allowedContentTypes: [.json, EstateWorkbookDocument.xlsxType],
-                      allowsMultipleSelection: false, onCompletion: importEstateFile)
+                      allowsMultipleSelection: false) { result in
+            importEstateFile(result)
+        }
         .fileExporter(isPresented: $showWorkbookExporter, document: workbookDocument,
                       contentType: EstateWorkbookDocument.xlsxType, defaultFilename: "Planters-Book-estate-template")
         .sheet(isPresented: $showEstatePreview) { estatePreview }
