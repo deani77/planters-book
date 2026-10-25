@@ -41,28 +41,19 @@ struct UserSettingsView: View {
             estateDataSection
 
         }
-        .fileImporter(isPresented: $showFileImporter, allowedContentTypes: [.json, EstateWorkbookDocument.xlsxType], allowsMultipleSelection: false) { result in
-            do {
-                guard let selected = try result.get().first else { return }
-                let access = selected.startAccessingSecurityScopedResource()
-                defer { if access { selected.stopAccessingSecurityScopedResource() } }
-                let input = try FileHandle(forReadingFrom: selected)
-                defer { try? input.close() }
-                let raw = try input.read(upToCount: 8 * 1024 * 1024 + 1) ?? Data()
-                guard raw.count <= 8 * 1024 * 1024 else { throw ProductionError.invalid("Workbook exceeds 8 MB.") }
-                let data = selected.pathExtension.lowercased() == "xlsx" ? try EstateXlsx.parse(raw) : raw
-                let update = try EstateReference.parse(data)
-                guard update.revision > (estate.reference?.revision ?? 0) else {
-                    throw ProductionError.invalid("This revision is already saved or older.")
-                }
-                pendingEstate = update
-                pendingEstateData = data
-                showEstatePreview = true
-            } catch { dataMessage = error.localizedDescription }
-        }
+        .fileImporter(isPresented: $showFileImporter, allowedContentTypes: [.json, EstateWorkbookDocument.xlsxType],
+                      allowsMultipleSelection: false, onCompletion: importEstateFile)
         .fileExporter(isPresented: $showWorkbookExporter, document: workbookDocument,
                       contentType: EstateWorkbookDocument.xlsxType, defaultFilename: "Planters-Book-estate-template")
-        .sheet(isPresented: $showEstatePreview) {
+        .sheet(isPresented: $showEstatePreview) { estatePreview }
+        .onAppear { editedEstateName = estateName }
+        .estateScreen().navigationTitle("Settings")
+        .navigationBarTitleDisplayMode(.inline)
+        .toolbar(.visible, for: .navigationBar)
+    }
+
+    private var estatePreview: some View {
+
             NavigationStack {
                 ScrollView {
                     LazyVStack(alignment: .leading, spacing: 12) {
@@ -103,11 +94,26 @@ struct UserSettingsView: View {
                     }
                 }
             }
-        }
-        .onAppear { editedEstateName = estateName }
-        .estateScreen().navigationTitle("Settings")
-        .navigationBarTitleDisplayMode(.inline)
-        .toolbar(.visible, for: .navigationBar)
+    }
+
+    private func importEstateFile(_ result: Result<[URL], Error>) {
+        do {
+            guard let selected = try result.get().first else { return }
+            let access = selected.startAccessingSecurityScopedResource()
+            defer { if access { selected.stopAccessingSecurityScopedResource() } }
+            let input = try FileHandle(forReadingFrom: selected)
+            defer { try? input.close() }
+            let raw = try input.read(upToCount: 8 * 1024 * 1024 + 1) ?? Data()
+            guard raw.count <= 8 * 1024 * 1024 else { throw ProductionError.invalid("Workbook exceeds 8 MB.") }
+            let data = selected.pathExtension.lowercased() == "xlsx" ? try EstateXlsx.parse(raw) : raw
+            let update = try EstateReference.parse(data)
+            guard update.revision > (estate.reference?.revision ?? 0) else {
+                throw ProductionError.invalid("This revision is already saved or older.")
+            }
+            pendingEstate = update
+            pendingEstateData = data
+            showEstatePreview = true
+        } catch { dataMessage = error.localizedDescription }
     }
 
     private var estatePdfPrompt: String {
