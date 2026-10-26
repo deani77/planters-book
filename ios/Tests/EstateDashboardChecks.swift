@@ -302,3 +302,24 @@ precondition(invalidAbw.rows.allSatisfy { $0.value == "Pending" })
 print("Field ABW: YTD comparison, placement, zero/missing, duplicates and future year checks passed")
 
 
+
+
+var qualityFixture = fixture
+qualityFixture["ffbRejectReport"] = ["reportDate":"2026-10-21","totals":["rejectMtdMt":120.5,"rejectMtdPercent":1.25,"rejectYtdMt":999,"rejectYtdPercent":2.5]]
+let quality = panel("FFB Quality",try dashboard(qualityFixture))
+precondition(quality.headers == ["Category","This Month","YTD"])
+precondition(quality.rows[3] == ["Reject (mt)","120.50","999.00"])
+precondition(quality.rows.prefix(3).allSatisfy { $0[0].hasSuffix("(%)") && $0[1] == "Pending" && $0[2] == "Pending" })
+let priorMonthQuality = panel("FFB Quality",try dashboard(qualityFixture,november))
+precondition(priorMonthQuality.rows[3] == ["Reject (mt)","Pending","999.00"])
+let futureQuality = panel("FFB Quality",try dashboard(qualityFixture,august))
+precondition(futureQuality.rows[3][1] == "Pending" && futureQuality.note == "Awaiting approved FFB quality records.")
+qualityFixture["ffbRejectReport"] = ["reportDate":"2026-10-21","totals":["rejectMtdMt":0,"rejectYtdMt":0,"rejectMtdPercent":77,"rejectYtdPercent":88]]
+let zeroQuality = panel("FFB Quality",try dashboard(qualityFixture))
+precondition(zeroQuality.rows[3] == ["Reject (mt)","0.00","0.00"])
+let staleQuality = panel("FFB Quality",try dashboard(qualityFixture,january))
+precondition(staleQuality.rows[3][2] == "Pending")
+qualityFixture["ffbRejectReport"] = ["reportDate":"2026-10-21","totals":["rejectMtdMt":-1,"rejectYtdMt":NSNull(),"rejectMtdPercent":1,"rejectYtdPercent":2]]
+let invalidQuality = panel("FFB Quality",try dashboard(qualityFixture))
+precondition(invalidQuality.rows[3] == ["Reject (mt)","Pending","Pending"])
+print("FFB reject tonnes: source mass above 100, percentage independence, zero/missing/negative and dated month/year handling passed")

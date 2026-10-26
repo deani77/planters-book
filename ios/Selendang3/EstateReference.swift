@@ -35,6 +35,7 @@ struct EstateReference: Decodable {
     let cropProductionReportHistory: [EstateCropReport]?
     let manuringReport: EstateManuringReport?
     let cropBudget: EstateCropBudget?
+    let ffbRejectReport: EstateFfbRejectReport?
     static func parse(_ data: Data) throws -> EstateReference {
         guard data.count <= 2*1024*1024 else { throw ProductionError.invalid("Estate update exceeds 2 MB.") }
         let result = try JSONDecoder().decode(EstateReference.self, from: data)
@@ -97,3 +98,14 @@ struct EstateCropBudgetMonth: Decodable {
     let tonnes: Double?
 }
 
+
+struct EstateFfbRejectReport: Decodable {
+    let reportDate: String
+    let totals: EstateFfbRejectTotals
+}
+struct EstateFfbRejectTotals: Decodable {
+    let rejectMtdMt: Double?
+    let rejectMtdPercent: Double?
+    let rejectYtdMt: Double?
+    let rejectYtdPercent: Double?
+}

@@ -12,12 +12,15 @@
     "ios-home-summary-parity": "ea2354313237409ec5c4c03b56f2639a3e72608d",
     "ios-report-dashboard": "a3ccbbf9ed240bf7e435f4ba66a67961f42cbb04",
     "ios-swiftui-starter": "59021f9dbc8ec097a387277815ff220a2bf999ed",
-    "main": "d17ce6283a58a06053cf2e8d7910d79f77c9c94b",
+    "main": "91f577137dd28520176d608dfc9f87d396603305",
     "production-two-way-sync": "c27dfcce82b1f0073ddd427710cb22244ebdac08",
     "s3-oil-palm-app-icon": "c58dc03d5dbe8ffde77bd84daa2837ba7c1150d2",
     "ffb-quality-categories": "8c957ff75ba62acac6974a050187324dd44d0dcb",
     "field-abw-details": "ea01fcf20413b9446976e6c81b2af6737f3d04a1",
-    "protect-main-checks": "e6de974923e4a95b88f7c7da931f429e2b04b8e6"
+    "protect-main-checks": "e6de974923e4a95b88f7c7da931f429e2b04b8e6",
+    "ffb-reject-report": "9a7f99ef17cd94c28dea8526ff5e2cb640387c35",
+    "reject-tonnes": "041da92a801d71c256f7a1bfe365459d65e6994d",
+    "data/sample-reject-2026-10-25": "c835fc63a6353fd3b6c2322e6e2cb7bf49c4b2bc"
   },
   "already_ported": [
     {
@@ -47,6 +50,56 @@
         "e6de974923e4a95b88f7c7da931f429e2b04b8e6"
       ],
       "adaptation": "Distinct check names, iOS checks on all PRs and Android ready_for_review trigger. Automatic APK build/emulator job excluded; manual-only APK policy retained."
+    },
+    {
+      "source_branch": "ffb-reject-report",
+      "source_pr": 15,
+      "source_commit": "9a7f99ef17cd94c28dea8526ff5e2cb640387c35",
+      "adaptation": "Dated reject report imported via local JSON/XLSX, previewed before replacement; source percentage display superseded by PR17 tonnes correction in this same port."
+    },
+    {
+      "source_branch": "reject-tonnes",
+      "source_pr": 17,
+      "source_commit": "041da92a801d71c256f7a1bfe365459d65e6994d",
+      "adaptation": "Latest reject tonnes display with per-row units and report freshness; no VPS dependency."
     }
-  ]
+  ],
+  "excluded_source_changes": [
+    {
+      "source_branch": "data/sample-reject-2026-10-25",
+      "source_commit": "c835fc63a6353fd3b6c2322e6e2cb7bf49c4b2bc",
+      "paths": [
+        "sample-data/reject/2026-10-25-reject-by-pkt.csv"
+      ],
+      "reason": "Dated operational sample may contain private estate data. Inspected commit/tree metadata only; no file values retrieved or copied. Users supply their own local data."
+    }
+  ],
+  "main_delta_coverage": {
+    "source_base": "d17ce6283a58a06053cf2e8d7910d79f77c9c94b",
+    "source_head": "91f577137dd28520176d608dfc9f87d396603305",
+    "ports": [
+      {
+        "target_pr": 3,
+        "source_branch": "synced-estate-name",
+        "source_head": "df68eac132fafd47a6ac77d0f296583a0d031e62"
+      },
+      {
+        "target_pr": 4,
+        "source_branch": "portrait-only",
+        "source_head": "0a1eef687a113acc45e35f04a8f255adfbde83b6"
+      },
+      {
+        "source_branches": [
+          "ffb-reject-report",
+          "reject-tonnes"
+        ],
+        "source_heads": [
+          "9a7f99ef17cd94c28dea8526ff5e2cb640387c35",
+          "041da92a801d71c256f7a1bfe365459d65e6994d"
+        ],
+        "status": "staged in this draft"
+      }
+    ],
+    "note": "Main's merge commits introduce no additional unique features. Other ports remain separate drafts; no merges are authorized."
+  }
 }

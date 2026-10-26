@@ -383,9 +383,21 @@ struct EstateDashboardData {
         ]
     }
 
+    var ffbQuality: EstateDashboardPanel {
+        var rows = ["Ripe (%)","Underipe (%)","Unripe (%)","Reject (mt)"].map { [$0,"Pending","Pending"] }
+        var note = "Awaiting approved FFB quality records."
+        if let report = reference?.ffbRejectReport, let date = reportDate(report.reportDate) {
+            let sameMonth = reportCalendar.isDate(date, equalTo: today, toGranularity: .month)
+            let sameYear = reportCalendar.isDate(date, equalTo: today, toGranularity: .year)
+            rows[3][1] = Self.number(sameMonth ? nonnegative(report.totals.rejectMtdMt) : nil)
+            rows[3][2] = Self.number(sameYear ? nonnegative(report.totals.rejectYtdMt) : nil)
+            note = "Reject report: " + report.reportDate + ". Rejected FFB quantities are shown in mt. Other quality categories remain Pending."
+        }
+        return EstateDashboardPanel(title:"FFB Quality", headers:["Category","This Month","YTD"], rows:rows, note:note)
+    }
     var panels: [EstateDashboardPanel] {
         [ages,land("Terrain",title:"Topography"),yph,sph,land("Soil series",title:"Soil Type"),rainfall,workforce,ratios,costs,
-         EstateDashboardPanel(title:"FFB Quality",headers:["Category","This Month (%)","YTD (%)"],rows:["Ripe","Underipe","Unripe","Reject"].map { [$0,"Pending","Pending"] }),
+         ffbQuality,
          EstateDashboardPanel(title:"OER (%)",headers:["Period","Actual (%)","Budget (%)"],rows:[["YTD","Pending","Pending"]],
              note:"Awaiting approved OER records.",unit:"%")]
 

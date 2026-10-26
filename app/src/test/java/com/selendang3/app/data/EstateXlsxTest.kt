@@ -75,6 +75,19 @@ class EstateXlsxTest {
         files["xl/worksheets/sheet9.xml"] = sheet(listOf(listOf("key", "json"), listOf("manuringReport", "{broken")))
         rejects(files)
     }
+    @Test fun rejectReportRoundTripsThroughLocalWorkbook() {
+        val files = template()
+        val report = """{"reportDate":"2026-10-21","totals":{"rejectMtdMt":0,"rejectYtdMt":null},"fields":[{"field":"Example","rejectMtdMt":0}],"reviewNotes":"Fictional fixture"}"""
+        files["xl/worksheets/sheet9.xml"] = sheet(listOf(listOf("key", "json"), listOf("ffbRejectReport", report)))
+        val update = parsed(files)
+        val saved = JSONObject(update.json).getJSONObject("ffbRejectReport")
+        assertEquals(0, saved.getJSONObject("totals").getInt("rejectMtdMt"))
+        assertTrue(saved.getJSONObject("totals").isNull("rejectYtdMt"))
+        assertEquals("Example", saved.getJSONArray("fields").getJSONObject(0).getString("field"))
+        assertEquals("Fictional fixture", saved.getString("reviewNotes"))
+        assertEquals(listOf("Reject (mt)", "0.00", "Pending"), estateFfbQuality(update, java.time.LocalDate.of(2026,10,26)).rows[3])
+        assertEquals(update.json, EstateXlsx.readEstate(update.json.byteInputStream()))
+    }
     @Test fun rejectsUnheadedValuesAndInvalidReferencesWithoutDroppingData() {
         val files = template()
         files["xl/worksheets/sheet2.xml"] = sheet(listOf(listOf("Value"), listOf("A", "Unexpected")))
