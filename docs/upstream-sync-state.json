@@ -17,7 +17,8 @@
     "s3-oil-palm-app-icon": "c58dc03d5dbe8ffde77bd84daa2837ba7c1150d2",
     "ffb-quality-categories": "8c957ff75ba62acac6974a050187324dd44d0dcb",
     "field-abw-details": "ea01fcf20413b9446976e6c81b2af6737f3d04a1",
-    "protect-main-checks": "e6de974923e4a95b88f7c7da931f429e2b04b8e6"
+    "protect-main-checks": "e6de974923e4a95b88f7c7da931f429e2b04b8e6",
+    "portrait-only": "0a1eef687a113acc45e35f04a8f255adfbde83b6"
   },
   "already_ported": [
     {
@@ -47,6 +48,12 @@
         "e6de974923e4a95b88f7c7da931f429e2b04b8e6"
       ],
       "adaptation": "Distinct check names, iOS checks on all PRs and Android ready_for_review trigger. Automatic APK build/emulator job excluded; manual-only APK policy retained."
+    },
+    {
+      "source_branch": "portrait-only",
+      "source_pr": 16,
+      "source_commit": "0a1eef687a113acc45e35f04a8f255adfbde83b6",
+      "adaptation": "Portrait declarations retained on Android and iOS, preserving local FileProvider and Planters Book identity. No server or workflow changes."
     }
   ]
 }
