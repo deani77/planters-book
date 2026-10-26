@@ -1,6 +1,7 @@
 package com.selendang3.app
 
 import android.content.SharedPreferences
+import com.selendang3.app.data.estateDisplayName
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -9,7 +10,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 
 @Composable
-fun rememberEstateName(): String {
+fun rememberEstateName(importedName: String? = null): String {
     val context = LocalContext.current.applicationContext
     val preferences = remember(context) { context.getSharedPreferences("user_settings", 0) }
     var name by remember(preferences) { mutableStateOf(preferences.getString("estate_name", "") ?: "") }
@@ -20,7 +21,7 @@ fun rememberEstateName(): String {
         preferences.registerOnSharedPreferenceChangeListener(listener)
         onDispose { preferences.unregisterOnSharedPreferenceChangeListener(listener) }
     }
-    return name.trim().ifEmpty { "Your Estate" }
+    return estateDisplayName(name, importedName)
 }
 
 @Composable

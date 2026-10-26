@@ -65,7 +65,6 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 fun EstateApp() {
-    val estateName = rememberEstateName()
     val context = LocalContext.current.applicationContext
     val preferences = remember(context) { context.getSharedPreferences("user_settings", 0) }
     var themeChoice by remember { mutableStateOf(preferences.getString("theme", "system") ?: "system") }
@@ -77,6 +76,7 @@ fun EstateApp() {
     val dao = remember(context) { EstateDatabase.get(context).estateDao() }
     val snapshot by remember(dao) { dao.observeSnapshot() }.collectAsStateWithLifecycle(null)
     val estateUpdate = remember(snapshot?.content) { snapshot?.let { EstatePackages.parse(it.content) } }
+    val estateName = rememberEstateName(estateUpdate?.estateName)
     val nav = rememberNavController()
     val entry by nav.currentBackStackEntryAsState()
     val route = entry?.destination?.route ?: "home"

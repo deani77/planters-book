@@ -47,4 +47,29 @@ class EstatePackageTest {
     fun fractionalRevisionRejected() { EstatePackages.parse(fixture().put("revision", 1.5).toString()) }
     @Test(expected = IllegalArgumentException::class)
     fun oversizedFileRejectedBeforeParse() { EstatePackages.read(ByteArray(EstatePackages.MAX_BYTES + 1).inputStream()) }
+    @Test fun estateNameComesFromImportedOverviewAndSurvivesReload() {
+        fun named(rows: List<List<Any?>>): EstatePackage {
+            val root = fixture()
+            root.getJSONArray("sections").put(0, JSONObject().put("id", "overview")
+                .put("columns", JSONArray(listOf("Item", "Details")))
+                .put("rows", JSONArray(rows.map { JSONArray(it.map { value -> value ?: JSONObject.NULL }) })))
+            return EstatePackages.parse(root.toString())
+        }
+        assertNull(EstatePackages.parse(fixture().toString()).estateName)
+        val saved = named(listOf(listOf("Estate name", "  Example Estate  ")))
+        assertEquals("Example Estate", saved.estateName)
+        assertEquals("Example Estate", EstatePackages.parse(saved.json).estateName)
+        for (rows in listOf(emptyList(), listOf(listOf("Estate name", null)),
+            listOf(listOf("Estate name", "")), listOf(listOf("Estate name", " ")),
+            listOf(listOf("Estate name", "A"), listOf("Estate name", "B")),
+            listOf(listOf("Estate name", "A\nB")), listOf(listOf("Estate name", "x".repeat(121))))) {
+            assertNull(named(rows).estateName)
+        }
+        assertEquals("Updated Estate", named(listOf(listOf("Estate name", "Updated Estate"))).estateName)
+    }
+    @Test fun customNameTakesPriorityOverImportedName() {
+        assertEquals("Custom", estateDisplayName(" Custom ", "Imported"))
+        assertEquals("Imported", estateDisplayName(" ", "Imported"))
+        assertEquals("Your Estate", estateDisplayName("", null))
+    }
 }

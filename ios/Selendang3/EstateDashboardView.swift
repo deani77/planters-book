@@ -9,7 +9,7 @@ struct EstateDashboardView: View {
             let data = EstateDashboardData(reference:estate.reference,today:context.date)
             ScrollView {
                 VStack(alignment:.leading,spacing:16) {
-                    Text("ESTATE DETAILS · " + (estateName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? "Your Estate" : estateName)).font(.title2.bold())
+                    Text("ESTATE DETAILS · " + (estateDisplayName(estateName, estate.reference?.estateName))).font(.title2.bold())
                     panel(data.areaSummary)
                     if let reference = estate.reference {
                         Text("Saved estate revision \(reference.revision)").font(.headline)

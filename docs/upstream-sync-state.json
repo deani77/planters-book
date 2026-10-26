@@ -17,7 +17,8 @@
     "s3-oil-palm-app-icon": "c58dc03d5dbe8ffde77bd84daa2837ba7c1150d2",
     "ffb-quality-categories": "8c957ff75ba62acac6974a050187324dd44d0dcb",
     "field-abw-details": "ea01fcf20413b9446976e6c81b2af6737f3d04a1",
-    "protect-main-checks": "e6de974923e4a95b88f7c7da931f429e2b04b8e6"
+    "protect-main-checks": "e6de974923e4a95b88f7c7da931f429e2b04b8e6",
+    "synced-estate-name": "df68eac132fafd47a6ac77d0f296583a0d031e62"
   },
   "already_ported": [
     {
@@ -47,6 +48,15 @@
         "e6de974923e4a95b88f7c7da931f429e2b04b8e6"
       ],
       "adaptation": "Distinct check names, iOS checks on all PRs and Android ready_for_review trigger. Automatic APK build/emulator job excluded; manual-only APK policy retained."
+    },
+    {
+      "source_branch": "synced-estate-name",
+      "source_pr": 14,
+      "source_commits": [
+        "889eb6d6375a3ed4b7b94171914bc49332f7e618",
+        "df68eac132fafd47a6ac77d0f296583a0d031e62"
+      ],
+      "adaptation": "Imported overview name is a fallback only; user's saved estate name remains first. VPS-only naming and server navigation assumptions excluded."
     }
   ]
 }

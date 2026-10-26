@@ -53,7 +53,7 @@ private const val Pending = "—"
 /** Estate metrics are calculated from the user’s imported records. */
 @Composable
 fun EstateDashboard(estateUpdate: EstatePackage? = null) {
-    val estateName = rememberEstateName()
+    val estateName = rememberEstateName(estateUpdate?.estateName)
     val ageProfile = remember(estateUpdate) { estateAgeProfile(estateUpdate) }
     val topography = remember(estateUpdate) { estateTopography(estateUpdate) }
     val averageSph = remember(estateUpdate) { estateAverageSph(estateUpdate) }

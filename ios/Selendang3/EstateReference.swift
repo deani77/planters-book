@@ -35,6 +35,15 @@ struct EstateReference: Decodable {
     let cropProductionReportHistory: [EstateCropReport]?
     let manuringReport: EstateManuringReport?
     let cropBudget: EstateCropBudget?
+    var estateName: String? {
+        guard let overview = sections.first(where: { $0.id == "overview" }),
+              let item = overview.columns.firstIndex(of: "Item"),
+              let details = overview.columns.firstIndex(of: "Details") else { return nil }
+        let matches = overview.rows.filter { $0[item]?.text.trimmingCharacters(in: .whitespacesAndNewlines) == "Estate name" }
+        guard matches.count == 1, let value = matches[0][details]?.text.trimmingCharacters(in: .whitespacesAndNewlines),
+              !value.isEmpty, value.utf16.count <= 120, value.rangeOfCharacter(from: .controlCharacters) == nil else { return nil }
+        return value
+    }
     static func parse(_ data: Data) throws -> EstateReference {
         guard data.count <= 2*1024*1024 else { throw ProductionError.invalid("Estate update exceeds 2 MB.") }
         let result = try JSONDecoder().decode(EstateReference.self, from: data)
@@ -97,3 +106,8 @@ struct EstateCropBudgetMonth: Decodable {
     let tonnes: Double?
 }
 
+
+func estateDisplayName(_ customName: String, _ importedName: String?) -> String {
+    let custom = customName.trimmingCharacters(in: .whitespacesAndNewlines)
+    return custom.isEmpty ? (importedName ?? "Your Estate") : custom
+}

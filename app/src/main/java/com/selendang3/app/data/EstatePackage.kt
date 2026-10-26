@@ -7,7 +7,18 @@ import java.time.OffsetDateTime
 
 data class EstateTable(val id: String, val columns: List<String>, val rows: List<List<String?>>)
 data class EstatePackage(val revision: Long, val reportingPeriod: String,
-    val exportedAt: String, val tables: List<EstateTable>, val json: String, val yph: YphData? = null)
+    val exportedAt: String, val tables: List<EstateTable>, val json: String, val yph: YphData? = null) {
+    val estateName: String?
+        get() {
+            val overview = tables.singleOrNull { it.id == "overview" } ?: return null
+            val item = overview.columns.indexOf("Item")
+            val details = overview.columns.indexOf("Details")
+            if (minOf(item, details) < 0) return null
+            val value = overview.rows.singleOrNull { it.getOrNull(item)?.trim() == "Estate name" }
+                ?.getOrNull(details)?.trim() ?: return null
+            return value.takeIf { it.isNotEmpty() && it.length <= 120 && it.none(Char::isISOControl) }
+        }
+}
 
 object EstatePackages {
     const val MAX_BYTES = 2 * 1024 * 1024
@@ -89,3 +100,6 @@ object EstatePackages {
         require(current == null || incoming > current) { "This update is already imported or older than the saved data." }
     }
 }
+
+fun estateDisplayName(customName: String, importedName: String?): String =
+    customName.trim().ifEmpty { importedName ?: "Your Estate" }
