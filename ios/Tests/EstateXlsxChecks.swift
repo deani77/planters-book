@@ -77,4 +77,16 @@ files["xl/worksheets/sheet2.xml"] = Data("<worksheet><sheetData><row><c r=\"AAAA
 rejects(files)
 files["xl/worksheets/sheet2.xml"] = Data("<!DOCTYPE worksheet [<!ENTITY x 'text'>]><worksheet/>".utf8)
 rejects(files)
-print("XLSX round-trip, worksheet mapping, zero/null preservation and rejected-input checks passed")
+files = base
+let rejectJSON = #"{"reportDate":"2026-10-21","totals":{"rejectMtdMt":0,"rejectYtdMt":null},"fields":[{"field":"Example","rejectMtdMt":0}],"reviewNotes":"Fictional fixture"}"#
+files["xl/worksheets/sheet9.xml"] = sheet([["key", "json"], ["ffbRejectReport", rejectJSON]])
+let rejectBytes = try EstateXlsx.parse(pack(files))
+let rejectReference = try EstateReference.parse(rejectBytes)
+precondition(rejectReference.ffbRejectReport?.totals.rejectMtdMt == 0)
+precondition(rejectReference.ffbRejectReport?.totals.rejectYtdMt == nil)
+let retained = (try JSONSerialization.jsonObject(with: rejectBytes) as! [String: Any])["ffbRejectReport"] as! [String: Any]
+precondition((retained["fields"] as? [[String: Any]])?.first?["field"] as? String == "Example")
+precondition(retained["reviewNotes"] as? String == "Fictional fixture")
+let reloaded = try EstateXlsx.readEstate(rejectBytes)
+precondition(reloaded == rejectBytes)
+print("XLSX round-trip, worksheet mapping, zero/null preservation, local reject report and rejected-input checks passed")

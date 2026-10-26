@@ -121,7 +121,7 @@ fun EstateDataControls() {
     preview?.let { update ->
         val reports = remember(update.json) {
             val root = org.json.JSONObject(update.json)
-            listOf("yph", "cropProductionReport", "cropProductionReportHistory", "manuringReport", "cropBudget").mapNotNull { key ->
+            listOf("yph", "cropProductionReport", "cropProductionReportHistory", "manuringReport", "cropBudget", "ffbRejectReport").mapNotNull { key ->
                 if (!root.has(key) || root.isNull(key)) null else key to when (val value = root.get(key)) {
                     is org.json.JSONObject -> value.toString(2)
                     is org.json.JSONArray -> value.toString(2)

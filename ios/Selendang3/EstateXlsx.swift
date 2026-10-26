@@ -92,7 +92,7 @@ private final class WorkbookXMLReader: NSObject, XMLParserDelegate {
 
 enum EstateXlsx {
     private static let sections = ["overview", "fields", "ages", "soil", "rainfall", "abw", "roads"]
-    private static let optionalKeys: Set<String> = ["yph", "cropProductionReport", "cropProductionReportHistory", "manuringReport", "cropBudget"]
+    private static let optionalKeys: Set<String> = ["yph", "cropProductionReport", "cropProductionReportHistory", "manuringReport", "cropBudget", "ffbRejectReport"]
 
     static func readEstate(_ data: Data) throws -> Data {
         guard data.count <= 8 * 1024 * 1024 else { throw ProductionError.invalid("Estate file exceeds 8 MB.") }
@@ -219,7 +219,7 @@ enum EstateXlsx {
         ]
         sheets += sections.map { _ in [["Value"]] }
         sheets.append([["key", "json"], ["yph", ""], ["cropProductionReport", ""],
-                       ["cropProductionReportHistory", ""], ["manuringReport", ""], ["cropBudget", ""]])
+                       ["cropProductionReportHistory", ""], ["manuringReport", ""], ["cropBudget", ""], ["ffbRejectReport", ""]])
         let names = ["Metadata", "Overview", "Fields", "Ages", "Soil", "Rainfall", "Abw", "Roads", "Optional JSON"]
         let archive = try Archive(data: Data(), accessMode: .create)
         func add(_ path: String, _ text: String) throws {

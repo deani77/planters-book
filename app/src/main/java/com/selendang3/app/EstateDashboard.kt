@@ -34,6 +34,8 @@ import com.selendang3.app.data.EstateWorkerRatios
 import com.selendang3.app.data.estateWorkerRatios
 import com.selendang3.app.data.FfbCostComparison
 import com.selendang3.app.data.estateFfbCosts
+import com.selendang3.app.data.estateFfbQuality
+import com.selendang3.app.data.FfbQuality
 import com.selendang3.app.data.estateAreaSummary
 import com.selendang3.app.data.EstatePackage
 import com.selendang3.app.data.EstateAgeProfile
@@ -64,6 +66,7 @@ fun EstateDashboard(estateUpdate: EstatePackage? = null) {
             while (true) { value = estateRainfallToday(); delay(60_000) }
         }
     }
+    val quality = remember(estateUpdate, today) { estateFfbQuality(estateUpdate, today) }
     val estateArea = remember(estateUpdate, today) { estateAreaSummary(estateUpdate, today) }
     val rainfall = remember(estateUpdate, today) { estateAnnualRainfall(estateUpdate, today) }
     val workforce = remember(estateUpdate) { estateWorkforce(estateUpdate) }
@@ -100,13 +103,13 @@ fun EstateDashboard(estateUpdate: EstatePackage? = null) {
                                 PeopleAndRainfallPanels(rainfall, workforce, workerRatios)
                             }
                             Column(Modifier.weight(1.2f), verticalArrangement = Arrangement.spacedBy(16.dp)) {
-                                ProductionPanels(ffbCost)
+                                ProductionPanels(ffbCost, quality)
                             }
                         }
                     } else {
                         ProfilePanels(ageProfile, topography, estateUpdate?.yph, averageSph, soilSeries)
                         PeopleAndRainfallPanels(rainfall, workforce, workerRatios)
-                        ProductionPanels(ffbCost)
+                        ProductionPanels(ffbCost, quality)
                     }
                     HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
                 }
@@ -257,13 +260,11 @@ private fun PeopleAndRainfallPanels(rainfall: List<AnnualRainfall>, workforce: E
 }
 
 @Composable
-private fun ProductionPanels(ffbCost: FfbCostComparison?) {
+private fun ProductionPanels(ffbCost: FfbCostComparison?, quality: FfbQuality) {
     DashboardPanel("Kos FFB/TAN") { FfbCostPanel(ffbCost) }
     DashboardPanel("FFB Quality") {
-        DashboardTable(listOf("Category", "This Month (%)", "YTD (%)"), listOf(
-            listOf("Ripe", Pending, Pending), listOf("Underipe", Pending, Pending),
-            listOf("Unripe", Pending, Pending), listOf("Reject", Pending, Pending),
-        ))
+        DashboardTable(listOf("Category", "This Month", "YTD"), quality.rows)
+        Text(quality.note, Modifier.padding(12.dp), style = MaterialTheme.typography.bodySmall)
     }
     DashboardPanel("OER (%)") {
         DashboardTable(listOf("Period", "Actual (%)", "Budget (%)"), listOf(listOf("YTD", Pending, Pending)), minimumWidth = 320)
