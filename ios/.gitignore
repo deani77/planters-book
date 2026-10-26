@@ -3,3 +3,4 @@ build/
 DerivedData/
 *.xcuserstate
 Selendang3/Assets.xcassets/AppIcon.appiconset/AppIcon.png
+Generated/

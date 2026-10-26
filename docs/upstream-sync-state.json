@@ -20,7 +20,8 @@
     "protect-main-checks": "e6de974923e4a95b88f7c7da931f429e2b04b8e6",
     "ffb-reject-report": "9a7f99ef17cd94c28dea8526ff5e2cb640387c35",
     "reject-tonnes": "041da92a801d71c256f7a1bfe365459d65e6994d",
-    "data/sample-reject-2026-10-25": "c835fc63a6353fd3b6c2322e6e2cb7bf49c4b2bc"
+    "data/sample-reject-2026-10-25": "c835fc63a6353fd3b6c2322e6e2cb7bf49c4b2bc",
+    "portrait-only": "0a1eef687a113acc45e35f04a8f255adfbde83b6"
   },
   "already_ported": [
     {
@@ -62,6 +63,12 @@
       "source_pr": 17,
       "source_commit": "041da92a801d71c256f7a1bfe365459d65e6994d",
       "adaptation": "Latest reject tonnes display with per-row units and report freshness; no VPS dependency."
+    },
+    {
+      "source_branch": "portrait-only",
+      "source_pr": 16,
+      "source_commit": "0a1eef687a113acc45e35f04a8f255adfbde83b6",
+      "adaptation": "Portrait declarations retained on Android and iOS, preserving local FileProvider and Planters Book identity. No server or workflow changes."
     }
   ],
   "excluded_source_changes": [
@@ -86,7 +93,8 @@
       {
         "target_pr": 4,
         "source_branch": "portrait-only",
-        "source_head": "0a1eef687a113acc45e35f04a8f255adfbde83b6"
+        "source_head": "0a1eef687a113acc45e35f04a8f255adfbde83b6",
+        "status": "merged"
       },
       {
         "source_branches": [
@@ -100,6 +108,6 @@
         "status": "staged in this draft"
       }
     ],
-    "note": "Main's merge commits introduce no additional unique features. Other ports remain separate drafts; no merges are authorized."
+    "note": "PR #4 merged; PR #5 reviewed and approved for merge by the user on 2026-10-27."
   }
 }
