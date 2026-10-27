@@ -57,19 +57,38 @@ fun FieldDetailsScreen(update: EstatePackage?) {
 
 @Composable
 fun UpkeepCultivationScreen(update: EstatePackage?) {
-    Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(16.dp)) {
+    val manuring = operationalDashboardCards(update, estateRainfallToday())[3]
+    val categories = listOf(
+        "Weeding" to "Estate totals: Pending",
+        "Manuring" to "Estate programme progress: ${manuring.metrics[0].value} %",
+        "Pest and Disease" to "Estate totals: Pending",
+        "Water Management" to "Estate totals: Pending",
+        "Road Management" to "Estate totals: Pending",
+        "Others" to "Additional estate work: Pending",
+    )
+    Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()),
+        verticalArrangement = Arrangement.spacedBy(16.dp)) {
         Card(Modifier.fillMaxWidth()) {
             Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 Text("Upkeep and Cultivation Dashboard", style = MaterialTheme.typography.titleLarge)
                 Text("Weeding progress: Pending")
-                val manuring = operationalDashboardCards(update, estateRainfallToday())[3]
                 Text("Manuring progress: ${manuring.metrics[0].value} %")
                 Text(manuring.period, style = MaterialTheme.typography.bodySmall)
-                Text("Pest and disease work: Pending")
+                Text("Pest and Disease: Pending")
+                Text("Water Management: Pending")
+                Text("Road Management: Pending")
             }
         }
-        Text("Weeding, manuring, pest and disease management, and other estate upkeep and cultivation work.")
+        Text("Major Upkeep Work", style = MaterialTheme.typography.titleLarge)
+        categories.forEach { (category, status) ->
+            Card(Modifier.fillMaxWidth()) {
+                Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                    Text(category, style = MaterialTheme.typography.titleMedium)
+                    Text(status)
+                }
+            }
+        }
+        Text("Upkeep records are shown at estate level. Entered or imported field profiles are not presented as field-level upkeep activity.")
         Text("Crop production activities are recorded under Crop Production.")
-        Text("Work records and additional dashboard measures are awaiting approved inputs.")
     }
 }

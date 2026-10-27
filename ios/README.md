@@ -7,7 +7,7 @@ Native SwiftUI app for iOS 16 or later. Estate reports read locally imported dat
 - Estate Details contains estate reference panels and saved source tables. OER (%) retains Actual/Budget YTD only. Checkroll Average and Cost Breakdown panels are removed.
 - Field Details shows basic field identity, area, palms, planting/age and explicitly field-keyed soil/infrastructure records.
 - Crop Production shows the responsive Target/Actual table and field pills. Tapping a field opens its saved crop, harvesting, productivity and bunch-weight records. No manual forms, date-entry filters or upload controls are exposed.
-- Upkeep and Cultivation shows saved estate work summaries; missing measures stay Pending.
+- Upkeep and Cultivation groups estate-level work into Weeding, Manuring, Pest and Disease, Water Management, Road Management and Others. Missing measures stay Pending. Field profiles are not reused as field-level activity records.
 - Planter Tools provides six offline calculators: Plant Density, Chemical Dosage per Pump, Fertilizer Requirement, Nozzle Calibration, Work Costing and Unit Conversion. Calculator inputs never alter estate records.
 - Settings contains Inbox, User Profile, Appearance, Suggestions, About and Estate Data Management. Users set their own estate name, import JSON files, or share a PDF with a compatible AI app and review its returned JSON before importing.
 
