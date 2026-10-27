@@ -36,6 +36,8 @@ interface EstateDao {
     fun observeSnapshot(): Flow<EstateSnapshot?>
     @Query("SELECT * FROM estate_snapshot WHERE slot = 1")
     suspend fun currentSnapshot(): EstateSnapshot?
+    @Query("SELECT * FROM estate_snapshot WHERE slot = 2")
+    suspend fun previousSnapshot(): EstateSnapshot?
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun putSnapshot(value: EstateSnapshot)
     @Insert(onConflict = OnConflictStrategy.REPLACE)

@@ -45,6 +45,16 @@ jobs:
           cp ios/Selendang3/ProductionData.swift ios/Selendang3/EstateReference.swift ios/Selendang3/EstateDashboardData.swift ios/Selendang3/EstateXlsx.swift "$workbook_checks_dir/Sources/WorkbookChecks/"
           cp ios/Tests/EstateXlsxChecks.swift "$workbook_checks_dir/Sources/WorkbookChecks/main.swift"
           swift run --package-path "$workbook_checks_dir" WorkbookChecks
+      - name: Check ZIP updates, backup and restore
+        run: |
+          zip_checks_dir="$RUNNER_TEMP/planters-zip-checks"
+          mkdir -p "$zip_checks_dir/Sources/WorkbookChecks"
+          cp ios/Tests/WorkbookChecks.Package.swift "$zip_checks_dir/Package.swift"
+          cp ios/Selendang3/ProductionData.swift ios/Selendang3/EstateReference.swift ios/Selendang3/EstateDashboardData.swift ios/Selendang3/EstateXlsx.swift ios/Selendang3/EstateZip.swift ios/Selendang3/EstateReferenceStore.swift "$zip_checks_dir/Sources/WorkbookChecks/"
+          cp ios/Tests/EstateZipChecks.swift "$zip_checks_dir/Sources/WorkbookChecks/main.swift"
+          swift run --package-path "$zip_checks_dir" WorkbookChecks
+      - name: Check offline compatibility packager
+        run: python3 -m unittest discover -s tools/tests -v
       - name: Build for iOS Simulator
         run: xcodebuild -project ios/Selendang3.xcodeproj -scheme Selendang3 -configuration Debug -sdk iphonesimulator -destination 'generic/platform=iOS Simulator' CODE_SIGNING_ALLOWED=NO build
 

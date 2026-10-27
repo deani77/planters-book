@@ -38,6 +38,7 @@ struct EstateReference: Decodable {
     let ffbRejectReport: EstateFfbRejectReport?
     static func parse(_ data: Data) throws -> EstateReference {
         guard data.count <= 2*1024*1024 else { throw ProductionError.invalid("Estate update exceeds 2 MB.") }
+        guard String(data: data, encoding: .utf8) != nil else { throw ProductionError.invalid("Estate JSON must be UTF-8.") }
         let result = try JSONDecoder().decode(EstateReference.self, from: data)
         let expected: Set<String> = ["overview","fields","ages","soil","rainfall","abw","roads"]
         guard result.schemaVersion == 1, !result.estateId.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty, result.estateId.count <= 100, result.revision > 0,
@@ -46,6 +47,13 @@ struct EstateReference: Decodable {
               result.sections.count == 7, Set(result.sections.map(\.id)) == expected,
               result.sections.reduce(0, { $0 + $1.rows.count }) <= 10000 else {
             throw ProductionError.invalid("Invalid estate update.")
+        }
+        let timestamp = ISO8601DateFormatter()
+        timestamp.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        let fractional = timestamp.date(from: result.exportedAt)
+        timestamp.formatOptions = [.withInternetDateTime]
+        guard fractional != nil || timestamp.date(from: result.exportedAt) != nil else {
+            throw ProductionError.invalid("Invalid exportedAt timestamp; include a timezone.")
         }
         for table in result.sections {
             guard (1...20).contains(table.columns.count), Set(table.columns).count == table.columns.count,

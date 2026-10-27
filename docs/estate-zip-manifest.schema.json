@@ -1,0 +1,136 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Planters Book estate ZIP manifest v1",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "format": {
+      "const": "planters-book-estate"
+    },
+    "version": {
+      "type": "integer",
+      "const": 1
+    },
+    "payload": {
+      "const": "estate.json"
+    },
+    "sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "estateId": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 100
+    },
+    "revision": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 9223372036854775807
+    },
+    "mode": {
+      "enum": [
+        "replace",
+        "merge"
+      ]
+    },
+    "baseRevision": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 9223372036854775807
+    },
+    "sections": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "enum": [
+          "overview",
+          "fields",
+          "ages",
+          "soil",
+          "rainfall",
+          "abw",
+          "roads"
+        ]
+      }
+    },
+    "reports": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "enum": [
+          "yph",
+          "cropProductionReport",
+          "cropProductionReportHistory",
+          "manuringReport",
+          "cropBudget",
+          "ffbRejectReport"
+        ]
+      }
+    }
+  },
+  "required": [
+    "format",
+    "version",
+    "payload",
+    "sha256",
+    "estateId",
+    "revision",
+    "mode"
+  ],
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "mode": {
+            "const": "merge"
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "baseRevision",
+          "sections",
+          "reports"
+        ],
+        "anyOf": [
+          {
+            "properties": {
+              "sections": {
+                "minItems": 1
+              }
+            }
+          },
+          {
+            "properties": {
+              "reports": {
+                "minItems": 1
+              }
+            }
+          }
+        ]
+      },
+      "else": {
+        "not": {
+          "anyOf": [
+            {
+              "required": [
+                "baseRevision"
+              ]
+            },
+            {
+              "required": [
+                "sections"
+              ]
+            },
+            {
+              "required": [
+                "reports"
+              ]
+            }
+          ]
+        }
+      }
+    }
+  ]
+}

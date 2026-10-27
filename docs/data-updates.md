@@ -1,5 +1,7 @@
 # Local estate data and Excel import
 
+Versioned ZIP import, selected-section merge, ZIP export/share and reviewed backup restore are documented in [Offline estate ZIP updates](estate-zip.md). JSON/XLSX retain full-replacement behavior. All imports must match the saved estate ID.
+
 Planters Book stores estate data on the device. Users can enter or prepare their own records and import a completed XLSX workbook or a JSON estate file. Importing works offline; no VPS account, server address, access token, or network connection is required.
 
 ## Workbook workflow
@@ -24,7 +26,7 @@ See the fictional example at ../sample-data/estate-update.example.json. Format v
 - Every section contains 1–20 unique column labels and rows of matching width. Cells are text, finite numbers, or null.
 - Optional report fields (yph, production reports/history, manuring report, and crop budget) remain supported.
 
-JSON imports are limited to 2 MB; the workbook reader caps expanded workbook content at 8 MB. Both formats are validated before preview. Invalid or older revisions leave the saved data unchanged. An import is a full replacement, not a merge. Confirm the figures and keep your own private backup before sharing or changing devices.
+JSON imports are limited to 2 MB; the workbook reader caps expanded workbook content at 8 MB. Both formats are validated before preview. Invalid or older revisions leave the saved data unchanged. JSON and XLSX imports are full replacements. Versioned ZIPs also support an explicitly selected section/report merge. Confirm the figures and keep your own private backup before sharing or changing devices.
 
 ## Data ownership
 
