@@ -190,4 +190,3 @@ fun EstateSectionData(section: Section, update: EstatePackage?) {
         }
     }
 }
-

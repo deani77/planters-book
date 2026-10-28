@@ -17,13 +17,18 @@ private fun sourceProfileTables(update: EstatePackage?, code: String): List<Esta
         val number = obj.opt(key) as? Number
         number != null && number.toDouble().isFinite() && number.toDouble() >= 0
     }
-    require(profile.getInt("reportYear") in 1..9999)
+    fun validYear(obj: JSONObject, key: String): Boolean {
+        val number = obj.opt(key) as? Number ?: return false
+        val value = number.toDouble()
+        return value.isFinite() && value in 1.0..9999.0 && value == kotlin.math.floor(value)
+    }
+    require(validYear(profile, "reportYear"))
     require(validNumbers(profile, listOf("plantedAreaHa", "unplantedAreaHa", "divisionStandsPerHa", "divisionPalmHeightM")))
     val sourceBlocks = profile.getJSONArray("blocks")
     val ids = (0 until sourceBlocks.length()).map { index ->
         val block = sourceBlocks.getJSONObject(index)
         require(validNumbers(block, listOf("plantedAreaHa", "unplantedAreaHa")))
-        require(block.getInt("harvestingYear") in 1..9999)
+        require(validYear(block, "harvestingYear"))
         block.getString("blockId").also { require(it.isNotBlank()) }
     }
     require(ids.distinct().size == ids.size)
