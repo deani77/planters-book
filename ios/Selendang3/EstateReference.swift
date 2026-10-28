@@ -30,6 +30,7 @@ struct EstateReference: Decodable {
     let reportingPeriod: String
     let exportedAt: String
     let sections: [EstateReferenceTable]
+    let fieldProfiles: [EstateSourceFieldProfile]?
     let yph: EstateYph?
     let cropProductionReport: EstateCropReport?
     let cropProductionReportHistory: [EstateCropReport]?
@@ -108,4 +109,40 @@ struct EstateFfbRejectTotals: Decodable {
     let rejectMtdPercent: Double?
     let rejectYtdMt: Double?
     let rejectYtdPercent: Double?
+}
+
+struct EstateSourceFieldProfile: Decodable {
+    let fieldCode: String
+    let reportYear: Int
+    let plantedAreaHa: Double
+    let unplantedAreaHa: Double
+    let divisionStandsPerHa: Double
+    let divisionPalmHeightM: Double
+    let maturity: String
+    let blocks: [EstateSourceBlock]
+}
+struct EstateSourceBlock: Decodable {
+    let blockId: String
+    let blockName: String
+    let plantedAreaHa: Double
+    let unplantedAreaHa: Double
+    let soilCode: String?
+    let harvestingYear: Int
+    let sourceNote: String?
+}
+
+
+extension EstateReference {
+    func sourceFieldProfile(_ code: String) -> EstateSourceFieldProfile? {
+        let matches = (fieldProfiles ?? []).filter { $0.fieldCode == code }
+        guard matches.count == 1, let profile = matches.first,
+              (1...9999).contains(profile.reportYear),
+              [profile.plantedAreaHa, profile.unplantedAreaHa, profile.divisionStandsPerHa, profile.divisionPalmHeightM].allSatisfy({ $0.isFinite && $0 >= 0 }),
+              Set(profile.blocks.map(\.blockId)).count == profile.blocks.count,
+              profile.blocks.allSatisfy({ !$0.blockId.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty &&
+                  (1...9999).contains($0.harvestingYear) &&
+                  [$0.plantedAreaHa, $0.unplantedAreaHa].allSatisfy({ $0.isFinite && $0 >= 0 }) })
+        else { return nil }
+        return profile
+    }
 }

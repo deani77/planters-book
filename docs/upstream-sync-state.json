@@ -21,7 +21,8 @@
     "ffb-reject-report": "9a7f99ef17cd94c28dea8526ff5e2cb640387c35",
     "reject-tonnes": "041da92a801d71c256f7a1bfe365459d65e6994d",
     "data/sample-reject-2026-10-25": "c835fc63a6353fd3b6c2322e6e2cb7bf49c4b2bc",
-    "portrait-only": "0a1eef687a113acc45e35f04a8f255adfbde83b6"
+    "portrait-only": "0a1eef687a113acc45e35f04a8f255adfbde83b6",
+    "field-source-profiles": "3dbd0e6f50ef4333dd1e41df10edb0effb775891"
   },
   "already_ported": [
     {
@@ -69,6 +70,12 @@
       "source_pr": 16,
       "source_commit": "0a1eef687a113acc45e35f04a8f255adfbde83b6",
       "adaptation": "Portrait declarations retained on Android and iOS, preserving local FileProvider and Planters Book identity. No server or workflow changes."
+    },
+    {
+      "source_branch": "field-source-profiles",
+      "source_pr": 19,
+      "source_commit": "3dbd0e6f50ef4333dd1e41df10edb0effb775891",
+      "adaptation": "Read-only profiles from local JSON/XLSX with preview. No fixed estate date/year or VPS preparation/deployment scripts. Original data holders retained; see docs/field-source-profile.md for pending ZIP PR7 integration."
     }
   ],
   "excluded_source_changes": [

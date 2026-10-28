@@ -13,7 +13,7 @@ import java.util.zip.ZipOutputStream
 object EstateXlsx {
     private const val MAX_EXPANDED = 8 * 1024 * 1024
     private val sections = listOf("overview", "fields", "ages", "soil", "rainfall", "abw", "roads")
-    private val optional = setOf("yph", "cropProductionReport", "cropProductionReportHistory", "manuringReport", "cropBudget", "ffbRejectReport")
+    private val optional = setOf("yph", "cropProductionReport", "cropProductionReportHistory", "manuringReport", "cropBudget", "ffbRejectReport", "fieldProfiles")
 
     /** Detect by content because document providers may return a generic MIME type. */
     fun readEstate(input: InputStream): String {
@@ -111,7 +111,7 @@ object EstateXlsx {
                     val wrapped = JSONArray("[" + json + "]")
                     require(wrapped.length() == 1) { "Enter one JSON value per optional report." }
                     val value = wrapped.get(0)
-                    require(if (key == "cropProductionReportHistory") value is JSONArray else value is JSONObject) { "Invalid optional report shape." }
+                    require(if ((key == "cropProductionReportHistory" || key == "fieldProfiles")) value is JSONArray else value is JSONObject) { "Invalid optional report shape." }
                     root.put(key, value)
                 }
             }
@@ -138,7 +138,7 @@ object EstateXlsx {
             listOf("exportedAt", java.time.Instant.now().toString()))
         sections.forEach { sheets += listOf(listOf("Value")) }
         sheets += listOf(listOf("key", "json"), listOf("yph", ""), listOf("cropProductionReport", ""),
-            listOf("cropProductionReportHistory", ""), listOf("manuringReport", ""), listOf("cropBudget", ""), listOf("ffbRejectReport", ""))
+            listOf("cropProductionReportHistory", ""), listOf("manuringReport", ""), listOf("cropBudget", ""), listOf("ffbRejectReport", ""), listOf("fieldProfiles", ""))
         val names = listOf("Metadata") + sections.map { it.replaceFirstChar { first -> first.uppercase() } } + "Optional JSON"
         ZipOutputStream(output).use { zip ->
             fun add(path: String, text: String) {

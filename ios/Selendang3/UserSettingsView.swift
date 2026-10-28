@@ -107,7 +107,7 @@ struct UserSettingsView: View {
     private var optionalReportPreviews: [EstateReportPreview] {
         guard let data = pendingEstateData,
               let root = (try? JSONSerialization.jsonObject(with: data)) as? [String: Any] else { return [] }
-        return ["yph", "cropProductionReport", "cropProductionReportHistory", "manuringReport", "cropBudget", "ffbRejectReport"].compactMap { key in
+        return ["yph", "cropProductionReport", "cropProductionReportHistory", "manuringReport", "cropBudget", "ffbRejectReport", "fieldProfiles"].compactMap { key in
             guard let value = root[key], !(value is NSNull),
                   let bytes = try? JSONSerialization.data(withJSONObject: value, options: [.prettyPrinted, .sortedKeys]),
                   let text = String(data: bytes, encoding: .utf8) else { return nil }

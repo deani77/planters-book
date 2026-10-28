@@ -1,5 +1,44 @@
 package com.selendang3.app.data
 
+import org.json.JSONObject
+
+// Display-only source facts; they do not replace operational areas or infer palm counts.
+fun sourceFieldProfileTables(update: EstatePackage?, code: String): List<EstateTable> {
+    if (code !in estateFieldCodes(update)) return emptyList()
+    return runCatching { sourceProfileTables(update, code) }.getOrDefault(emptyList())
+}
+
+private fun sourceProfileTables(update: EstatePackage?, code: String): List<EstateTable> {
+    val profiles = update?.let { JSONObject(it.json).optJSONArray("fieldProfiles") } ?: return emptyList()
+    val matches = (0 until profiles.length()).map { profiles.getJSONObject(it) }.filter { it.optString("fieldCode") == code }
+    val profile = matches.singleOrNull() ?: return emptyList()
+    fun value(obj: JSONObject, key: String): String? = if (obj.isNull(key)) null else obj.get(key).toString()
+    fun validNumbers(obj: JSONObject, keys: List<String>) = keys.all { key ->
+        val number = obj.opt(key) as? Number
+        number != null && number.toDouble().isFinite() && number.toDouble() >= 0
+    }
+    require(profile.getInt("reportYear") in 1..9999)
+    require(validNumbers(profile, listOf("plantedAreaHa", "unplantedAreaHa", "divisionStandsPerHa", "divisionPalmHeightM")))
+    val sourceBlocks = profile.getJSONArray("blocks")
+    val ids = (0 until sourceBlocks.length()).map { index ->
+        val block = sourceBlocks.getJSONObject(index)
+        require(validNumbers(block, listOf("plantedAreaHa", "unplantedAreaHa")))
+        require(block.getInt("harvestingYear") in 1..9999)
+        block.getString("blockId").also { require(it.isNotBlank()) }
+    }
+    require(ids.distinct().size == ids.size)
+    val summary = EstateTable("Source profile · ${profile.getInt("reportYear")}",
+        listOf("Planted area (ha)", "Unplanted area (ha)", "Division stands/ha", "Division palm height (m)", "Maturity"),
+        listOf(listOf("plantedAreaHa", "unplantedAreaHa", "divisionStandsPerHa", "divisionPalmHeightM", "maturity").map { value(profile, it) }))
+    val blocks = profile.getJSONArray("blocks")
+    return listOf(summary) + (0 until blocks.length()).map { index ->
+        val block = blocks.getJSONObject(index)
+        EstateTable("Block ${block.getString("blockName")}",
+            listOf("Block identifier", "Planted area (ha)", "Unplanted area (ha)", "Soil code", "Harvesting year", "Source note"),
+            listOf(listOf("blockId", "plantedAreaHa", "unplantedAreaHa", "soilCode", "harvestingYear", "sourceNote").map { value(block, it) }))
+    }
+}
+
 fun estateFieldCodes(update: EstatePackage?): List<String> {
     val table = update?.tables?.firstOrNull { it.id == "fields" } ?: return emptyList()
     val column = table.columns.indexOf("Field code")

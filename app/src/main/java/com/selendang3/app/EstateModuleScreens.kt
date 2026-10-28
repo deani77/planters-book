@@ -39,7 +39,10 @@ fun FieldDetailsScreen(update: EstatePackage?) {
         } else {
             TextButton(onClick = { selected = null }) { Text("‹ All Fields") }
             Text(field, style = MaterialTheme.typography.titleLarge)
-            estateFieldTables(update, field).forEach { table ->
+            if (sourceFieldProfileTables(update, field).isNotEmpty()) {
+                Text("Imported profile: report year is shown below. Density and height apply to the division; source date is unconfirmed.", style = MaterialTheme.typography.bodySmall)
+            }
+            (sourceFieldProfileTables(update, field) + estateFieldTables(update, field)).forEach { table ->
                 Text(estateSections.firstOrNull { it.route == table.id }?.title ?: table.id,
                     style = MaterialTheme.typography.titleMedium)
                 table.rows.forEach { row ->
