@@ -9,6 +9,15 @@ import org.junit.Assert.*
 import org.junit.Test
 
 class EstateXlsxTest {
+    @Test fun fieldProfilesArraySurvivesWorkbookImport() {
+        val files = template()
+        val profiles = """[{"fieldCode":"EXAMPLE","reportYear":2027,"plantedAreaHa":1,"unplantedAreaHa":0,"divisionStandsPerHa":120,"divisionPalmHeightM":0,"maturity":"Example","blocks":[]}]"""
+        files["xl/worksheets/sheet9.xml"] = sheet(listOf(listOf("key", "json"), listOf("fieldProfiles", profiles)))
+        val saved = JSONObject(parsed(files).json).getJSONArray("fieldProfiles").getJSONObject(0)
+        assertEquals("EXAMPLE", saved.getString("fieldCode"))
+        assertEquals(0, saved.getInt("divisionPalmHeightM"))
+    }
+
     private fun template(): MutableMap<String, ByteArray> {
         val out = ByteArrayOutputStream()
         EstateXlsx.writeTemplate(out)
