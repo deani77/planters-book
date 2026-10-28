@@ -21,7 +21,9 @@
     "ffb-reject-report": "9a7f99ef17cd94c28dea8526ff5e2cb640387c35",
     "reject-tonnes": "041da92a801d71c256f7a1bfe365459d65e6994d",
     "data/sample-reject-2026-10-25": "c835fc63a6353fd3b6c2322e6e2cb7bf49c4b2bc",
-    "portrait-only": "0a1eef687a113acc45e35f04a8f255adfbde83b6"
+    "portrait-only": "0a1eef687a113acc45e35f04a8f255adfbde83b6",
+    "upkeep-work-field-tabs": "fb8e33ab5442fd4fa1fca7ff72d5027d57fe8045",
+    "synced-estate-name": "df68eac132fafd47a6ac77d0f296583a0d031e62"
   },
   "already_ported": [
     {
@@ -69,6 +71,12 @@
       "source_pr": 16,
       "source_commit": "0a1eef687a113acc45e35f04a8f255adfbde83b6",
       "adaptation": "Portrait declarations retained on Android and iOS, preserving local FileProvider and Planters Book identity. No server or workflow changes."
+    },
+    {
+      "source_branch": "upkeep-work-field-tabs",
+      "source_pr": 18,
+      "source_commit": "fb8e33ab5442fd4fa1fca7ff72d5027d57fe8045",
+      "adaptation": "Organize upkeep into six estate-level work categories on Android and iOS. Field pills and profile reuse are excluded because Planters Book records weeding/manuring and other upkeep as estate totals unless verified field-level activity inputs are defined."
     }
   ],
   "excluded_source_changes": [
@@ -79,6 +87,19 @@
         "sample-data/reject/2026-10-25-reject-by-pkt.csv"
       ],
       "reason": "Dated operational sample may contain private estate data. Inspected commit/tree metadata only; no file values retrieved or copied. Users supply their own local data."
+    },
+    {
+      "source_branch": "synced-estate-name",
+      "source_commit": "df68eac132fafd47a6ac77d0f296583a0d031e62",
+      "paths": [
+        "app/src/main/java/com/selendang3/app/EstateDashboard.kt",
+        "app/src/main/java/com/selendang3/app/MainActivity.kt",
+        "app/src/main/java/com/selendang3/app/data/EstatePackage.kt",
+        "ios/Selendang3/EstateDashboardView.swift",
+        "ios/Selendang3/EstateReference.swift",
+        "ios/Selendang3/HomeView.swift"
+      ],
+      "reason": "Target PR #3 was deliberately closed at the user's request on 2026-10-26. Planters Book retains its existing user-entered estate-name behavior. Do not replay without a new source change or explicit instruction."
     }
   ],
   "main_delta_coverage": {
