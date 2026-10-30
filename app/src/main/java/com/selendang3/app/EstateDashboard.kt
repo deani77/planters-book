@@ -267,8 +267,12 @@ private fun ProductionPanels(ffbCost: FfbCostComparison?, quality: FfbQuality) {
         Text(quality.note, Modifier.padding(12.dp), style = MaterialTheme.typography.bodySmall)
     }
     DashboardPanel("OER (%)") {
-        DashboardTable(listOf("Period", "Actual (%)", "Budget (%)"), listOf(listOf("YTD", Pending, Pending)), minimumWidth = 320)
-        Text("Awaiting approved OER records.", Modifier.padding(12.dp), style = MaterialTheme.typography.bodySmall)
+        DashboardTable(listOf("Period", "KPG (%)", "KPA (%)"), listOf(listOf("YTD", Pending, Pending)), minimumWidth = 320)
+        Text("KPG = actual OER; KPA = budget OER. Awaiting approved OER records.", Modifier.padding(12.dp), style = MaterialTheme.typography.bodySmall)
+    }
+    DashboardPanel("Oil Yield (t/ha)") {
+        DashboardTable(listOf("Period", "Actual (t/ha)", "Budget (t/ha)"), listOf(listOf("YTD", Pending, Pending)), minimumWidth = 320)
+        Text("Oil tonnes per hectare. Awaiting approved oil yield records.", Modifier.padding(12.dp), style = MaterialTheme.typography.bodySmall)
     }
 
 }

@@ -12,7 +12,7 @@
     "ios-home-summary-parity": "ea2354313237409ec5c4c03b56f2639a3e72608d",
     "ios-report-dashboard": "a3ccbbf9ed240bf7e435f4ba66a67961f42cbb04",
     "ios-swiftui-starter": "59021f9dbc8ec097a387277815ff220a2bf999ed",
-    "main": "91f577137dd28520176d608dfc9f87d396603305",
+    "main": "683d4b0519ca157fc6490f40c03f24e169b714d0",
     "production-two-way-sync": "c27dfcce82b1f0073ddd427710cb22244ebdac08",
     "s3-oil-palm-app-icon": "c58dc03d5dbe8ffde77bd84daa2837ba7c1150d2",
     "ffb-quality-categories": "8c957ff75ba62acac6974a050187324dd44d0dcb",
@@ -23,7 +23,14 @@
     "data/sample-reject-2026-10-25": "c835fc63a6353fd3b6c2322e6e2cb7bf49c4b2bc",
     "portrait-only": "0a1eef687a113acc45e35f04a8f255adfbde83b6",
     "upkeep-work-field-tabs": "fb8e33ab5442fd4fa1fca7ff72d5027d57fe8045",
-    "synced-estate-name": "df68eac132fafd47a6ac77d0f296583a0d031e62"
+    "synced-estate-name": "df68eac132fafd47a6ac77d0f296583a0d031e62",
+    "field-source-profiles": "2e0f43c729f45fea4d56226aebbf9f6204cd0d49",
+    "crop-last-year-achievement": "5701213cd114bce37f902a93859d589d37c8a463",
+    "feature/crop-history-field-tabs": "a45c3188b0df09c2dca355d04efefc66a416095e",
+    "fix/field-same-period-only": "2c2dc254947c2a8d5270a84f91303951fb8b5ac0",
+    "simplify-upkeep-categories": "65e16505409e4e874d0859ec97669397d7f6f3c1",
+    "estate-oer-oil-yield": "b7a72b97be96bb409defc27d90b7ef9007b5f98a",
+    "remove-dashboard-crop-history": "ba602100eba0087036776bba9908331cbd04a260"
   },
   "already_ported": [
     {
@@ -77,6 +84,12 @@
       "source_pr": 18,
       "source_commit": "fb8e33ab5442fd4fa1fca7ff72d5027d57fe8045",
       "adaptation": "Organize upkeep into six estate-level work categories on Android and iOS. Field pills and profile reuse are excluded because Planters Book records weeding/manuring and other upkeep as estate totals unless verified field-level activity inputs are defined."
+    },
+    {
+      "source_branch": "field-source-profiles",
+      "source_pr": 19,
+      "source_commit": "3dbd0e6f50ef4333dd1e41df10edb0effb775891",
+      "adaptation": "Read-only profiles from local JSON/XLSX with preview. No fixed estate date/year or VPS preparation/deployment scripts. Original data holders retained; see docs/field-source-profile.md for pending ZIP PR7 integration."
     }
   ],
   "excluded_source_changes": [
@@ -130,5 +143,44 @@
       }
     ],
     "note": "PR #4 merged; PR #5 reviewed and approved for merge by the user on 2026-10-27."
+  },
+  "offline_sync_2026_10_31": {
+    "status": "staged in combined draft",
+    "target_base": "57f5fe8248ef621eb020e16cdddb6f9b4874278a",
+    "integrated_target_prs": {
+      "7": "396e81e72b2e9883b4c76a28090718eaff32cc6e",
+      "8": "798131c092ebb7dc5e6226c27e5f9eb2b94dc944"
+    },
+    "source_prs": [
+      19,
+      20,
+      21,
+      22,
+      23,
+      24,
+      25
+    ],
+    "source_heads": {
+      "field-source-profiles": "2e0f43c729f45fea4d56226aebbf9f6204cd0d49",
+      "crop-last-year-achievement": "5701213cd114bce37f902a93859d589d37c8a463",
+      "feature/crop-history-field-tabs": "a45c3188b0df09c2dca355d04efefc66a416095e",
+      "fix/field-same-period-only": "2c2dc254947c2a8d5270a84f91303951fb8b5ac0",
+      "simplify-upkeep-categories": "65e16505409e4e874d0859ec97669397d7f6f3c1",
+      "estate-oer-oil-yield": "b7a72b97be96bb409defc27d90b7ef9007b5f98a",
+      "remove-dashboard-crop-history": "ba602100eba0087036776bba9908331cbd04a260",
+      "main": "683d4b0519ca157fc6490f40c03f24e169b714d0"
+    },
+    "adaptations": [
+      "Local ZIP/JSON/XLSX import, preview, export and backup restore; profiles/history supported in scoped merges.",
+      "Dynamic field codes, no bundled estate records or source-specific dates.",
+      "PR25 final placement: crop history only in Crop Production; no Estate Dashboard shortcut added.",
+      "Estate-level upkeep retained with three dashboard items and six Major Upkeep Work categories.",
+      "KPG/KPA and Oil Yield labels remain Pending until approved records exist."
+    ],
+    "excluded": [
+      "VPS/server endpoints, authentication, network clients, background sync and deployment workflows.",
+      "Private crop-history preparation/publication scripts, source records and sample operational data.",
+      "Previously declined imported estate-name fallback."
+    ]
   }
 }

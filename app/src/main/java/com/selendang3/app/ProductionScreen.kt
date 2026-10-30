@@ -33,6 +33,7 @@ fun ProductionScreen() {
             Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 Text("Crop Production Dashboard", style = MaterialTheme.typography.titleLarge)
                 CropProductionDashboardTable(cropProductionTable(update, today))
+                CropHistoryPanel(update)
             }
         }
         Text("Field Crop Records", style = MaterialTheme.typography.titleMedium)

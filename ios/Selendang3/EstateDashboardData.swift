@@ -398,8 +398,10 @@ struct EstateDashboardData {
     var panels: [EstateDashboardPanel] {
         [ages,land("Terrain",title:"Topography"),yph,sph,land("Soil series",title:"Soil Type"),rainfall,workforce,ratios,costs,
          ffbQuality,
-         EstateDashboardPanel(title:"OER (%)",headers:["Period","Actual (%)","Budget (%)"],rows:[["YTD","Pending","Pending"]],
-             note:"Awaiting approved OER records.",unit:"%")]
+         EstateDashboardPanel(title:"OER (%)",headers:["Period","KPG (%)","KPA (%)"],rows:[["YTD","Pending","Pending"]],
+             note:"KPG = actual OER; KPA = budget OER. Awaiting approved OER records.",unit:"%"),
+         EstateDashboardPanel(title:"Oil Yield (t/ha)",headers:["Period","Actual (t/ha)","Budget (t/ha)"],rows:[["YTD","Pending","Pending"]],
+             note:"Oil tonnes per hectare. Awaiting approved oil yield records.",unit:"t/ha")]
 
     }
 }

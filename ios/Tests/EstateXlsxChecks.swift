@@ -90,3 +90,17 @@ precondition(retained["reviewNotes"] as? String == "Fictional fixture")
 let reloaded = try EstateXlsx.readEstate(rejectBytes)
 precondition(reloaded == rejectBytes)
 print("XLSX round-trip, worksheet mapping, zero/null preservation, local reject report and rejected-input checks passed")
+
+files = base
+let profilesJSON = #"[{"fieldCode":"EXAMPLE","reportYear":2027,"plantedAreaHa":1,"unplantedAreaHa":0,"divisionStandsPerHa":120,"divisionPalmHeightM":0,"maturity":"Example","blocks":[]}]"#
+files["xl/worksheets/sheet9.xml"] = sheet([["key", "json"], ["fieldProfiles", profilesJSON]])
+let profileWorkbook = try parsed(files)
+precondition(profileWorkbook.sourceFieldProfile("EXAMPLE")?.divisionPalmHeightM == 0)
+print("Workbook field profile array and source zero checks passed")
+
+let historyJSON = #"{"cutoff":"2026-09-30","fields":[{"fieldCode":"EXAMPLE","annual":{"2025":12},"productionYear":2026,"productionTonnes":0,"plantedAreaHa":10,"areaSource":"Fictional"}]}"#
+files["xl/worksheets/sheet9.xml"] = sheet([["key", "json"], ["cropHistory", historyJSON]])
+let historyWorkbook = try parsed(files)
+precondition(historyWorkbook.cropHistory!.fields.first!.yield(year: 2026) == 0)
+precondition(historyWorkbook.cropHistory!.fields.first!.yield(year: 2025) == 12)
+print("Local workbook crop history preserves measured zero and annual yield")
