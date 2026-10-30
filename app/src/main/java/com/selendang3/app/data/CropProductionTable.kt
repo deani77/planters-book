@@ -88,6 +88,27 @@ private fun fieldAbwSummary(update: EstatePackage?, today: LocalDate, code: Stri
     return FieldCropSummaryGroup("Average Bunch Weight", values,
         "Cumulative/YTD source averages. Reporting cutoff unconfirmed; these figures may cover a different period from the crop report.")
 }
+private fun previousYearCropRows(update: EstatePackage?, reportDate: String?, code: String): List<FieldCropSummaryRow> {
+    val current = reportDate?.let(LocalDate::parse)
+    val cutoff = current?.minusYears(1)?.withDayOfMonth(1)?.minusDays(1)
+    val history = update?.let { JSONObject(it.json).optJSONArray("cropProductionReportHistory") }
+    fun yieldAt(date: LocalDate?): String {
+        if (date == null) return "Pending"
+        val reports = (0 until (history?.length() ?: 0)).mapNotNull { history?.optJSONObject(it) }
+            .filter { it.optString("reportDate") == date.toString() }
+        val fields = reports.singleOrNull()?.optJSONArray("fields")
+        val matches = (0 until (fields?.length() ?: 0)).mapNotNull { fields?.optJSONObject(it) }
+            .filter { it.optString("field") == code }
+        val source = matches.singleOrNull() ?: return "Pending"
+        fun number(key: String) = (source.opt(key) as? Number)?.toDouble()?.takeIf { it.isFinite() && it >= 0 }
+        val tonnes = number("sentToMillYtdMt") ?: return "Pending"
+        val area = number("areaHa")?.takeIf { it > 0 } ?: return "Pending"
+        return (tonnes / area).takeIf { it.isFinite() }?.let { String.format(Locale.US, "%.2f", it) } ?: "Pending"
+    }
+    return listOf(
+        FieldCropSummaryRow("Last Year Same-Period YTD${cutoff?.let { " · through $it" }.orEmpty()} (mt/ha)", yieldAt(cutoff)))
+}
+
 fun fieldCropSummary(update: EstatePackage?, today: LocalDate, code: String): FieldCropSummary? {
     val table = cropProductionTable(update, today)
     val field = table.rows.firstOrNull { it.field == code } ?: return null
@@ -109,7 +130,8 @@ fun fieldCropSummary(update: EstatePackage?, today: LocalDate, code: String): Fi
         FieldCropSummaryGroup("Field Profile", listOf(FieldCropSummaryRow("Field Code", code), FieldCropSummaryRow("Hectare (ha)", field.area))),
         FieldCropSummaryGroup("Crop Budget and Actual", listOf(
             FieldCropSummaryRow("Budget This Month (mt)", field.values[0]), FieldCropSummaryRow("Budget YTD (mt)", field.values[1]),
-            FieldCropSummaryRow("Year Budget (mt)", field.values[2]), FieldCropSummaryRow("Actual MTD (mt)", field.values[6]), FieldCropSummaryRow("Actual YTD (mt)", field.values[7]))),
+            FieldCropSummaryRow("Year Budget (mt)", field.values[2]), FieldCropSummaryRow("Actual MTD (mt)", field.values[6]), FieldCropSummaryRow("Actual YTD (mt)", field.values[7])) + previousYearCropRows(update, table.reportDate, code),
+            "Last-year yield uses each field’s historical sent-to-mill tonnes and hectares. Same-period YTD runs through the last completed month, one year earlier. Missing or ambiguous records remain Pending."),
         fieldAbwSummary(update, today, code),
         FieldCropSummaryGroup("Harvesting", listOf(FieldCropSummaryRow("Required Harvesters (people)", crew), FieldCropSummaryRow("Harvesting Rounds This Month (rounds)", label("roundsMtd")))),
         FieldCropSummaryGroup("Harvester Productivity", listOf(FieldCropSummaryRow("Tonnes per mandays (mt/manday)", label("mtPerHarvesterDayMtd")), FieldCropSummaryRow("Hectare per mandays (ha/manday)", label("haPerHarvesterDayMtd"))))

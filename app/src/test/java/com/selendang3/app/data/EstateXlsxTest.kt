@@ -9,6 +9,23 @@ import org.junit.Assert.*
 import org.junit.Test
 
 class EstateXlsxTest {
+    @Test fun cropHistoryObjectSurvivesWorkbookImport() {
+        val files = template()
+        val history = """{"cutoff":"2026-09-30","fields":[{"fieldCode":"EXAMPLE","annual":{"2025":12},"productionYear":2026,"productionTonnes":0,"plantedAreaHa":10,"areaSource":"Fictional"}]}"""
+        files["xl/worksheets/sheet9.xml"] = sheet(listOf(listOf("key", "json"), listOf("cropHistory", history)))
+        val fields = cropHistoryFields(parsed(files))
+        assertEquals(0.0, fields.single().yield(2026)!!, 0.0)
+        assertEquals(12.0, fields.single().yield(2025)!!, 0.0)
+    }
+    @Test fun fieldProfilesArraySurvivesWorkbookImport() {
+        val files = template()
+        val profiles = """[{"fieldCode":"EXAMPLE","reportYear":2027,"plantedAreaHa":1,"unplantedAreaHa":0,"divisionStandsPerHa":120,"divisionPalmHeightM":0,"maturity":"Example","blocks":[]}]"""
+        files["xl/worksheets/sheet9.xml"] = sheet(listOf(listOf("key", "json"), listOf("fieldProfiles", profiles)))
+        val saved = JSONObject(parsed(files).json).getJSONArray("fieldProfiles").getJSONObject(0)
+        assertEquals("EXAMPLE", saved.getString("fieldCode"))
+        assertEquals(0, saved.getInt("divisionPalmHeightM"))
+    }
+
     private fun template(): MutableMap<String, ByteArray> {
         val out = ByteArrayOutputStream()
         EstateXlsx.writeTemplate(out)

@@ -14,6 +14,7 @@ struct ProductionView: View {
                         CropProductionTableView(data: CropProductionTableData(reference: estate.reference, today: context.date))
                     }.padding(.top, 8)
                 }
+                CropHistoryView(history: estate.reference?.cropHistory, codes: estateFieldCodes(estate.reference))
                 Text("Field Crop Records").font(.headline)
                 Text("Select a field to view its report. Import records in Settings → Estate Data Management.")
                     .font(.footnote).foregroundStyle(.secondary)

@@ -139,6 +139,23 @@ extension CropProductionTableData {
         return FieldCropSummaryGroup(title: "Average Bunch Weight", rows: values,
             note: "Cumulative/YTD source averages. Reporting cutoff unconfirmed; these figures may cover a different period from the crop report.")
     }
+    private func previousYearCropRows(code: String) -> [FieldCropSummaryRow] {
+        let previousYear = reportDate.flatMap { calendar.date(byAdding: .year, value: -1, to: $0) }
+        let cutoff = previousYear.flatMap { calendar.dateInterval(of: .month, for: $0)?.start }
+            .flatMap { calendar.date(byAdding: .day, value: -1, to: $0) }
+        let format = DateFormatter(); format.locale = Locale(identifier: "en_US_POSIX")
+        format.calendar = calendar; format.timeZone = calendar.timeZone; format.dateFormat = "yyyy-MM-dd"
+        func yieldAt(_ date: Date?) -> String {
+            guard let date = date else { return "Pending" }
+            let reports = (reference?.cropProductionReportHistory ?? []).filter { $0.reportDate == format.string(from: date) }
+            guard reports.count == 1 else { return "Pending" }
+            let fields = (reports[0].fields ?? []).filter { $0.field == code }
+            guard fields.count == 1 else { return "Pending" }
+            return EstateDashboardData.number(divide(fields[0].sentToMillYtdMt, fields[0].areaHa))
+        }
+        return [
+            FieldCropSummaryRow(label: "Last Year Same-Period YTD" + (cutoff.map { " · through " + format.string(from: $0) } ?? "") + " (mt/ha)", value: yieldAt(cutoff))]
+    }
     func fieldSummary(code: String) -> FieldCropSummary? {
         guard let field = sourceFields.first(where: { $0.0 == code }) else { return nil }
         let values = row(code, area: field.1, target: targets(code), actual: actual(code))
@@ -157,7 +174,8 @@ extension CropProductionTableData {
                 FieldCropSummaryRow(label: "Budget YTD (mt)", value: values.values[1]),
                 FieldCropSummaryRow(label: "Year Budget (mt)", value: values.values[2]),
                 FieldCropSummaryRow(label: "Actual MTD (mt)", value: values.values[6]),
-                FieldCropSummaryRow(label: "Actual YTD (mt)", value: values.values[7])]),
+                FieldCropSummaryRow(label: "Actual YTD (mt)", value: values.values[7])] + previousYearCropRows(code: code),
+                note: "Last-year yield uses each field’s historical sent-to-mill tonnes and hectares. Same-period YTD runs through the last completed month, one year earlier. Missing or ambiguous records remain Pending."),
             abwSummary(code: code),
             FieldCropSummaryGroup(title: "Harvesting", rows: [
                 FieldCropSummaryRow(label: "Required Harvesters (people)", value: crew),

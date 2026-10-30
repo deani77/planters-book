@@ -10,13 +10,14 @@ Estate information and production drafts are stored locally. Users supply estate
 
 ## Current implementation
 
-- Android and iOS support local JSON estate imports with validation and a replacement preview.
+- Android and iOS support offline ZIP, JSON and XLSX estate imports with validation, preview, a previous-snapshot backup and reviewed restore.
+- Versioned ZIPs support full replacement or an exact-base merge of selected sections/reports, plus local export and system sharing.
 - Android and iOS can create a blank XLSX template and import a filled workbook.
 - Workbook sheets cover the existing seven estate reference tables and supported optional YPH, production, manuring, and budget report data.
 - The previous estate snapshot is retained on-device when a new import is confirmed.
 - Existing local production draft storage and data fields are preserved.
 
-Workbook details and limits are in docs/data-updates.md. The sample JSON format remains available at sample-data/estate-update.example.json.
+ZIP format, backup scope and Selendang-3 export compatibility are in [docs/estate-zip.md](docs/estate-zip.md). Workbook details and limits are in docs/data-updates.md. The sample JSON format remains available at sample-data/estate-update.example.json.
 
 ## Planned Data Input work
 
