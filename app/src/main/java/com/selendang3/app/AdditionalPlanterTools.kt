@@ -60,9 +60,7 @@ internal fun WorkCostCalculator() {
     var quantity by rememberSaveable { mutableStateOf("") }
     var basis by rememberSaveable { mutableStateOf(WorkCostBasis.HECTARES) }
     Text("Work Costing", style = MaterialTheme.typography.titleLarge)
-    Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-        WorkCostBasis.entries.forEach { value -> FilterChip(selected = basis == value, onClick = { basis = value; quantity = "" }, label = { Text(value.label) }) }
-    }
+    EstatePillSelector(WorkCostBasis.entries, basis, { basis = it; quantity = "" }) { it.label }
     NumberInput(basis.quantityLabel, quantity) { quantity = it }
     NumberInput("Labour cost (RM)", labour) { labour = it }
     NumberInput("Material cost (RM)", material) { material = it }
@@ -87,10 +85,7 @@ internal fun PlantationUnitConverter() {
     var from by rememberSaveable { mutableStateOf(PlantationUnit.HECTARES) }
     var to by rememberSaveable { mutableStateOf(PlantationUnit.ACRES) }
     Text("Unit Conversion", style = MaterialTheme.typography.titleLarge)
-    Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-        ConversionGroup.entries.forEach { value -> FilterChip(selected = group == value,
-            onClick = { group = value; from = value.units[0]; to = value.units[1] }, label = { Text(value.label) }) }
-    }
+    EstatePillSelector(ConversionGroup.entries, group, { group = it; from = it.units[0]; to = it.units[1] }) { it.label }
     UnitSelector("From", from, group.units) { from = it }
     UnitSelector("To", to, group.units) { to = it }
     NumberInput("Value (${from.symbol})", text) { text = it }
