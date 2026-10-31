@@ -27,7 +27,7 @@ fun UserSettingsScreen(themeChoice: String, onThemeChange: (String) -> Unit) {
             when (page) {
                 "Settings" -> {
                     listOf("Inbox", "User Profile", "Appearance", "Suggestions", "About").forEach { item ->
-                        OutlinedButton(onClick = { page = item }, modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp)) {
+                        OutlinedButton(onClick = { page = item }, modifier = Modifier.fillMaxWidth().heightIn(min = EstateControlHeight)) {
                             Text(item)
                         }
                     }
@@ -60,7 +60,7 @@ fun UserSettingsScreen(themeChoice: String, onThemeChange: (String) -> Unit) {
                 "Appearance" -> {
                     Text("Choose how the app looks. Your choice applies immediately.")
                     listOf("light" to "Light", "dark" to "Dark", "system" to "Follow System").forEach { (value, label) ->
-                        OutlinedButton(onClick = { onThemeChange(value) }, modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp)) {
+                        OutlinedButton(onClick = { onThemeChange(value) }, modifier = Modifier.fillMaxWidth().heightIn(min = EstateControlHeight)) {
                             Text(if (themeChoice == value) "✓ $label" else label)
                         }
                     }

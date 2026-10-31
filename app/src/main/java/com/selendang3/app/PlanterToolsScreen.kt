@@ -17,12 +17,12 @@ fun PlanterToolsScreen() {
     var tool by rememberSaveable { mutableStateOf("") }
     Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).imePadding(), verticalArrangement = Arrangement.spacedBy(14.dp)) {
         if (tool.isEmpty()) {
-            FilledTonalButton(onClick = { tool = "density" }, modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp)) { Text("Plant Density") }
-            FilledTonalButton(onClick = { tool = "dose" }, modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp)) { Text("Chemical Dosage per Pump") }
-            FilledTonalButton(onClick = { tool = "fertilizer" }, modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp)) { Text("Fertilizer Requirement") }
-            FilledTonalButton(onClick = { tool = "calibration" }, modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp)) { Text("Nozzle Calibration") }
-            FilledTonalButton(onClick = { tool = "cost" }, modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp)) { Text("Work Costing") }
-            FilledTonalButton(onClick = { tool = "units" }, modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp)) { Text("Unit Conversion") }
+            FilledTonalButton(onClick = { tool = "density" }, modifier = Modifier.fillMaxWidth().heightIn(min = EstateControlHeight)) { Text("Plant Density") }
+            FilledTonalButton(onClick = { tool = "dose" }, modifier = Modifier.fillMaxWidth().heightIn(min = EstateControlHeight)) { Text("Chemical Dosage per Pump") }
+            FilledTonalButton(onClick = { tool = "fertilizer" }, modifier = Modifier.fillMaxWidth().heightIn(min = EstateControlHeight)) { Text("Fertilizer Requirement") }
+            FilledTonalButton(onClick = { tool = "calibration" }, modifier = Modifier.fillMaxWidth().heightIn(min = EstateControlHeight)) { Text("Nozzle Calibration") }
+            FilledTonalButton(onClick = { tool = "cost" }, modifier = Modifier.fillMaxWidth().heightIn(min = EstateControlHeight)) { Text("Work Costing") }
+            FilledTonalButton(onClick = { tool = "units" }, modifier = Modifier.fillMaxWidth().heightIn(min = EstateControlHeight)) { Text("Unit Conversion") }
             Text("Offline calculators. Inputs and results are temporary and do not change estate records. Use a decimal point; commas group thousands.", style = MaterialTheme.typography.bodySmall)
         } else {
             TextButton(onClick = { tool = "" }) { Text("‹ All Tools") }
@@ -44,12 +44,8 @@ private fun DensityCalculator() {
     var unit by rememberSaveable { mutableStateOf(PlantingDistanceUnit.METRES) }
     var pattern by rememberSaveable { mutableStateOf(PlantingPattern.TRIANGULAR) }
     Text("Plant Density", style = MaterialTheme.typography.titleLarge)
-    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-        PlantingPattern.entries.forEach { value -> FilterChip(selected = pattern == value, onClick = { pattern = value }, label = { Text(value.label) }) }
-    }
-    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-        PlantingDistanceUnit.entries.forEach { value -> FilterChip(selected = unit == value, onClick = { unit = value }, label = { Text(value.label) }) }
-    }
+    EstatePillSelector(PlantingPattern.entries, pattern, { pattern = it }) { it.label }
+    EstatePillSelector(PlantingDistanceUnit.entries, unit, { unit = it }) { it.label }
     NumberInput("Planting distance (${if (unit == PlantingDistanceUnit.METRES) "m" else "ft"})", distance) { distance = it }
     Text(if (pattern == PlantingPattern.TRIANGULAR) "Distance between neighbouring palms along each side of an equilateral triangle." else "Equal distance between palms and between rows.", style = MaterialTheme.typography.bodySmall)
     val result = PlanterCalculations.input(distance)?.let { PlanterCalculations.density(it, unit, pattern) }
@@ -72,9 +68,7 @@ private fun PumpDosageCalculator() {
     var spray by rememberSaveable { mutableStateOf("") }
     var unit by rememberSaveable { mutableStateOf(ProductRateUnit.LITRES) }
     Text("Chemical per Pump", style = MaterialTheme.typography.titleLarge)
-    Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-        ProductRateUnit.entries.forEach { value -> FilterChip(selected = unit == value, onClick = { unit = value }, label = { Text(value.label, style = MaterialTheme.typography.labelSmall) }) }
-    }
+    EstatePillSelector(ProductRateUnit.entries, unit, { unit = it }) { it.label }
     NumberInput("Label product rate (${unit.label})", rate) { rate = it }
     Text("Use the formulated-product label rate per treated hectare, not the active-ingredient rate.", style = MaterialTheme.typography.bodySmall)
     NumberInput("Final solution per pump (L)", tank) { tank = it }

@@ -23,11 +23,8 @@ fun CropProductionDashboardTable(data: CropTable) {
         val font = if (wide) MaterialTheme.typography.bodyMedium else MaterialTheme.typography.labelSmall
         Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
             Text(data.note, style = MaterialTheme.typography.bodySmall)
-            Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                listOf("Crop (mt)", "Yield (mt/ha)", "Achievement (%)").forEachIndexed { index, name ->
-                    FilterChip(selected = measure == index, onClick = { measure = index }, modifier = Modifier.weight(1f),
-                        label = { Text(name, style = MaterialTheme.typography.labelSmall, textAlign = TextAlign.Center) })
-                }
+            EstatePillSelector(listOf(0, 1, 2), measure, { measure = it }) {
+                listOf("Crop (mt)", "Yield (mt/ha)", "Achievement (%)")[it]
             }
             if (data.rows.isEmpty()) Text("Field records pending. Import estate data to populate this table.")
             else Column {
