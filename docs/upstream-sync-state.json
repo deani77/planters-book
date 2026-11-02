@@ -200,5 +200,18 @@
       "Keep estate-level upkeep cards; exclude source field-level upkeep navigation.",
       "Retain layout instrumentation tests for an explicitly requested future APK run. No APK or connected tests requested."
     ]
+  },
+  "ipad_estate_map_2026_11_03": {
+    "source_pr": 27,
+    "source_branch": "codex/ipad-estate-map",
+    "source_commit": "759f1f027b1f45d05c6cdef3b14388e9e3324db9",
+    "source_main": "d8cc03f3c3e117db455484bb78d599935adfbf80",
+    "target_base": "69ba5cd3c27c293ed1858ccd3d3e6c1d556e2a97",
+    "adaptations": [
+      "Import a user's PDF through Files rather than bundle Selendang's map.",
+      "Save validated PDF atomically in Application Support; allow explicit replacement, offline viewing, zoom, pan and reset.",
+      "iPad-only entry; no server or location dependency. PDF stored separately and excluded from estate ZIP/JSON/XLSX exports."
+    ],
+    "status": "reviewed for merge"
   }
 }
