@@ -43,7 +43,7 @@ fun OperationalDashboardScreen(update: EstatePackage?) {
 
 @Composable
 private fun OperationalSummaryCard(card: OperationalCard, symbol: String, modifier: Modifier = Modifier, wide: Boolean = false) {
-    Card(modifier.fillMaxWidth(), shape = RoundedCornerShape(16.dp),
+    Card(modifier.fillMaxWidth().heightIn(min = EstateControlHeight), shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)) {
         Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {

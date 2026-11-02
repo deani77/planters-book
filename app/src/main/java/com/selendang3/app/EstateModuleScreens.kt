@@ -26,14 +26,9 @@ fun FieldDetailsScreen(update: EstatePackage?) {
                     Text("Choose a field for its basic information. Crop and harvesting records are under Crop Production.")
                 }
             }
-            codes.chunked(2).forEach { group ->
-                Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                    group.forEach { code ->
-                        FilledTonalButton(onClick = { selected = code },
-                            modifier = Modifier.weight(1f).heightIn(min = 60.dp)) { Text(code) }
-                    }
-                    if (group.size == 1) Spacer(Modifier.weight(1f))
-                }
+            EstatePillGrid(codes.size, maxColumns = 2) { index ->
+                FilledTonalButton(onClick = { selected = codes[index] },
+                    modifier = Modifier.fillMaxWidth().heightIn(min = EstateControlHeight)) { Text(codes[index]) }
             }
             if (codes.isEmpty()) Text("Import estate records through Settings → Estate Data Management to see field buttons.")
         } else {
