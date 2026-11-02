@@ -1,8 +1,6 @@
 package com.selendang3.app
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.horizontalScroll
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -21,9 +19,7 @@ fun CropHistoryPanel(update: EstatePackage?) {
     val field = history.singleOrNull { it.code == selected }
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Text("Crop History · t/ha", style = MaterialTheme.typography.titleMedium)
-        Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-            codes.forEach { code -> FilterChip(selected = code == selected, onClick = { selection = code }, label = { Text(code) }) }
-        }
+        EstatePillSelector(codes, selected, { selection = it }) { it.orEmpty() }
         if (field == null) Text("Crop history unavailable. Import records in Settings → Estate Data Management.") else {
             Text("Production cutoff: ${field.cutoff}. Completed years and partial YTD are not directly comparable.")
             val years = field.years(LocalDate.now().year)

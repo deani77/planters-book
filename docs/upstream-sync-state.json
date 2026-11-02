@@ -12,7 +12,7 @@
     "ios-home-summary-parity": "ea2354313237409ec5c4c03b56f2639a3e72608d",
     "ios-report-dashboard": "a3ccbbf9ed240bf7e435f4ba66a67961f42cbb04",
     "ios-swiftui-starter": "59021f9dbc8ec097a387277815ff220a2bf999ed",
-    "main": "683d4b0519ca157fc6490f40c03f24e169b714d0",
+    "main": "07edced37042c74d9b2771560232e68038a26813",
     "production-two-way-sync": "c27dfcce82b1f0073ddd427710cb22244ebdac08",
     "s3-oil-palm-app-icon": "c58dc03d5dbe8ffde77bd84daa2837ba7c1150d2",
     "ffb-quality-categories": "8c957ff75ba62acac6974a050187324dd44d0dcb",
@@ -30,7 +30,8 @@
     "fix/field-same-period-only": "2c2dc254947c2a8d5270a84f91303951fb8b5ac0",
     "simplify-upkeep-categories": "65e16505409e4e874d0859ec97669397d7f6f3c1",
     "estate-oer-oil-yield": "b7a72b97be96bb409defc27d90b7ef9007b5f98a",
-    "remove-dashboard-crop-history": "ba602100eba0087036776bba9908331cbd04a260"
+    "remove-dashboard-crop-history": "ba602100eba0087036776bba9908331cbd04a260",
+    "fix/android-responsive-pills": "0dad35d6ab21e34339e247811b577edcfa51a3d6"
   },
   "already_ported": [
     {
@@ -181,6 +182,23 @@
       "VPS/server endpoints, authentication, network clients, background sync and deployment workflows.",
       "Private crop-history preparation/publication scripts, source records and sample operational data.",
       "Previously declined imported estate-name fallback."
+    ]
+  },
+  "android_responsive_controls_2026_10_31": {
+    "source_pr": 26,
+    "source_branch": "fix/android-responsive-pills",
+    "source_commits": [
+      "a60742cca2ef8e9caf67817c4c9c3eeb68995cad",
+      "a1dc93ff63217379c746a77ed80ae075d6773d2b",
+      "0dad35d6ab21e34339e247811b577edcfa51a3d6"
+    ],
+    "source_main": "07edced37042c74d9b2771560232e68038a26813",
+    "target_base": "69ba5cd3c27c293ed1858ccd3d3e6c1d556e2a97",
+    "adaptations": [
+      "Responsive Android navigation, selectors, calculator/settings controls and operational summary card heights.",
+      "Preserve local crop history selection, import wording, estate names, Suggestions and data management.",
+      "Keep estate-level upkeep cards; exclude source field-level upkeep navigation.",
+      "Retain layout instrumentation tests for an explicitly requested future APK run. No APK or connected tests requested."
     ]
   }
 }

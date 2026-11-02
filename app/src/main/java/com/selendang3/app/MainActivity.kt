@@ -108,23 +108,12 @@ fun EstateApp() {
                         Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()),
                             verticalArrangement = Arrangement.spacedBy(14.dp)) {
                             Spacer(Modifier.height(8.dp))
-                            Button(onClick = { nav.navigate("dashboard") },
-                                modifier = Modifier.fillMaxWidth().heightIn(min = 88.dp).semantics { contentDescription = "Open Estate Dashboard" },
-                                shape = RoundedCornerShape(24.dp),
-                                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF21523D), contentColor = Color.White)) {
-                                Column(horizontalAlignment = Alignment.CenterHorizontally,
-                                    verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                                    EstateModuleIcon("dashboard", Modifier.size(28.dp), Color.White)
-                                    Text("Estate Dashboard", style = MaterialTheme.typography.titleLarge,
-                                        fontWeight = FontWeight.Bold)
-                                }
-                            }
-                            SectionGrid(mainSections) { nav.navigate(it) }
+                            SectionGrid(listOf(Section("dashboard", "Estate Dashboard", "")) + mainSections) { nav.navigate(it) }
                         }
                     }
                     composable("information") {
                         Column {
-                            OutlinedButton(onClick = { nav.navigate("estate-records") }) { Text("All Estate Records") }
+                            OutlinedButton(onClick = { nav.navigate("estate-records") }, modifier = Modifier.fillMaxWidth().heightIn(min = EstateControlHeight)) { Text("All Estate Records") }
                             Box(Modifier.weight(1f)) { EstateDashboard(estateUpdate) }
                         }
                     }
@@ -172,24 +161,20 @@ fun EstateApp() {
 
 @Composable
 private fun SectionGrid(sections: List<Section>, onOpen: (String) -> Unit) {
-    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        sections.chunked(2).forEach { row ->
-            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                row.forEach { section ->
-                    FilledTonalButton(onClick = { onOpen(section.route) },
-                        modifier = Modifier.weight(1f).heightIn(min = 88.dp),
-                        shape = RoundedCornerShape(18.dp),
-                        border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
-                        colors = ButtonDefaults.filledTonalButtonColors(
-                            containerColor = MaterialTheme.colorScheme.surface, contentColor = MaterialTheme.colorScheme.onSurface)) {
-                        Column(horizontalAlignment = Alignment.CenterHorizontally,
-                            verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                            EstateModuleIcon(section.route, Modifier.size(26.dp), MaterialTheme.colorScheme.primary)
-                            Text(section.title, textAlign = TextAlign.Center, fontWeight = FontWeight.SemiBold)
-                        }
-                    }
-                }
-                if (row.size == 1) Spacer(Modifier.weight(1f))
+    EstatePillGrid(sections.size, maxColumns = 2) { index ->
+        val section = sections[index]
+        FilledTonalButton(onClick = { onOpen(section.route) },
+            modifier = Modifier.fillMaxWidth().heightIn(min = EstateControlHeight).semantics {
+                if (section.route == "dashboard") contentDescription = "Open Estate Dashboard"
+            },
+            shape = RoundedCornerShape(24.dp),
+            border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
+            colors = ButtonDefaults.filledTonalButtonColors(
+                containerColor = MaterialTheme.colorScheme.surface, contentColor = MaterialTheme.colorScheme.onSurface)) {
+            Column(horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                EstateModuleIcon(section.route, Modifier.size(26.dp), MaterialTheme.colorScheme.primary)
+                Text(section.title, textAlign = TextAlign.Center, fontWeight = FontWeight.SemiBold)
             }
         }
     }
