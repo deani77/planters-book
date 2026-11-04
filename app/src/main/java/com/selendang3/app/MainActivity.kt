@@ -110,7 +110,8 @@ fun EstateApp() {
                         .background(Color(0xFF4A6274), RoundedCornerShape(24.dp))
                         .padding(20.dp),
                     textAlign = if (route == "home") TextAlign.Center else TextAlign.Start)
-                Surface(Modifier.weight(1f).fillMaxWidth(),
+                Surface(Modifier.weight(1f).fillMaxWidth()
+                    .padding(vertical = if (route == "home") 0.dp else 12.dp),
                     color = if (route == "home") Color.Transparent else MaterialTheme.colorScheme.surface,
                     contentColor = if (route == "home") Color.White else MaterialTheme.colorScheme.onSurface,
                     shape = RoundedCornerShape(18.dp)) {
