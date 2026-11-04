@@ -4,6 +4,7 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -13,9 +14,10 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.compositeOver
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.role
@@ -95,7 +97,7 @@ fun EstateApp() {
                 } else {
                     Spacer(Modifier.height(20.dp))
                     Text(estateName, modifier = Modifier.fillMaxWidth(),
-                        style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        style = MaterialTheme.typography.labelMedium, color = Color.White.copy(alpha = 0.8f),
                         textAlign = TextAlign.Center)
                 }
                 Text(title, style = if (route == "home") MaterialTheme.typography.headlineLarge.copy(
@@ -104,7 +106,7 @@ fun EstateApp() {
                 ) else MaterialTheme.typography.headlineMedium,
                     fontWeight = FontWeight.Bold, color = Color.White,
                     modifier = Modifier.fillMaxWidth().padding(vertical = 12.dp)
-                        .background(Brush.linearGradient(listOf(bookAccent(route).start, bookAccent(route).end)), RoundedCornerShape(24.dp))
+                        .background(Color(0xFF4A6274), RoundedCornerShape(24.dp))
                         .padding(20.dp),
                     textAlign = if (route == "home") TextAlign.Center else TextAlign.Start)
                 NavHost(nav, startDestination = "home", modifier = Modifier.weight(1f)) {
@@ -153,11 +155,11 @@ fun EstateApp() {
                 }
                 if (route == "home") {
                     Text("Planters Book", style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        color = Color.White.copy(alpha = 0.8f),
                         modifier = Modifier.fillMaxWidth().padding(top = 8.dp), textAlign = TextAlign.Center)
                 }
                 Text("v${BuildConfig.VERSION_NAME}  •  Local storage\nLast update: ${snapshot?.let { DateFormat.getDateTimeInstance().format(Date(it.updatedAt)) + " · " + it.source } ?: "No data yet"}",
-                    style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    style = MaterialTheme.typography.labelMedium, color = Color.White.copy(alpha = 0.8f),
                     modifier = Modifier.fillMaxWidth().padding(vertical = 16.dp), textAlign = TextAlign.Center)
             }
         }
@@ -185,20 +187,19 @@ private fun SectionGrid(sections: List<Section>, fixedColumns: Int? = null, onOp
 
 @Composable
 private fun SectionCard(section: Section, modifier: Modifier, onOpen: (String) -> Unit) {
-    val accent = bookAccent(section.route)
     Card(onClick = { onOpen(section.route) },
         modifier = modifier.heightIn(min = 112.dp).semantics {
             role = Role.Button
             if (section.route == "dashboard") contentDescription = "Open Estate Dashboard"
         },
         shape = RoundedCornerShape(24.dp),
-        colors = CardDefaults.cardColors(containerColor = accent.start, contentColor = Color.White)) {
+        colors = CardDefaults.cardColors(containerColor = Color(0xFF79AEB2), contentColor = Color(0xFF142D36))) {
         Column(Modifier.fillMaxSize()
-            .background(Brush.linearGradient(listOf(accent.start, accent.end)))
+            .background(Color(0xFF79AEB2))
             .padding(horizontal = 12.dp, vertical = 20.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(10.dp, Alignment.CenterVertically)) {
-            EstateModuleIcon(section.route, Modifier.size(28.dp), Color.White)
+            EstateModuleIcon(section.route, Modifier.size(28.dp), Color(0xFF142D36))
             Text(section.title, textAlign = TextAlign.Center, fontWeight = FontWeight.SemiBold)
         }
     }
@@ -217,9 +218,32 @@ private fun InfoCard(title: String, body: String) {
 
 @Composable
 private fun PlantationBackground() {
-    val base = MaterialTheme.colorScheme.background
-    // Keep controls readable over the decorative gradient in both appearances.
-    val soft = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.16f).compositeOver(base)
-    Box(Modifier.fillMaxSize().background(Brush.verticalGradient(
-        listOf(soft, base, base))))
+    Canvas(Modifier.fillMaxSize().background(Color(0xFF4A6274))) {
+        // Decorative oil-palm fronds stay behind content.
+        val ink = Color(0xFF79AEB2).copy(alpha = 0.14f)
+        val stroke = 1.5.dp.toPx()
+        fun frond(root: Offset, tip: Offset, spread: Float) {
+            drawLine(ink, root, tip, strokeWidth = stroke)
+            for (i in 1..9) {
+                val t = i / 10f
+                val stem = Offset(root.x + (tip.x - root.x) * t, root.y + (tip.y - root.y) * t)
+                val length = spread * (1f - t * 0.65f)
+                for (side in listOf(-1f, 1f)) {
+                    val leaf = Path().apply {
+                        moveTo(stem.x, stem.y)
+                        quadraticBezierTo(stem.x + side * length * 0.55f, stem.y - length * 0.1f,
+                            stem.x + side * length, stem.y + length * 0.32f)
+                    }
+                    drawPath(leaf, ink, style = Stroke(width = stroke))
+                }
+            }
+        }
+        val crown = Offset(size.width * 0.88f, size.height * 0.68f)
+        drawLine(ink, Offset(size.width * 0.96f, size.height), crown, strokeWidth = 8.dp.toPx())
+        frond(crown, Offset(size.width * 0.38f, size.height * 0.47f), size.width * 0.18f)
+        frond(crown, Offset(size.width * 0.74f, size.height * 0.35f), size.width * 0.2f)
+        frond(crown, Offset(size.width * 1.12f, size.height * 0.41f), size.width * 0.18f)
+        frond(Offset(-size.width * 0.06f, size.height * 0.18f),
+            Offset(size.width * 0.38f, -size.height * 0.04f), size.width * 0.2f)
+    }
 }
