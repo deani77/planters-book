@@ -200,7 +200,8 @@ private fun SectionCard(section: Section, modifier: Modifier, onOpen: (String) -
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(10.dp, Alignment.CenterVertically)) {
             EstateModuleIcon(section.route, Modifier.size(28.dp), Color(0xFF142D36))
-            Text(section.title, style = MaterialTheme.typography.labelLarge,\n                textAlign = TextAlign.Center, fontWeight = FontWeight.SemiBold)
+            Text(section.title, style = MaterialTheme.typography.labelLarge,
+                textAlign = TextAlign.Center, fontWeight = FontWeight.SemiBold)
         }
     }
 }
