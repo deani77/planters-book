@@ -65,6 +65,18 @@ class BookPaletteTest {
         }
     }
 
+    @Test fun exactBackgroundAndTabLevelsInBothModes() {
+        listOf(false, true).forEach { dark ->
+            val colors = estateColorScheme(dark)
+            assertEquals(Color(0xFF2D2D2D), colors.background)
+            assertEquals(Color(0xFF2D2D2D), colors.surface)
+        }
+        listOf(0xFF006400, 0xFF228B22, 0xFF32CD32, 0xFF7FFF00).forEachIndexed { level, hex ->
+            assertEquals(Color(hex), bookTabBackground(level))
+            assertTrue("tab level $level", contrast(bookTabBackground(level), bookTabForeground(level)) >= 4.5f)
+        }
+    }
+
     @Test fun moduleAccentsMatchNavigationAndDashboard() {
         assertEquals(BookAccent.Crop, bookAccent("reports"))
         assertEquals(BookAccent.Crop, bookAccent("Crop Production"))
