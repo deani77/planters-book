@@ -45,15 +45,22 @@ class BookPaletteTest {
         }
     }
 
-    @Test fun pageGradientKeepsNavigationAndSecondaryTextReadable() {
-        BookAccent.entries.forEach { accent ->
-            listOf(false, true).forEach { dark ->
-                val colors = estateColorScheme(dark, accent)
-                val top = colors.primaryContainer.copy(alpha = 0.16f).compositeOver(colors.background)
-                listOf(colors.primary, colors.onSurface, colors.onSurfaceVariant).forEach { text ->
-                    assertTrue("${accent.name}, dark=$dark", contrast(top, text) >= 4.5f)
-                    assertTrue("${accent.name}, dark=$dark", contrast(colors.background, text) >= 4.5f)
-                }
+    @Test fun pageTableAndNavigationTextRemainReadable() {
+        listOf(false, true).forEach { dark ->
+            val colors = estateColorScheme(dark)
+            listOf(
+                BookSlate to Color.White,
+                BookSlate to Color.White.copy(alpha = 0.8f).compositeOver(BookSlate),
+                BookTeal to BookInk,
+                colors.surface to colors.primary,
+                colors.surface to colors.secondary,
+                colors.surface to colors.tertiary,
+                colors.secondaryContainer to colors.onSurface,
+                colors.secondaryContainer to colors.primary,
+                colors.secondaryContainer to colors.onSecondaryContainer,
+            ).forEach { (background, text) ->
+                assertTrue("dark=$dark, background=$background, text=$text",
+                    contrast(background, text) >= 4.5f)
             }
         }
     }
