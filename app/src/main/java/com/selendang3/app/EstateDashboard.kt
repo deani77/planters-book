@@ -73,7 +73,7 @@ fun EstateDashboard(estateUpdate: EstatePackage? = null) {
     val workerRatios = remember(estateUpdate) { estateWorkerRatios(estateUpdate) }
     val ffbCost = remember(estateUpdate) { estateFfbCosts(estateUpdate) }
     MaterialTheme {
-        Surface(modifier = Modifier.fillMaxSize(), color = Color.Transparent) {
+        Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.surface) {
             BoxWithConstraints {
                 val wide = maxWidth >= 840.dp
                 Column(
@@ -131,7 +131,7 @@ private fun ProfilePanels(ageProfile: EstateAgeProfile?, topography: EstateTopog
             ))
             MetricRow("Total area (ha)")
         } else {
-            val colors = listOf(Color(0xFF49ACC3), Color(0xFF4B8C42), Color(0xFFA46436))
+            val colors = listOf(MaterialTheme.colorScheme.primary, MaterialTheme.colorScheme.secondary, MaterialTheme.colorScheme.tertiary)
             Canvas(Modifier.size(160.dp).align(Alignment.CenterHorizontally).padding(12.dp)) {
                 var angle = -90f
                 ageProfile.bands.forEachIndexed { index, band ->
@@ -158,7 +158,7 @@ private fun ProfilePanels(ageProfile: EstateAgeProfile?, topography: EstateTopog
             Text("Import complete terrain records using the current estate area.",
                 Modifier.padding(12.dp), style = MaterialTheme.typography.bodySmall)
         } else {
-            val colors = listOf(Color(0xFF49ACC3), Color(0xFFA46436), Color(0xFF4B8C42))
+            val colors = listOf(MaterialTheme.colorScheme.primary, MaterialTheme.colorScheme.tertiary, MaterialTheme.colorScheme.secondary)
             Canvas(Modifier.size(160.dp).align(Alignment.CenterHorizontally).padding(12.dp)) {
                 var angle = -90f
                 topography.bands.forEachIndexed { index, band ->
@@ -285,7 +285,7 @@ private fun DashboardPanel(
     Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(18.dp))
         .background(MaterialTheme.colorScheme.surface)
         .border(1.dp, MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(18.dp))) {
-        Text(title, color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold,
+        Text(title, color = MaterialTheme.colorScheme.onSecondaryContainer, fontWeight = FontWeight.Bold,
             style = MaterialTheme.typography.titleMedium,
             modifier = Modifier.fillMaxWidth().background(MaterialTheme.colorScheme.secondaryContainer).padding(horizontal = 12.dp, vertical = 10.dp))
         content()
