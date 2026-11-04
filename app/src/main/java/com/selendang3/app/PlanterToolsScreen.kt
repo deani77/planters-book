@@ -17,15 +17,16 @@ fun PlanterToolsScreen() {
     var tool by rememberSaveable { mutableStateOf("") }
     Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).imePadding(), verticalArrangement = Arrangement.spacedBy(14.dp)) {
         if (tool.isEmpty()) {
-            FilledTonalButton(onClick = { tool = "density" }, modifier = Modifier.fillMaxWidth().heightIn(min = EstateControlHeight)) { Text("Plant Density") }
-            FilledTonalButton(onClick = { tool = "dose" }, modifier = Modifier.fillMaxWidth().heightIn(min = EstateControlHeight)) { Text("Chemical Dosage per Pump") }
-            FilledTonalButton(onClick = { tool = "fertilizer" }, modifier = Modifier.fillMaxWidth().heightIn(min = EstateControlHeight)) { Text("Fertilizer Requirement") }
-            FilledTonalButton(onClick = { tool = "calibration" }, modifier = Modifier.fillMaxWidth().heightIn(min = EstateControlHeight)) { Text("Nozzle Calibration") }
-            FilledTonalButton(onClick = { tool = "cost" }, modifier = Modifier.fillMaxWidth().heightIn(min = EstateControlHeight)) { Text("Work Costing") }
-            FilledTonalButton(onClick = { tool = "units" }, modifier = Modifier.fillMaxWidth().heightIn(min = EstateControlHeight)) { Text("Unit Conversion") }
+            FilledTonalButton(colors = bookTabButtonColors(), onClick = { tool = "density" }, modifier = Modifier.fillMaxWidth().heightIn(min = EstateControlHeight)) { Text("Plant Density") }
+            FilledTonalButton(colors = bookTabButtonColors(), onClick = { tool = "dose" }, modifier = Modifier.fillMaxWidth().heightIn(min = EstateControlHeight)) { Text("Chemical Dosage per Pump") }
+            FilledTonalButton(colors = bookTabButtonColors(), onClick = { tool = "fertilizer" }, modifier = Modifier.fillMaxWidth().heightIn(min = EstateControlHeight)) { Text("Fertilizer Requirement") }
+            FilledTonalButton(colors = bookTabButtonColors(), onClick = { tool = "calibration" }, modifier = Modifier.fillMaxWidth().heightIn(min = EstateControlHeight)) { Text("Nozzle Calibration") }
+            FilledTonalButton(colors = bookTabButtonColors(), onClick = { tool = "cost" }, modifier = Modifier.fillMaxWidth().heightIn(min = EstateControlHeight)) { Text("Work Costing") }
+            FilledTonalButton(colors = bookTabButtonColors(), onClick = { tool = "units" }, modifier = Modifier.fillMaxWidth().heightIn(min = EstateControlHeight)) { Text("Unit Conversion") }
             Text("Offline calculators. Inputs and results are temporary and do not change estate records. Use a decimal point; commas group thousands.", style = MaterialTheme.typography.bodySmall)
         } else {
             TextButton(onClick = { tool = "" }) { Text("‹ All Tools") }
+            CompositionLocalProvider(LocalBookTabLevel provides 2) {
             when (tool) {
                 "density" -> DensityCalculator()
                 "dose" -> PumpDosageCalculator()
@@ -35,6 +36,7 @@ fun PlanterToolsScreen() {
                 "units" -> PlantationUnitConverter()
             }
         }
+    }
     }
 }
 
