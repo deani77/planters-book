@@ -136,7 +136,11 @@ fun EstateApp() {
                         }
                     }
                     estateSections.forEach { section ->
-                        composable(section.route) { EstateSectionData(section, estateUpdate) }
+                        composable(section.route) {
+                            CompositionLocalProvider(LocalBookTabLevel provides 3) {
+                                EstateSectionData(section, estateUpdate)
+                            }
+                        }
                     }
                     composable("production") { FieldDetailsScreen(estateUpdate) }
                     composable("upkeep") { UpkeepCultivationScreen(estateUpdate) }
