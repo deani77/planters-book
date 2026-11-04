@@ -107,12 +107,12 @@ fun EstateApp() {
                 ) else MaterialTheme.typography.headlineMedium,
                     fontWeight = FontWeight.Bold, color = Color.White,
                     modifier = Modifier.fillMaxWidth().padding(vertical = 12.dp)
-                        .background(Color(0xFF4A6274), RoundedCornerShape(24.dp))
+                        .background(Color(0xFF2D2D2D), RoundedCornerShape(24.dp))
                         .padding(20.dp),
                     textAlign = if (route == "home") TextAlign.Center else TextAlign.Start)
                 Surface(Modifier.weight(1f).fillMaxWidth()
                     .padding(vertical = if (route == "home") 0.dp else 12.dp),
-                    color = if (route == "home") Color.Transparent else MaterialTheme.colorScheme.surface,
+                    color = Color.Transparent,
                     contentColor = if (route == "home") Color.White else MaterialTheme.colorScheme.onSurface,
                     shape = RoundedCornerShape(18.dp)) {
                 NavHost(nav, startDestination = "home", modifier = Modifier.fillMaxSize()) {
@@ -126,13 +126,13 @@ fun EstateApp() {
                     }
                     composable("information") {
                         Column {
-                            OutlinedButton(onClick = { nav.navigate("estate-records") }, modifier = Modifier.fillMaxWidth().heightIn(min = EstateControlHeight)) { Text("All Estate Records") }
+                            FilledTonalButton(colors = bookTabButtonColors(1), onClick = { nav.navigate("estate-records") }, modifier = Modifier.fillMaxWidth().heightIn(min = EstateControlHeight)) { Text("All Estate Records") }
                             Box(Modifier.weight(1f)) { EstateDashboard(estateUpdate) }
                         }
                     }
                     composable("estate-records") {
                         Column(Modifier.verticalScroll(rememberScrollState())) {
-                            SectionGrid(estateSections) { nav.navigate(it) }
+                            SectionGrid(estateSections, level = 2) { nav.navigate(it) }
                         }
                     }
                     estateSections.forEach { section ->
@@ -176,7 +176,7 @@ fun EstateApp() {
 }
 
 @Composable
-private fun SectionGrid(sections: List<Section>, fixedColumns: Int? = null, onOpen: (String) -> Unit) {
+private fun SectionGrid(sections: List<Section>, fixedColumns: Int? = null, level: Int = 0, onOpen: (String) -> Unit) {
     BoxWithConstraints(Modifier.fillMaxWidth()) {
         val fontScale = androidx.compose.ui.platform.LocalDensity.current.fontScale.coerceAtLeast(1f)
         val columns = fixedColumns ?: if (maxWidth >= 288.dp * fontScale) 2 else 1
@@ -185,7 +185,7 @@ private fun SectionGrid(sections: List<Section>, fixedColumns: Int? = null, onOp
                 Row(Modifier.fillMaxWidth().height(IntrinsicSize.Max),
                     horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                     row.forEach { section ->
-                        SectionCard(section, Modifier.weight(1f).fillMaxHeight(), onOpen)
+                        SectionCard(section, Modifier.weight(1f).fillMaxHeight(), level, onOpen)
                     }
                     if (row.size < columns && sections.size > 1) Spacer(Modifier.weight(1f))
                 }
@@ -195,20 +195,20 @@ private fun SectionGrid(sections: List<Section>, fixedColumns: Int? = null, onOp
 }
 
 @Composable
-private fun SectionCard(section: Section, modifier: Modifier, onOpen: (String) -> Unit) {
+private fun SectionCard(section: Section, modifier: Modifier, level: Int, onOpen: (String) -> Unit) {
     Card(onClick = { onOpen(section.route) },
         modifier = modifier.heightIn(min = 112.dp).semantics {
             role = Role.Button
             if (section.route == "dashboard") contentDescription = "Open Estate Dashboard"
         },
         shape = RoundedCornerShape(24.dp),
-        colors = CardDefaults.cardColors(containerColor = Color(0xFF79AEB2), contentColor = Color(0xFF142D36))) {
+        colors = CardDefaults.cardColors(containerColor = bookTabBackground(level), contentColor = bookTabForeground(level))) {
         Column(Modifier.fillMaxSize()
-            .background(Color(0xFF79AEB2))
+            .background(bookTabBackground(level))
             .padding(horizontal = 12.dp, vertical = 20.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(10.dp, Alignment.CenterVertically)) {
-            EstateModuleIcon(section.route, Modifier.size(28.dp), Color(0xFF142D36))
+            EstateModuleIcon(section.route, Modifier.size(28.dp), bookTabForeground(level))
             Text(section.title, style = MaterialTheme.typography.labelLarge,
                 textAlign = TextAlign.Center, fontWeight = FontWeight.SemiBold)
         }
@@ -228,9 +228,9 @@ private fun InfoCard(title: String, body: String) {
 
 @Composable
 private fun PlantationBackground() {
-    Canvas(Modifier.fillMaxSize().background(Color(0xFF4A6274))) {
+    Canvas(Modifier.fillMaxSize().background(Color(0xFF2D2D2D))) {
         // Decorative oil-palm fronds stay behind content.
-        val ink = Color(0xFF79AEB2).copy(alpha = 0.14f)
+        val ink = Color(0xFF32CD32).copy(alpha = 0.14f)
         val stroke = 1.5.dp.toPx()
         fun frond(root: Offset, tip: Offset, spread: Float) {
             drawLine(ink, root, tip, strokeWidth = stroke)
