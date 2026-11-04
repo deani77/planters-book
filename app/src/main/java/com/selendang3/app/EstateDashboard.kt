@@ -73,7 +73,7 @@ fun EstateDashboard(estateUpdate: EstatePackage? = null) {
     val workerRatios = remember(estateUpdate) { estateWorkerRatios(estateUpdate) }
     val ffbCost = remember(estateUpdate) { estateFfbCosts(estateUpdate) }
     MaterialTheme {
-        Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.surface) {
+        Surface(modifier = Modifier.fillMaxSize(), color = Color.Transparent) {
             BoxWithConstraints {
                 val wide = maxWidth >= 840.dp
                 Column(
