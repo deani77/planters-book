@@ -28,12 +28,12 @@ fun CropProductionDashboardTable(data: CropTable) {
             }
             if (data.rows.isEmpty()) Text("Field records pending. Import estate data to populate this table.")
             else Column {
-                Row(Modifier.fillMaxWidth().height(48.dp).background(MaterialTheme.colorScheme.secondaryContainer), verticalAlignment = Alignment.CenterVertically) {
-                    Text("Field\nArea (ha)", Modifier.width(identityWidth), style = font, textAlign = TextAlign.Center, fontWeight = FontWeight.SemiBold)
-                    listOf("This Month", "Year to Date", "Full Year").forEach { Text(it, Modifier.weight(1f), style = font, textAlign = TextAlign.Center, fontWeight = FontWeight.SemiBold) }
+                Row(Modifier.fillMaxWidth().heightIn(min = 48.dp).background(MaterialTheme.colorScheme.secondaryContainer), verticalAlignment = Alignment.CenterVertically) {
+                    Text("Field\nArea (ha)", color = MaterialTheme.colorScheme.onSecondaryContainer, Modifier.width(identityWidth), style = font, textAlign = TextAlign.Center, fontWeight = FontWeight.SemiBold)
+                    listOf("This Month", "Year to Date", "Full Year").forEach { Text(it, Modifier.weight(1f), style = font, textAlign = TextAlign.Center, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.onSecondaryContainer) }
                 }
                 @Composable fun row(record: CropTableRow, total: Boolean = false) {
-                    Row(Modifier.fillMaxWidth().height(if (wide) 56.dp else 48.dp)
+                    Row(Modifier.fillMaxWidth().heightIn(min = if (wide) 56.dp else 48.dp).padding(vertical = 6.dp)
                         .background(if (total) MaterialTheme.colorScheme.secondaryContainer else MaterialTheme.colorScheme.surface)
                         .border(0.5.dp, MaterialTheme.colorScheme.outlineVariant), verticalAlignment = Alignment.CenterVertically) {
                         Text(record.field + "\n" + record.area, Modifier.width(identityWidth), style = font, textAlign = TextAlign.Center, fontWeight = FontWeight.SemiBold)
