@@ -29,7 +29,7 @@ fun CropProductionDashboardTable(data: CropTable) {
             if (data.rows.isEmpty()) Text("Field records pending. Import estate data to populate this table.")
             else Column {
                 Row(Modifier.fillMaxWidth().heightIn(min = 48.dp).background(MaterialTheme.colorScheme.secondaryContainer), verticalAlignment = Alignment.CenterVertically) {
-                    Text("Field\nArea (ha)", color = MaterialTheme.colorScheme.onSecondaryContainer, Modifier.width(identityWidth), style = font, textAlign = TextAlign.Center, fontWeight = FontWeight.SemiBold)
+                    Text("Field\nArea (ha)", Modifier.width(identityWidth), style = font, textAlign = TextAlign.Center, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.onSecondaryContainer)
                     listOf("This Month", "Year to Date", "Full Year").forEach { Text(it, Modifier.weight(1f), style = font, textAlign = TextAlign.Center, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.onSecondaryContainer) }
                 }
                 @Composable fun row(record: CropTableRow, total: Boolean = false) {
