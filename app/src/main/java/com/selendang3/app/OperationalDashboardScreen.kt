@@ -60,35 +60,35 @@ private fun OperationalSummaryCard(card: OperationalCard, symbol: String, modifi
                     Text(card.title, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold, color = Color.White)
                 }
                 Column(Modifier.padding(horizontal = 12.dp).padding(bottom = 12.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
-                if (card.title == "Crop Production") {
-                    Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                        card.metrics.take(3).forEach { metric ->
-                            OperationalMetricValue(metric, Modifier.weight(1f), centered = true, prominent = true)
+                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+                    if (card.title == "Crop Production") {
+                        Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                            card.metrics.take(3).forEach { metric ->
+                                OperationalMetricValue(metric, Modifier.weight(1f), centered = true, prominent = true)
+                            }
                         }
-                    }
-                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                        Text(card.metrics[3].label, style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant)
-                        Text(card.metrics[3].value + " " + card.metrics[3].unit,
-                            style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.SemiBold)
-                    }
-                } else if (wide) {
-                    Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                        card.metrics.forEach { metric ->
-                            OperationalMetricValue(metric, Modifier.weight(1f), centered = true,
-                                prominent = card.title == "Estate Cost")
+                        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                            Text(card.metrics[3].label, style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            Text(card.metrics[3].value + " " + card.metrics[3].unit,
+                                style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.SemiBold)
                         }
+                    } else if (wide) {
+                        Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                            card.metrics.forEach { metric ->
+                                OperationalMetricValue(metric, Modifier.weight(1f), centered = true,
+                                    prominent = card.title == "Estate Cost")
+                            }
+                        }
+                    } else {
+                        card.metrics.forEach { OperationalMetricValue(it) }
                     }
-                } else {
-                    card.metrics.forEach { OperationalMetricValue(it) }
+                    Text(card.period, modifier = Modifier.fillMaxWidth().padding(top = 3.dp),
+                        style = MaterialTheme.typography.labelSmall,
+                        textAlign = if (wide) TextAlign.Center else TextAlign.Start,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
-                Text(card.period, modifier = Modifier.fillMaxWidth().padding(top = 3.dp),
-                    style = MaterialTheme.typography.labelSmall,
-                    textAlign = if (wide) TextAlign.Center else TextAlign.Start,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
-        }
         }
     }
 }
