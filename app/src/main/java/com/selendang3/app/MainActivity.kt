@@ -4,7 +4,6 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.isSystemInDarkTheme
-import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -14,10 +13,12 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.compositeOver
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
@@ -32,8 +33,6 @@ import com.selendang3.app.data.EstateDatabase
 import com.selendang3.app.data.EstatePackages
 import java.text.DateFormat
 import java.util.Date
-import kotlin.math.cos
-import kotlin.math.sin
 
 data class Section(val route: String, val title: String, val description: String)
 
@@ -87,9 +86,9 @@ fun EstateApp() {
         "estate-records" -> "All Estate Records"
         else -> allSections.firstOrNull { it.route == route }?.title ?: "Estate Details"
     }
-    MaterialTheme(colorScheme = estateColorScheme(dark)) {
+    MaterialTheme(colorScheme = estateColorScheme(dark, bookAccent(route)), typography = BookTypography) {
         Box(Modifier.fillMaxSize()) {
-            PlantationBackground(route)
+            PlantationBackground()
             Column(Modifier.fillMaxSize().safeDrawingPadding().padding(horizontal = 20.dp)) {
                 if (route != "home") {
                     TextButton(onClick = { nav.popBackStack() }) { Text("‹  Back") }
@@ -100,8 +99,10 @@ fun EstateApp() {
                         textAlign = TextAlign.Center)
                 }
                 Text(title, style = if (route == "home") MaterialTheme.typography.headlineLarge else MaterialTheme.typography.headlineMedium,
-                    fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface,
-                    modifier = Modifier.fillMaxWidth().padding(vertical = 12.dp),
+                    fontWeight = FontWeight.Bold, color = Color.White,
+                    modifier = Modifier.fillMaxWidth().padding(vertical = 12.dp)
+                        .background(Brush.linearGradient(listOf(bookAccent(route).start, bookAccent(route).end)), RoundedCornerShape(24.dp))
+                        .padding(20.dp),
                     textAlign = if (route == "home") TextAlign.Center else TextAlign.Start)
                 NavHost(nav, startDestination = "home", modifier = Modifier.weight(1f)) {
                     composable("home") {
@@ -163,17 +164,20 @@ fun EstateApp() {
 private fun SectionGrid(sections: List<Section>, onOpen: (String) -> Unit) {
     EstatePillGrid(sections.size, maxColumns = 2) { index ->
         val section = sections[index]
-        FilledTonalButton(onClick = { onOpen(section.route) },
-            modifier = Modifier.fillMaxWidth().heightIn(min = EstateControlHeight).semantics {
+        val accent = bookAccent(section.route)
+        Card(onClick = { onOpen(section.route) },
+            modifier = Modifier.fillMaxWidth().heightIn(min = 112.dp).semantics {
+                role = Role.Button
                 if (section.route == "dashboard") contentDescription = "Open Estate Dashboard"
             },
             shape = RoundedCornerShape(24.dp),
-            border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
-            colors = ButtonDefaults.filledTonalButtonColors(
-                containerColor = MaterialTheme.colorScheme.surface, contentColor = MaterialTheme.colorScheme.onSurface)) {
-            Column(horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                EstateModuleIcon(section.route, Modifier.size(26.dp), MaterialTheme.colorScheme.primary)
+            colors = CardDefaults.cardColors(containerColor = Color.Transparent, contentColor = Color.White)) {
+            Column(Modifier.fillMaxWidth()
+                .background(Brush.linearGradient(listOf(accent.start, accent.end)))
+                .padding(horizontal = 12.dp, vertical = 20.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                EstateModuleIcon(section.route, Modifier.size(28.dp), Color.White)
                 Text(section.title, textAlign = TextAlign.Center, fontWeight = FontWeight.SemiBold)
             }
         }
@@ -192,26 +196,10 @@ private fun InfoCard(title: String, body: String) {
 }
 
 @Composable
-private fun PlantationBackground(route: String) {
-    // Low-contrast vector palm canopy; the same semantic palette applies to every route.
+private fun PlantationBackground() {
     val base = MaterialTheme.colorScheme.background
-    val accent = MaterialTheme.colorScheme.primary
-    val soft = MaterialTheme.colorScheme.secondaryContainer
-    Box(Modifier.fillMaxSize().background(base).background(Brush.verticalGradient(listOf(soft.copy(alpha = 0.45f), base)))) {
-        Canvas(Modifier.fillMaxSize()) {
-            for (row in 0..7) for (col in 0..4) {
-                val center = Offset(size.width * (col + 0.2f + (row % 2) * 0.4f) / 4f, size.height * row / 7f)
-                val radius = size.width * 0.11f
-                for (leaf in 0..7) {
-                    val angle = leaf * Math.PI / 4
-                    drawLine(accent.copy(alpha = if (route == "home") 0.055f else 0.02f), center,
-                        center + Offset((cos(angle) * radius).toFloat(), (sin(angle) * radius).toFloat()),
-                        strokeWidth = 12f)
-                }
-                drawCircle(accent.copy(alpha = if (route == "home") 0.06f else 0.02f), radius * 0.18f, center)
-            }
-        }
-
-    }
+    // Keep controls readable over the decorative gradient in both appearances.
+    val soft = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.16f).compositeOver(base)
+    Box(Modifier.fillMaxSize().background(Brush.verticalGradient(
+        listOf(soft, base, base))))
 }
-

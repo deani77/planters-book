@@ -1,5 +1,9 @@
 package com.selendang3.app
 
+import androidx.compose.foundation.background
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -43,44 +47,48 @@ fun OperationalDashboardScreen(update: EstatePackage?) {
 
 @Composable
 private fun OperationalSummaryCard(card: OperationalCard, symbol: String, modifier: Modifier = Modifier, wide: Boolean = false) {
-    Card(modifier.fillMaxWidth().heightIn(min = EstateControlHeight), shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)) {
-        Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-            Row(Modifier.fillMaxWidth(), horizontalArrangement = if (wide) Arrangement.Center else Arrangement.Start,
-                verticalAlignment = Alignment.Top) {
-                EstateModuleIcon(symbol, Modifier.size(18.dp), MaterialTheme.colorScheme.primary)
-                Spacer(Modifier.width(6.dp))
-                Text(card.title, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold)
-            }
-            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
-            if (card.title == "Crop Production") {
-                Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                    card.metrics.take(3).forEach { metric ->
-                        OperationalMetricValue(metric, Modifier.weight(1f), centered = true, prominent = true)
-                    }
+    val accent = bookAccent(card.title)
+    MaterialTheme(colorScheme = MaterialTheme.colorScheme.copy(primary = if (MaterialTheme.colorScheme.background.luminance() < 0.5f) accent.light else accent.start)) {
+        Card(modifier.fillMaxWidth().heightIn(min = EstateControlHeight), shape = RoundedCornerShape(16.dp),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)) {
+            Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                Row(Modifier.fillMaxWidth().background(Brush.linearGradient(listOf(accent.start, accent.end))).padding(14.dp), horizontalArrangement = if (wide) Arrangement.Center else Arrangement.Start,
+                    verticalAlignment = Alignment.Top) {
+                    EstateModuleIcon(symbol, Modifier.size(18.dp), Color.White)
+                    Spacer(Modifier.width(6.dp))
+                    Text(card.title, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold, color = Color.White)
                 }
-                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                    Text(card.metrics[3].label, style = MaterialTheme.typography.labelSmall,
+                Column(Modifier.padding(horizontal = 12.dp).padding(bottom = 12.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+                    if (card.title == "Crop Production") {
+                        Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                            card.metrics.take(3).forEach { metric ->
+                                OperationalMetricValue(metric, Modifier.weight(1f), centered = true, prominent = true)
+                            }
+                        }
+                        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                            Text(card.metrics[3].label, style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            Text(card.metrics[3].value + " " + card.metrics[3].unit,
+                                style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.SemiBold)
+                        }
+                    } else if (wide) {
+                        Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                            card.metrics.forEach { metric ->
+                                OperationalMetricValue(metric, Modifier.weight(1f), centered = true,
+                                    prominent = card.title == "Estate Cost")
+                            }
+                        }
+                    } else {
+                        card.metrics.forEach { OperationalMetricValue(it) }
+                    }
+                    Text(card.period, modifier = Modifier.fillMaxWidth().padding(top = 3.dp),
+                        style = MaterialTheme.typography.labelSmall,
+                        textAlign = if (wide) TextAlign.Center else TextAlign.Start,
                         color = MaterialTheme.colorScheme.onSurfaceVariant)
-                    Text(card.metrics[3].value + " " + card.metrics[3].unit,
-                        style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.SemiBold)
                 }
-            } else if (wide) {
-                Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                    card.metrics.forEach { metric ->
-                        OperationalMetricValue(metric, Modifier.weight(1f), centered = true,
-                            prominent = card.title == "Estate Cost")
-                    }
-                }
-            } else {
-                card.metrics.forEach { OperationalMetricValue(it) }
-                Spacer(Modifier.weight(1f))
             }
-            Text(card.period, modifier = Modifier.fillMaxWidth().padding(top = 3.dp),
-                style = MaterialTheme.typography.labelSmall,
-                textAlign = if (wide) TextAlign.Center else TextAlign.Start,
-                color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
     }
 }
