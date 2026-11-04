@@ -98,7 +98,10 @@ fun EstateApp() {
                         style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant,
                         textAlign = TextAlign.Center)
                 }
-                Text(title, style = if (route == "home") MaterialTheme.typography.headlineLarge else MaterialTheme.typography.headlineMedium,
+                Text(title, style = if (route == "home") MaterialTheme.typography.headlineLarge.copy(
+                    fontSize = MaterialTheme.typography.headlineLarge.fontSize * 0.5f,
+                    lineHeight = MaterialTheme.typography.headlineLarge.lineHeight * 0.5f
+                ) else MaterialTheme.typography.headlineMedium,
                     fontWeight = FontWeight.Bold, color = Color.White,
                     modifier = Modifier.fillMaxWidth().padding(vertical = 12.dp)
                         .background(Brush.linearGradient(listOf(bookAccent(route).start, bookAccent(route).end)), RoundedCornerShape(24.dp))
@@ -110,7 +113,7 @@ fun EstateApp() {
                             verticalArrangement = Arrangement.spacedBy(14.dp)) {
                             Spacer(Modifier.height(8.dp))
                             SectionGrid(listOf(Section("dashboard", "Estate Dashboard", ""))) { nav.navigate(it) }
-                            SectionGrid(mainSections) { nav.navigate(it) }
+                            SectionGrid(mainSections, fixedColumns = 2) { nav.navigate(it) }
                         }
                     }
                     composable("information") {
@@ -162,10 +165,10 @@ fun EstateApp() {
 }
 
 @Composable
-private fun SectionGrid(sections: List<Section>, onOpen: (String) -> Unit) {
+private fun SectionGrid(sections: List<Section>, fixedColumns: Int? = null, onOpen: (String) -> Unit) {
     BoxWithConstraints(Modifier.fillMaxWidth()) {
         val fontScale = androidx.compose.ui.platform.LocalDensity.current.fontScale.coerceAtLeast(1f)
-        val columns = if (maxWidth >= 288.dp * fontScale) 2 else 1
+        val columns = fixedColumns ?: if (maxWidth >= 288.dp * fontScale) 2 else 1
         Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
             sections.chunked(columns).forEach { row ->
                 Row(Modifier.fillMaxWidth().height(IntrinsicSize.Max),
