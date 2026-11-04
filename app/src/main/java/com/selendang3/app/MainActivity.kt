@@ -109,7 +109,8 @@ fun EstateApp() {
                         Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()),
                             verticalArrangement = Arrangement.spacedBy(14.dp)) {
                             Spacer(Modifier.height(8.dp))
-                            SectionGrid(listOf(Section("dashboard", "Estate Dashboard", "")) + mainSections) { nav.navigate(it) }
+                            SectionGrid(listOf(Section("dashboard", "Estate Dashboard", ""))) { nav.navigate(it) }
+                            SectionGrid(mainSections) { nav.navigate(it) }
                         }
                     }
                     composable("information") {
@@ -162,24 +163,40 @@ fun EstateApp() {
 
 @Composable
 private fun SectionGrid(sections: List<Section>, onOpen: (String) -> Unit) {
-    EstatePillGrid(sections.size, maxColumns = 2) { index ->
-        val section = sections[index]
-        val accent = bookAccent(section.route)
-        Card(onClick = { onOpen(section.route) },
-            modifier = Modifier.fillMaxWidth().heightIn(min = 112.dp).semantics {
-                role = Role.Button
-                if (section.route == "dashboard") contentDescription = "Open Estate Dashboard"
-            },
-            shape = RoundedCornerShape(24.dp),
-            colors = CardDefaults.cardColors(containerColor = Color.Transparent, contentColor = Color.White)) {
-            Column(Modifier.fillMaxWidth()
-                .background(Brush.linearGradient(listOf(accent.start, accent.end)))
-                .padding(horizontal = 12.dp, vertical = 20.dp),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                EstateModuleIcon(section.route, Modifier.size(28.dp), Color.White)
-                Text(section.title, textAlign = TextAlign.Center, fontWeight = FontWeight.SemiBold)
+    BoxWithConstraints(Modifier.fillMaxWidth()) {
+        val fontScale = androidx.compose.ui.platform.LocalDensity.current.fontScale.coerceAtLeast(1f)
+        val columns = if (maxWidth >= 288.dp * fontScale) 2 else 1
+        Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            sections.chunked(columns).forEach { row ->
+                Row(Modifier.fillMaxWidth().height(IntrinsicSize.Max),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                    row.forEach { section ->
+                        SectionCard(section, Modifier.weight(1f).fillMaxHeight(), onOpen)
+                    }
+                    if (row.size < columns && sections.size > 1) Spacer(Modifier.weight(1f))
+                }
             }
+        }
+    }
+}
+
+@Composable
+private fun SectionCard(section: Section, modifier: Modifier, onOpen: (String) -> Unit) {
+    val accent = bookAccent(section.route)
+    Card(onClick = { onOpen(section.route) },
+        modifier = modifier.heightIn(min = 112.dp).semantics {
+            role = Role.Button
+            if (section.route == "dashboard") contentDescription = "Open Estate Dashboard"
+        },
+        shape = RoundedCornerShape(24.dp),
+        colors = CardDefaults.cardColors(containerColor = accent.start, contentColor = Color.White)) {
+        Column(Modifier.fillMaxSize()
+            .background(Brush.linearGradient(listOf(accent.start, accent.end)))
+            .padding(horizontal = 12.dp, vertical = 20.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(10.dp, Alignment.CenterVertically)) {
+            EstateModuleIcon(section.route, Modifier.size(28.dp), Color.White)
+            Text(section.title, textAlign = TextAlign.Center, fontWeight = FontWeight.SemiBold)
         }
     }
 }
