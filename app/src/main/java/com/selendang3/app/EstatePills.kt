@@ -1,6 +1,7 @@
 package com.selendang3.app
 
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
@@ -71,9 +72,8 @@ internal fun <T> EstatePillSelector(options: List<T>, selection: T, onSelect: (T
                 selected = option == selection
                 role = Role.RadioButton
             }, shape = RoundedCornerShape(24.dp),
-            colors = ButtonDefaults.filledTonalButtonColors(
-                containerColor = if (option == selection) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant,
-                contentColor = if (option == selection) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant)) {
+            border = if (option == selection) BorderStroke(3.dp, MaterialTheme.colorScheme.onSurface) else null,
+            colors = bookTabButtonColors()) {
             Text(label(option), textAlign = TextAlign.Center)
         }
     }
