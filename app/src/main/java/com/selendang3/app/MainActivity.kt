@@ -83,7 +83,7 @@ fun EstateApp() {
         "estate-records" -> "All Estate Records"
         else -> allSections.firstOrNull { it.route == route }?.title ?: "Estate Details"
     }
-    MaterialTheme(colorScheme = estateColorScheme(dark, bookAccent(route))) {
+    MaterialTheme(colorScheme = estateColorScheme(dark, bookAccent(route)), typography = BookTypography) {
         Box(Modifier.fillMaxSize()) {
             PlantationBackground(route)
             Column(Modifier.fillMaxSize().safeDrawingPadding().padding(horizontal = 20.dp)) {
