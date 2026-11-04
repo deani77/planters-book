@@ -28,7 +28,13 @@ class DatabaseUpdateTest {
             db.openHelper.readableDatabase.query("SELECT COUNT(*) FROM sync_state").use {
                 assertTrue(it.moveToFirst()); assertEquals(0, it.getInt(0))
             }
-            repository.apply(update(2), "VPS")
+            // Offline imports must preserve any legacy sync metadata, including on rejection.
+            val legacySyncTimestamp = 1234L
+            db.estateDao().putSync(SyncState(lastSuccessEpochMillis = legacySyncTimestamp))
+            repository.apply(update(2), "File import")
+            db.openHelper.readableDatabase.query("SELECT lastSuccessEpochMillis FROM sync_state").use {
+                assertTrue(it.moveToFirst()); assertEquals(legacySyncTimestamp, it.getLong(0))
+            }
             val before = db.estateDao().currentSnapshot()
             try {
                 repository.apply(update(1), "File import")
@@ -39,7 +45,7 @@ class DatabaseUpdateTest {
                 assertTrue(it.moveToFirst()); assertEquals(1L, it.getLong(0))
             }
             db.openHelper.readableDatabase.query("SELECT lastSuccessEpochMillis FROM sync_state").use {
-                assertTrue(it.moveToFirst()); assertTrue(it.getLong(0) > 0)
+                assertTrue(it.moveToFirst()); assertEquals(legacySyncTimestamp, it.getLong(0))
             }
         } finally { db.close() }
     }
