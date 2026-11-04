@@ -89,11 +89,12 @@ fun EstateApp() {
         else -> allSections.firstOrNull { it.route == route }?.title ?: "Estate Details"
     }
     MaterialTheme(colorScheme = estateColorScheme(dark, bookAccent(route)), typography = BookTypography) {
+        Surface(Modifier.fillMaxSize(), color = BookSlate, contentColor = Color.White) {
         Box(Modifier.fillMaxSize()) {
             PlantationBackground()
             Column(Modifier.fillMaxSize().safeDrawingPadding().padding(horizontal = 20.dp)) {
                 if (route != "home") {
-                    TextButton(onClick = { nav.popBackStack() }) { Text("‹  Back") }
+                    TextButton(onClick = { nav.popBackStack() }, colors = ButtonDefaults.textButtonColors(contentColor = Color.White)) { Text("‹  Back") }
                 } else {
                     Spacer(Modifier.height(20.dp))
                     Text(estateName, modifier = Modifier.fillMaxWidth(),
@@ -109,7 +110,11 @@ fun EstateApp() {
                         .background(Color(0xFF4A6274), RoundedCornerShape(24.dp))
                         .padding(20.dp),
                     textAlign = if (route == "home") TextAlign.Center else TextAlign.Start)
-                NavHost(nav, startDestination = "home", modifier = Modifier.weight(1f)) {
+                Surface(Modifier.weight(1f).fillMaxWidth(),
+                    color = if (route == "home") Color.Transparent else MaterialTheme.colorScheme.surface,
+                    contentColor = if (route == "home") Color.White else MaterialTheme.colorScheme.onSurface,
+                    shape = RoundedCornerShape(18.dp)) {
+                NavHost(nav, startDestination = "home", modifier = Modifier.fillMaxSize()) {
                     composable("home") {
                         Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()),
                             verticalArrangement = Arrangement.spacedBy(14.dp)) {
@@ -153,6 +158,7 @@ fun EstateApp() {
                         }
                     }
                 }
+                }
                 if (route == "home") {
                     Text("Planters Book", style = MaterialTheme.typography.bodySmall,
                         color = Color.White.copy(alpha = 0.8f),
@@ -164,6 +170,8 @@ fun EstateApp() {
             }
         }
     }
+}
+
 }
 
 @Composable
