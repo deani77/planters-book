@@ -27,11 +27,11 @@ fun estateColorScheme(dark: Boolean, accent: BookAccent = BookAccent.Dashboard) 
     primary = BookTeal, onPrimary = BookInk,
     primaryContainer = Color(0xFF304B50), onPrimaryContainer = Color(0xFFE3F2F3),
     secondary = Color(0xFFB2CDD0), onSecondary = BookInk,
-    secondaryContainer = Color(0xFF30444F), onSecondaryContainer = Color(0xFFE6F0F3),
+    secondaryContainer = Color(0xFF293D47), onSecondaryContainer = Color(0xFFE6F0F3),
     tertiary = Color(0xFFBDD9CF), onTertiary = BookInk,
     background = BookSlate, onBackground = Color.White,
     surface = Color(0xFF1D2C35), onSurface = Color(0xFFF0F5F6),
-    surfaceVariant = Color(0xFF30444F), onSurfaceVariant = Color(0xFFCDDCE0),
+    surfaceVariant = Color(0xFF293D47), onSurfaceVariant = Color(0xFFCDDCE0),
     outline = Color(0xFF95AEB7), outlineVariant = Color(0xFF657F8B),
     error = Color(0xFFFFB4AB), onError = Color(0xFF690005),
 ) else lightColorScheme(
