@@ -1,6 +1,7 @@
 package com.selendang3.app
 
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.compositeOver
 import androidx.compose.ui.graphics.luminance
 import org.junit.Assert.assertTrue
 import org.junit.Assert.assertEquals
@@ -39,6 +40,19 @@ class BookPaletteTest {
                     colors.surface to colors.onSurface,
                     colors.surfaceVariant to colors.onSurfaceVariant).forEach { (background, text) ->
                     assertTrue("${accent.name}, dark=$dark", contrast(background, text) >= 4.5f)
+                }
+            }
+        }
+    }
+
+    @Test fun pageGradientKeepsNavigationAndSecondaryTextReadable() {
+        BookAccent.entries.forEach { accent ->
+            listOf(false, true).forEach { dark ->
+                val colors = estateColorScheme(dark, accent)
+                val top = colors.primaryContainer.copy(alpha = 0.16f).compositeOver(colors.background)
+                listOf(colors.primary, colors.onSurface, colors.onSurfaceVariant).forEach { text ->
+                    assertTrue("${accent.name}, dark=$dark", contrast(top, text) >= 4.5f)
+                    assertTrue("${accent.name}, dark=$dark", contrast(colors.background, text) >= 4.5f)
                 }
             }
         }

@@ -15,7 +15,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.compositeOver
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
@@ -85,7 +88,7 @@ fun EstateApp() {
     }
     MaterialTheme(colorScheme = estateColorScheme(dark, bookAccent(route)), typography = BookTypography) {
         Box(Modifier.fillMaxSize()) {
-            PlantationBackground(route)
+            PlantationBackground()
             Column(Modifier.fillMaxSize().safeDrawingPadding().padding(horizontal = 20.dp)) {
                 if (route != "home") {
                     TextButton(onClick = { nav.popBackStack() }) { Text("‹  Back") }
@@ -164,6 +167,7 @@ private fun SectionGrid(sections: List<Section>, onOpen: (String) -> Unit) {
         val accent = bookAccent(section.route)
         Card(onClick = { onOpen(section.route) },
             modifier = Modifier.fillMaxWidth().heightIn(min = 112.dp).semantics {
+                role = Role.Button
                 if (section.route == "dashboard") contentDescription = "Open Estate Dashboard"
             },
             shape = RoundedCornerShape(24.dp),
@@ -192,9 +196,10 @@ private fun InfoCard(title: String, body: String) {
 }
 
 @Composable
-private fun PlantationBackground(route: String) {
+private fun PlantationBackground() {
     val base = MaterialTheme.colorScheme.background
-    val soft = MaterialTheme.colorScheme.primaryContainer
+    // Keep controls readable over the decorative gradient in both appearances.
+    val soft = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.16f).compositeOver(base)
     Box(Modifier.fillMaxSize().background(Brush.verticalGradient(
         listOf(soft, base, base))))
 }
