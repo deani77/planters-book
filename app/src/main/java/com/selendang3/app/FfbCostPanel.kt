@@ -34,8 +34,8 @@ fun FfbCostPanel(data: FfbCostComparison?) {
                         Text(group.label, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center)
                     }
                     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        CostColumn("Budget", group.budgetYearRmPerTonne, maximum, Color(0xFFD3A21A), Modifier.weight(1f))
-                        CostColumn("Actual", group.actualYtdRmPerTonne, maximum, Color(0xFF397FBA), Modifier.weight(1f))
+                        CostColumn("Budget", group.budgetYearRmPerTonne, maximum, MaterialTheme.colorScheme.secondary, Modifier.weight(1f))
+                        CostColumn("Actual", group.actualYtdRmPerTonne, maximum, MaterialTheme.colorScheme.primary, Modifier.weight(1f))
                     }
                 }
             }

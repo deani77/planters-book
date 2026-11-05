@@ -7,6 +7,8 @@ import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 
 @Composable
 fun rememberEstateName(): String {
@@ -25,6 +27,8 @@ fun rememberEstateName(): String {
 
 @Composable
 fun EstateProfileControls() {
+    val focusManager = LocalFocusManager.current
+    val keyboard = LocalSoftwareKeyboardController.current
     val context = LocalContext.current
     val preferences = remember(context) { context.getSharedPreferences("user_settings", 0) }
     var name by rememberSaveable { mutableStateOf(preferences.getString("estate_name", "") ?: "") }
@@ -34,6 +38,8 @@ fun EstateProfileControls() {
     Button(onClick = {
         preferences.edit().putString("estate_name", name.trim()).apply()
         saved = true
+        focusManager.clearFocus()
+        keyboard?.hide()
     }, enabled = name.isNotBlank()) { Text("Save Estate Name") }
     if (saved) Text("Estate name saved on this device.")
 }

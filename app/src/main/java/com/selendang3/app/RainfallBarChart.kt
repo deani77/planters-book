@@ -23,12 +23,12 @@ fun RainfallBarChart(records: List<AnnualRainfall>) {
         Text("Rainfall chart pending complete monthly records.", Modifier.padding(12.dp), style = MaterialTheme.typography.bodySmall)
         return
     }
-    val dark = MaterialTheme.colorScheme.surface.luminance() < 0.5f
+    val palette = MaterialTheme.colorScheme
     fun color(role: RainfallHighlight): Color = when (role) {
-        RainfallHighlight.HIGHEST -> Color(if (dark) 0xFF81C784 else 0xFF2E7D32)
-        RainfallHighlight.LOWEST -> Color(if (dark) 0xFFFFB74D else 0xFFDB6405)
-        RainfallHighlight.FULL_YEAR -> Color(if (dark) 0xFF90CAF9 else 0xFF1565C0)
-        RainfallHighlight.YTD -> Color(if (dark) 0xFFB8BFC7 else 0xFF646D76)
+        RainfallHighlight.HIGHEST -> palette.primary
+        RainfallHighlight.LOWEST -> palette.tertiary
+        RainfallHighlight.FULL_YEAR -> palette.secondary
+        RainfallHighlight.YTD -> palette.onSurfaceVariant
     }
     val max = (bars.maxOfOrNull { it.totalMm } ?: 0.0).coerceAtLeast(1.0)
     val plotHeight = 170.dp

@@ -27,7 +27,7 @@ fun FieldDetailsScreen(update: EstatePackage?) {
                 }
             }
             EstatePillGrid(codes.size, maxColumns = 2) { index ->
-                FilledTonalButton(onClick = { selected = codes[index] },
+                FilledTonalButton(colors = bookTabButtonColors(), onClick = { selected = codes[index] },
                     modifier = Modifier.fillMaxWidth().heightIn(min = EstateControlHeight)) { Text(codes[index]) }
             }
             if (codes.isEmpty()) Text("Import estate records through Settings → Estate Data Management to see field buttons.")

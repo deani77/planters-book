@@ -19,7 +19,7 @@ fun UserSettingsScreen(themeChoice: String, onThemeChange: (String) -> Unit) {
     var position by rememberSaveable { mutableStateOf(preferences.getString("profile_position", "") ?: "") }
     var phone by rememberSaveable { mutableStateOf(preferences.getString("profile_phone", "") ?: "") }
     var saved by rememberSaveable { mutableStateOf(false) }
-    Surface(Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.surface) {
+    Surface(Modifier.fillMaxSize(), color = androidx.compose.ui.graphics.Color.Transparent) {
         Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).imePadding().padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)) {
             if (page != "Settings") TextButton(onClick = { page = "Settings" }) { Text("‹ Settings") }
@@ -27,7 +27,7 @@ fun UserSettingsScreen(themeChoice: String, onThemeChange: (String) -> Unit) {
             when (page) {
                 "Settings" -> {
                     listOf("Inbox", "User Profile", "Appearance", "Suggestions", "About").forEach { item ->
-                        OutlinedButton(onClick = { page = item }, modifier = Modifier.fillMaxWidth().heightIn(min = EstateControlHeight)) {
+                        FilledTonalButton(colors = bookTabButtonColors(if (page == "Settings") 1 else 2), onClick = { page = item }, modifier = Modifier.fillMaxWidth().heightIn(min = EstateControlHeight)) {
                             Text(item)
                         }
                     }
@@ -60,7 +60,7 @@ fun UserSettingsScreen(themeChoice: String, onThemeChange: (String) -> Unit) {
                 "Appearance" -> {
                     Text("Choose how the app looks. Your choice applies immediately.")
                     listOf("light" to "Light", "dark" to "Dark", "system" to "Follow System").forEach { (value, label) ->
-                        OutlinedButton(onClick = { onThemeChange(value) }, modifier = Modifier.fillMaxWidth().heightIn(min = EstateControlHeight)) {
+                        FilledTonalButton(colors = bookTabButtonColors(if (page == "Settings") 1 else 2), onClick = { onThemeChange(value) }, modifier = Modifier.fillMaxWidth().heightIn(min = EstateControlHeight)) {
                             Text(if (themeChoice == value) "✓ $label" else label)
                         }
                     }

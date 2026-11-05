@@ -4,6 +4,7 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -13,9 +14,10 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.compositeOver
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.role
@@ -87,44 +89,58 @@ fun EstateApp() {
         else -> allSections.firstOrNull { it.route == route }?.title ?: "Estate Details"
     }
     MaterialTheme(colorScheme = estateColorScheme(dark, bookAccent(route)), typography = BookTypography) {
+        Surface(Modifier.fillMaxSize(), color = BookSlate, contentColor = Color.White) {
         Box(Modifier.fillMaxSize()) {
             PlantationBackground()
             Column(Modifier.fillMaxSize().safeDrawingPadding().padding(horizontal = 20.dp)) {
                 if (route != "home") {
-                    TextButton(onClick = { nav.popBackStack() }) { Text("‹  Back") }
+                    TextButton(onClick = { nav.popBackStack() }, colors = ButtonDefaults.textButtonColors(contentColor = Color.White)) { Text("‹  Back") }
                 } else {
                     Spacer(Modifier.height(20.dp))
                     Text(estateName, modifier = Modifier.fillMaxWidth(),
-                        style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        style = MaterialTheme.typography.labelMedium, color = Color.White.copy(alpha = 0.8f),
                         textAlign = TextAlign.Center)
                 }
-                Text(title, style = if (route == "home") MaterialTheme.typography.headlineLarge else MaterialTheme.typography.headlineMedium,
+                Text(title, style = if (route == "home") MaterialTheme.typography.headlineLarge.copy(
+                    fontSize = MaterialTheme.typography.headlineLarge.fontSize * 0.5f,
+                    lineHeight = MaterialTheme.typography.headlineLarge.lineHeight * 0.5f
+                ) else MaterialTheme.typography.headlineMedium,
                     fontWeight = FontWeight.Bold, color = Color.White,
                     modifier = Modifier.fillMaxWidth().padding(vertical = 12.dp)
-                        .background(Brush.linearGradient(listOf(bookAccent(route).start, bookAccent(route).end)), RoundedCornerShape(24.dp))
+                        .background(Color(0xFF2D2D2D), RoundedCornerShape(24.dp))
                         .padding(20.dp),
                     textAlign = if (route == "home") TextAlign.Center else TextAlign.Start)
-                NavHost(nav, startDestination = "home", modifier = Modifier.weight(1f)) {
+                Surface(Modifier.weight(1f).fillMaxWidth()
+                    .padding(vertical = if (route == "home") 0.dp else 12.dp),
+                    color = Color.Transparent,
+                    contentColor = if (route == "home") Color.White else MaterialTheme.colorScheme.onSurface,
+                    shape = RoundedCornerShape(18.dp)) {
+                NavHost(nav, startDestination = "home", modifier = Modifier.fillMaxSize()) {
                     composable("home") {
                         Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()),
                             verticalArrangement = Arrangement.spacedBy(14.dp)) {
                             Spacer(Modifier.height(8.dp))
-                            SectionGrid(listOf(Section("dashboard", "Estate Dashboard", "")) + mainSections) { nav.navigate(it) }
+                            SectionGrid(listOf(Section("dashboard", "Estate Dashboard", ""))) { nav.navigate(it) }
+                            SectionGrid(mainSections, fixedColumns = 2) { nav.navigate(it) }
                         }
                     }
                     composable("information") {
                         Column {
-                            OutlinedButton(onClick = { nav.navigate("estate-records") }, modifier = Modifier.fillMaxWidth().heightIn(min = EstateControlHeight)) { Text("All Estate Records") }
+                            FilledTonalButton(colors = bookTabButtonColors(1), onClick = { nav.navigate("estate-records") }, modifier = Modifier.fillMaxWidth().heightIn(min = EstateControlHeight)) { Text("All Estate Records") }
                             Box(Modifier.weight(1f)) { EstateDashboard(estateUpdate) }
                         }
                     }
                     composable("estate-records") {
                         Column(Modifier.verticalScroll(rememberScrollState())) {
-                            SectionGrid(estateSections) { nav.navigate(it) }
+                            SectionGrid(estateSections, level = 2) { nav.navigate(it) }
                         }
                     }
                     estateSections.forEach { section ->
-                        composable(section.route) { EstateSectionData(section, estateUpdate) }
+                        composable(section.route) {
+                            CompositionLocalProvider(LocalBookTabLevel provides 3) {
+                                EstateSectionData(section, estateUpdate)
+                            }
+                        }
                     }
                     composable("production") { FieldDetailsScreen(estateUpdate) }
                     composable("upkeep") { UpkeepCultivationScreen(estateUpdate) }
@@ -147,39 +163,58 @@ fun EstateApp() {
                         }
                     }
                 }
+                }
                 if (route == "home") {
                     Text("Planters Book", style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        color = Color.White.copy(alpha = 0.8f),
                         modifier = Modifier.fillMaxWidth().padding(top = 8.dp), textAlign = TextAlign.Center)
                 }
                 Text("v${BuildConfig.VERSION_NAME}  •  Local storage\nLast update: ${snapshot?.let { DateFormat.getDateTimeInstance().format(Date(it.updatedAt)) + " · " + it.source } ?: "No data yet"}",
-                    style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    style = MaterialTheme.typography.labelMedium, color = Color.White.copy(alpha = 0.8f),
                     modifier = Modifier.fillMaxWidth().padding(vertical = 16.dp), textAlign = TextAlign.Center)
             }
         }
     }
 }
 
+}
+
 @Composable
-private fun SectionGrid(sections: List<Section>, onOpen: (String) -> Unit) {
-    EstatePillGrid(sections.size, maxColumns = 2) { index ->
-        val section = sections[index]
-        val accent = bookAccent(section.route)
-        Card(onClick = { onOpen(section.route) },
-            modifier = Modifier.fillMaxWidth().heightIn(min = 112.dp).semantics {
-                role = Role.Button
-                if (section.route == "dashboard") contentDescription = "Open Estate Dashboard"
-            },
-            shape = RoundedCornerShape(24.dp),
-            colors = CardDefaults.cardColors(containerColor = Color.Transparent, contentColor = Color.White)) {
-            Column(Modifier.fillMaxWidth()
-                .background(Brush.linearGradient(listOf(accent.start, accent.end)))
-                .padding(horizontal = 12.dp, vertical = 20.dp),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                EstateModuleIcon(section.route, Modifier.size(28.dp), Color.White)
-                Text(section.title, textAlign = TextAlign.Center, fontWeight = FontWeight.SemiBold)
+private fun SectionGrid(sections: List<Section>, fixedColumns: Int? = null, level: Int = 0, onOpen: (String) -> Unit) {
+    BoxWithConstraints(Modifier.fillMaxWidth()) {
+        val fontScale = androidx.compose.ui.platform.LocalDensity.current.fontScale.coerceAtLeast(1f)
+        val columns = fixedColumns ?: if (maxWidth >= 288.dp * fontScale) 2 else 1
+        Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            sections.chunked(columns).forEach { row ->
+                Row(Modifier.fillMaxWidth().height(IntrinsicSize.Max),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                    row.forEach { section ->
+                        SectionCard(section, Modifier.weight(1f).fillMaxHeight(), level, onOpen)
+                    }
+                    if (row.size < columns && sections.size > 1) Spacer(Modifier.weight(1f))
+                }
             }
+        }
+    }
+}
+
+@Composable
+private fun SectionCard(section: Section, modifier: Modifier, level: Int, onOpen: (String) -> Unit) {
+    Card(onClick = { onOpen(section.route) },
+        modifier = modifier.heightIn(min = 112.dp).semantics {
+            role = Role.Button
+            if (section.route == "dashboard") contentDescription = "Open Estate Dashboard"
+        },
+        shape = RoundedCornerShape(24.dp),
+        colors = CardDefaults.cardColors(containerColor = bookTabBackground(level), contentColor = bookTabForeground(level))) {
+        Column(Modifier.fillMaxSize()
+            .background(bookTabBackground(level))
+            .padding(horizontal = 12.dp, vertical = 20.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(10.dp, Alignment.CenterVertically)) {
+            EstateModuleIcon(section.route, Modifier.size(28.dp), bookTabForeground(level))
+            Text(section.title, style = MaterialTheme.typography.labelLarge,
+                textAlign = TextAlign.Center, fontWeight = FontWeight.SemiBold)
         }
     }
 }
@@ -197,9 +232,32 @@ private fun InfoCard(title: String, body: String) {
 
 @Composable
 private fun PlantationBackground() {
-    val base = MaterialTheme.colorScheme.background
-    // Keep controls readable over the decorative gradient in both appearances.
-    val soft = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.16f).compositeOver(base)
-    Box(Modifier.fillMaxSize().background(Brush.verticalGradient(
-        listOf(soft, base, base))))
+    Canvas(Modifier.fillMaxSize().background(Color(0xFF2D2D2D))) {
+        // Decorative oil-palm fronds stay behind content.
+        val ink = Color(0xFF32CD32).copy(alpha = 0.14f)
+        val stroke = 1.5.dp.toPx()
+        fun frond(root: Offset, tip: Offset, spread: Float) {
+            drawLine(ink, root, tip, strokeWidth = stroke)
+            for (i in 1..9) {
+                val t = i / 10f
+                val stem = Offset(root.x + (tip.x - root.x) * t, root.y + (tip.y - root.y) * t)
+                val length = spread * (1f - t * 0.65f)
+                for (side in listOf(-1f, 1f)) {
+                    val leaf = Path().apply {
+                        moveTo(stem.x, stem.y)
+                        quadraticBezierTo(stem.x + side * length * 0.55f, stem.y - length * 0.1f,
+                            stem.x + side * length, stem.y + length * 0.32f)
+                    }
+                    drawPath(leaf, ink, style = Stroke(width = stroke))
+                }
+            }
+        }
+        val crown = Offset(size.width * 0.88f, size.height * 0.68f)
+        drawLine(ink, Offset(size.width * 0.96f, size.height), crown, strokeWidth = 8.dp.toPx())
+        frond(crown, Offset(size.width * 0.38f, size.height * 0.47f), size.width * 0.18f)
+        frond(crown, Offset(size.width * 0.74f, size.height * 0.35f), size.width * 0.2f)
+        frond(crown, Offset(size.width * 1.12f, size.height * 0.41f), size.width * 0.18f)
+        frond(Offset(-size.width * 0.06f, size.height * 0.18f),
+            Offset(size.width * 0.38f, -size.height * 0.04f), size.width * 0.2f)
+    }
 }

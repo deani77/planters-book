@@ -48,7 +48,7 @@ fun OperationalDashboardScreen(update: EstatePackage?) {
 @Composable
 private fun OperationalSummaryCard(card: OperationalCard, symbol: String, modifier: Modifier = Modifier, wide: Boolean = false) {
     val accent = bookAccent(card.title)
-    MaterialTheme(colorScheme = MaterialTheme.colorScheme.copy(primary = if (MaterialTheme.colorScheme.background.luminance() < 0.5f) accent.light else accent.start)) {
+    MaterialTheme(colorScheme = MaterialTheme.colorScheme.copy(primary = if (MaterialTheme.colorScheme.surface.luminance() < 0.5f) accent.light else accent.start)) {
         Card(modifier.fillMaxWidth().heightIn(min = EstateControlHeight), shape = RoundedCornerShape(16.dp),
             colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
             border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)) {

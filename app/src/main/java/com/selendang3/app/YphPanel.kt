@@ -20,8 +20,8 @@ fun YphPanel(data: YphData?) {
         Text("Sync estate production data to view yearly actual YPH and current-year YTD/budget.", Modifier.padding(12.dp))
         return
     }
-    val actualColor = Color(0xFF397FBA)
-    val budgetColor = Color(0xFFD3A21A)
+    val actualColor = MaterialTheme.colorScheme.primary
+    val budgetColor = MaterialTheme.colorScheme.secondary
     val values = data.displayHistory.map { it.actualYph } + listOf(data.actualYtdYph, data.budgetYtdYph)
     val maximum = values.filterNotNull().maxOrNull()?.takeIf { it > 0 } ?: 1.0
     fun formatted(value: Double?) = value?.let { String.format(Locale.US, "%.2f", it) } ?: "Pending"
@@ -29,7 +29,7 @@ fun YphPanel(data: YphData?) {
     Column(Modifier.fillMaxWidth().padding(12.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
         Text("YPH · tonnes/hectare (t/ha)", fontWeight = FontWeight.Bold)
         Text("5-year period: ${data.reportingYear - 4}–${data.reportingYear}", style = MaterialTheme.typography.bodySmall)
-        Text("Blue: actual · Yellow: budget for the same YTD period", style = MaterialTheme.typography.bodySmall)
+        Text("Chart labels identify actual and budget for the same YTD period", style = MaterialTheme.typography.bodySmall)
         data.displayHistory.forEach { year ->
             YieldBar(year.year.toString(), year.actualYph, maximum, actualColor)
         }

@@ -44,7 +44,7 @@ fun ProductionScreen() {
                 codes.chunked(count).forEach { group ->
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         group.forEach { code ->
-                            FilledTonalButton(onClick = { selected = code }, modifier = Modifier.weight(1f).heightIn(min = 44.dp)) { Text(code) }
+                            FilledTonalButton(colors = bookTabButtonColors(), onClick = { selected = code }, modifier = Modifier.weight(1f).heightIn(min = 44.dp)) { Text(code) }
                         }
                         repeat(count - group.size) { Spacer(Modifier.weight(1f)) }
                     }
