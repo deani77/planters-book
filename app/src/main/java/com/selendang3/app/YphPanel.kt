@@ -29,7 +29,7 @@ fun YphPanel(data: YphData?) {
     Column(Modifier.fillMaxWidth().padding(12.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
         Text("YPH · tonnes/hectare (t/ha)", fontWeight = FontWeight.Bold)
         Text("5-year period: ${data.reportingYear - 4}–${data.reportingYear}", style = MaterialTheme.typography.bodySmall)
-        Text("Teal: actual · Slate: budget for the same YTD period", style = MaterialTheme.typography.bodySmall)
+        Text("Chart labels identify actual and budget for the same YTD period", style = MaterialTheme.typography.bodySmall)
         data.displayHistory.forEach { year ->
             YieldBar(year.year.toString(), year.actualYph, maximum, actualColor)
         }
