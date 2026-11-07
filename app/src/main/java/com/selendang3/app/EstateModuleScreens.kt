@@ -34,7 +34,11 @@ fun FieldDetailsScreen(update: EstatePackage?) {
         } else {
             TextButton(onClick = { selected = null }) { Text("‹ All Fields") }
             Text(field, style = MaterialTheme.typography.titleLarge)
-            estateFieldTables(update, field).forEach { table ->
+            val profiles = sourceFieldProfileTables(update, field)
+            if (profiles.isNotEmpty()) {
+                Text("Imported profile: report year is shown below. Density and height apply to the division; source date is unconfirmed.", style = MaterialTheme.typography.bodySmall)
+            }
+            (estateFieldTables(update, field) + profiles).forEach { table ->
                 Text(estateSections.firstOrNull { it.route == table.id }?.title ?: table.id,
                     style = MaterialTheme.typography.titleMedium)
                 table.rows.forEach { row ->
@@ -45,7 +49,7 @@ fun FieldDetailsScreen(update: EstatePackage?) {
                     }
                 }
             }
-            Text("Field overview and available ABW records only. Production and upkeep are maintained in their respective tabs.")
+            Text("Field information and imported source records. Production and upkeep are maintained in their respective tabs.")
         }
     }
 }
