@@ -62,7 +62,7 @@ object EstateXlsx {
             val name = entry["name"].orEmpty().trim().lowercase(java.util.Locale.ROOT)
             require(name.isNotBlank() && name !in sheets) { "Duplicate or invalid worksheet name." }
             val relationship = relationships[entry["id"]] ?: throw IllegalArgumentException("Missing worksheet relationship.")
-            if (name in sections || name == "metadata" || name == "optional json") {
+            if (name in sections || name == "metadata" || name == "optional json" || name in setOf("field input", "abw input", "crop input", "crop history input", "weeding input", "manuring input", "pest disease input", "other upkeep input")) {
                 require(relationship["TargetMode"] != "External" && relationship["Type"].orEmpty().endsWith("/worksheet")) { "Use local worksheet data." }
                 val target = relationship["Target"].orEmpty()
                 require(target.isNotEmpty() && !target.contains('\\') && !target.split('/').contains("..")) { "Invalid worksheet target." }
@@ -71,7 +71,20 @@ object EstateXlsx {
                 sheets[name] = path
             }
         }
+        // Until these entry sheets are mapped into the estate package schema, fail
+        // explicitly rather than appearing to import records that would be discarded.
+        val pendingEntryNames = setOf("field input", "abw input", "crop input",
+            "crop history input", "weeding input", "manuring input",
+            "pest disease input", "other upkeep input")
         val shared = files["xl/sharedStrings.xml"]?.let(::readShared) ?: emptyList()
+        pendingEntryNames.forEach { name ->
+            val path = sheets[name] ?: return@forEach
+            val records = readSheet(part(path), shared)
+            require(records.drop(1).none { row -> row.any(String::isNotBlank) }) {
+                "The ${name} worksheet is not importable yet. Keep its records until the Android importer supports this sheet."
+            }
+        }
+
         fun sheet(name: String) = readSheet(part(sheets[name] ?: throw IllegalArgumentException("Workbook is missing the " + name + " sheet.")), shared)
         val meta = linkedMapOf<String, String>()
         sheet("metadata").drop(1).filter { it.any(String::isNotBlank) }.forEach { row ->
@@ -139,7 +152,21 @@ object EstateXlsx {
         sections.forEach { sheets += listOf(listOf("Value")) }
         sheets += listOf(listOf("key", "json"), listOf("yph", ""), listOf("cropProductionReport", ""),
             listOf("cropProductionReportHistory", ""), listOf("manuringReport", ""), listOf("cropBudget", ""), listOf("ffbRejectReport", ""), listOf("fieldProfiles", ""), listOf("cropHistory", ""))
-        val names = listOf("Metadata") + sections.map { it.replaceFirstChar { first -> first.uppercase() } } + "Optional JSON"
+        // Human-friendly entry sheets are reference worksheets until the Android import
+        // mapping and estate package schema support their records. They are deliberately
+        // excluded from the parsed estate sections to prevent silent data corruption.
+        val entrySheets = listOf(
+            "Field Input" to listOf("Field Code", "Planting Year", "Maturity Year", "Perimeter Area (ha)", "Planted Area (ha)", "Standing Palms", "SPH", "Palm Variety", "Terrain", "Soil Type"),
+            "ABW Input" to listOf("Field Code", "Year", "ABW (kg/bunch)"),
+            "Crop Input" to listOf("Field Code", "Year", "Month (1-12)", "Actual FFB (MT)", "Budget FFB (MT)"),
+            "Crop History Input" to listOf("Field Code", "Year", "Annual Actual FFB (MT)"),
+            "Weeding Input" to listOf("Field Code", "Date (YYYY-MM-DD)", "Type (Circle/Selective)", "Completed Area (ha)", "Round"),
+            "Manuring Input" to listOf("Field Code", "Date (YYYY-MM-DD)", "Fertiliser Type", "Bags Applied", "Covered Area (ha)", "Round"),
+            "Pest Disease Input" to listOf("Field Code", "Inspection Date (YYYY-MM-DD)", "Pest or Disease", "Affected Area (ha)", "Severity", "Treatment", "Status"),
+            "Other Upkeep Input" to listOf("Field Code", "Date (YYYY-MM-DD)", "Category", "Work Completed", "Unit", "Remarks")
+        )
+        entrySheets.forEach { (_, headings) -> sheets += listOf(headings) }
+        val names = listOf("Metadata") + sections.map { it.replaceFirstChar { first -> first.uppercase() } } + "Optional JSON" + entrySheets.map { it.first }
         ZipOutputStream(output).use { zip ->
             fun add(path: String, text: String) {
                 zip.putNextEntry(ZipEntry(path)); zip.write(text.toByteArray(Charsets.UTF_8)); zip.closeEntry()
