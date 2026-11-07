@@ -20,9 +20,9 @@ fun FieldDetailsScreen(update: EstatePackage?) {
         if (field == null) {
             Card(Modifier.fillMaxWidth()) {
                 Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Text("Field Dashboard", style = MaterialTheme.typography.titleLarge)
+                    Text("Field Overview", style = MaterialTheme.typography.titleLarge)
                     Text("Fields available: " + if (update == null) "Pending" else codes.size.toString())
-                    Text("Basic field profiles · area, palms, planting and age records")
+                    Text("Planting, maturity, area, palm population, terrain, soil and average bunch weight")
                     Text("Choose a field for its basic information. Crop and harvesting records are under Crop Production.")
                 }
             }
@@ -34,10 +34,7 @@ fun FieldDetailsScreen(update: EstatePackage?) {
         } else {
             TextButton(onClick = { selected = null }) { Text("‹ All Fields") }
             Text(field, style = MaterialTheme.typography.titleLarge)
-            if (sourceFieldProfileTables(update, field).isNotEmpty()) {
-                Text("Imported profile: report year is shown below. Density and height apply to the division; source date is unconfirmed.", style = MaterialTheme.typography.bodySmall)
-            }
-            (sourceFieldProfileTables(update, field) + estateFieldTables(update, field)).forEach { table ->
+            estateFieldTables(update, field).forEach { table ->
                 Text(estateSections.firstOrNull { it.route == table.id }?.title ?: table.id,
                     style = MaterialTheme.typography.titleMedium)
                 table.rows.forEach { row ->
@@ -48,7 +45,7 @@ fun FieldDetailsScreen(update: EstatePackage?) {
                     }
                 }
             }
-            Text("Basic records for this field only. Crop, harvesting and productivity records are under Crop Production.")
+            Text("Field overview and available ABW records only. Production and upkeep are maintained in their respective tabs.")
         }
     }
 }
