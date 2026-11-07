@@ -1,38 +1,15 @@
 package com.selendang3.app
 
-import androidx.compose.material3.darkColorScheme
-import androidx.compose.material3.lightColorScheme
-import androidx.compose.ui.graphics.Color
+// Compatibility facade for screens not yet migrated to core.theme.
+// Remove after the remaining UI screens import the theme package directly.
+@Deprecated("Import from core.theme")
+typealias BookAccent = com.selendang3.app.core.theme.BookAccent
 
-// One slate/teal visual language across navigation, dashboards and charts.
-val BookSlate = Color(0xFF2D2D2D)
-val BookTeal = Color(0xFF32CD32)
-val BookInk = Color(0xFF101A10)
-enum class BookAccent(val start: Color = Color(0xFF006400), val end: Color = Color(0xFF006400),
-    val light: Color = BookTeal, val tint: Color = Color(0xFF393939)) {
-    Dashboard, Crop, Harvesting, Productivity, Upkeep, Rainfall
-}
+val BookSlate get() = com.selendang3.app.core.theme.BookSlate
+val BookTeal get() = com.selendang3.app.core.theme.BookTeal
+val BookInk get() = com.selendang3.app.core.theme.BookInk
 
-fun bookAccent(key: String) = when (key) {
-    "reports", "abw", "Crop Production" -> BookAccent.Crop
-    "production", "Harvesting Coverage" -> BookAccent.Harvesting
-    "Harvester Productivity", "Estate Cost", "tools" -> BookAccent.Productivity
-    "upkeep", "Manuring", "Weeding", "Pest & Disease" -> BookAccent.Upkeep
-    "rainfall" -> BookAccent.Rainfall
-    else -> BookAccent.Dashboard
-}
+fun bookAccent(key: String) = com.selendang3.app.core.theme.bookAccent(key)
 
-// The requested charcoal base and readable surfaces are identical in both modes.
-@Suppress("UNUSED_PARAMETER")
-fun estateColorScheme(dark: Boolean, accent: BookAccent = BookAccent.Dashboard) = darkColorScheme(
-    primary = Color(0xFF7FFF00), onPrimary = BookInk,
-    primaryContainer = Color(0xFF006400), onPrimaryContainer = Color.White,
-    secondary = Color(0xFF32CD32), onSecondary = BookInk,
-    secondaryContainer = Color(0xFF393939), onSecondaryContainer = Color.White,
-    tertiary = Color(0xFFB8EFA0), onTertiary = BookInk,
-    background = BookSlate, onBackground = Color.White,
-    surface = BookSlate, onSurface = Color.White,
-    surfaceVariant = Color(0xFF393939), onSurfaceVariant = Color(0xFFE0E0E0),
-    outline = Color(0xFFB1B1B1), outlineVariant = Color(0xFF808080),
-    error = Color(0xFFFFB4AB), onError = Color(0xFF690005),
-)
+fun estateColorScheme(dark: Boolean, accent: BookAccent = BookAccent.Dashboard) =
+    com.selendang3.app.core.theme.estateColorScheme(dark, accent)
