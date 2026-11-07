@@ -139,7 +139,21 @@ object EstateXlsx {
         sections.forEach { sheets += listOf(listOf("Value")) }
         sheets += listOf(listOf("key", "json"), listOf("yph", ""), listOf("cropProductionReport", ""),
             listOf("cropProductionReportHistory", ""), listOf("manuringReport", ""), listOf("cropBudget", ""), listOf("ffbRejectReport", ""), listOf("fieldProfiles", ""), listOf("cropHistory", ""))
-        val names = listOf("Metadata") + sections.map { it.replaceFirstChar { first -> first.uppercase() } } + "Optional JSON"
+        // Human-friendly entry sheets are reference worksheets until the Android import
+        // mapping and estate package schema support their records. They are deliberately
+        // excluded from the parsed estate sections to prevent silent data corruption.
+        val entrySheets = listOf(
+            "Field Input" to listOf("Field Code", "Planting Year", "Maturity Year", "Perimeter Area (ha)", "Planted Area (ha)", "Standing Palms", "SPH", "Palm Variety", "Terrain", "Soil Type"),
+            "ABW Input" to listOf("Field Code", "Year", "ABW (kg/bunch)"),
+            "Crop Input" to listOf("Field Code", "Year", "Month (1-12)", "Actual FFB (MT)", "Budget FFB (MT)"),
+            "Crop History Input" to listOf("Field Code", "Year", "Annual Actual FFB (MT)"),
+            "Weeding Input" to listOf("Field Code", "Date (YYYY-MM-DD)", "Type (Circle/Selective)", "Completed Area (ha)", "Round"),
+            "Manuring Input" to listOf("Field Code", "Date (YYYY-MM-DD)", "Fertiliser Type", "Bags Applied", "Covered Area (ha)", "Round"),
+            "Pest Disease Input" to listOf("Field Code", "Inspection Date (YYYY-MM-DD)", "Pest or Disease", "Affected Area (ha)", "Severity", "Treatment", "Status"),
+            "Other Upkeep Input" to listOf("Field Code", "Date (YYYY-MM-DD)", "Category", "Work Completed", "Unit", "Remarks")
+        )
+        entrySheets.forEach { (_, headings) -> sheets += listOf(headings) }
+        val names = listOf("Metadata") + sections.map { it.replaceFirstChar { first -> first.uppercase() } } + "Optional JSON" + entrySheets.map { it.first }
         ZipOutputStream(output).use { zip ->
             fun add(path: String, text: String) {
                 zip.putNextEntry(ZipEntry(path)); zip.write(text.toByteArray(Charsets.UTF_8)); zip.closeEntry()
