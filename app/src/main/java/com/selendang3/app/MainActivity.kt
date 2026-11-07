@@ -1,5 +1,8 @@
 package com.selendang3.app
 
+import com.selendang3.app.core.theme.estateColorScheme as coreEstateColorScheme
+import com.selendang3.app.core.theme.bookAccent as coreBookAccent
+
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -88,7 +91,7 @@ fun EstateApp() {
         "estate-records" -> "All Estate Records"
         else -> allSections.firstOrNull { it.route == route }?.title ?: "Estate Details"
     }
-    MaterialTheme(colorScheme = estateColorScheme(dark, bookAccent(route)), typography = BookTypography) {
+    MaterialTheme(colorScheme = coreEstateColorScheme(dark, coreBookAccent(route)), typography = BookTypography) {
         Surface(Modifier.fillMaxSize(), color = BookSlate, contentColor = Color.White) {
         Box(Modifier.fillMaxSize()) {
             PlantationBackground()
