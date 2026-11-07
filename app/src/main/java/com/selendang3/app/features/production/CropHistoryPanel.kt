@@ -1,4 +1,6 @@
-package com.selendang3.app
+package com.selendang3.app.features.production
+
+import com.selendang3.app.*
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
