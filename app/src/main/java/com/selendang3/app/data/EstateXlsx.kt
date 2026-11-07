@@ -62,7 +62,7 @@ object EstateXlsx {
             val name = entry["name"].orEmpty().trim().lowercase(java.util.Locale.ROOT)
             require(name.isNotBlank() && name !in sheets) { "Duplicate or invalid worksheet name." }
             val relationship = relationships[entry["id"]] ?: throw IllegalArgumentException("Missing worksheet relationship.")
-            if (name in sections || name == "metadata" || name == "optional json") {
+            if (name in sections || name == "metadata" || name == "optional json" || name in setOf("field input", "abw input", "crop input", "crop history input", "weeding input", "manuring input", "pest disease input", "other upkeep input")) {
                 require(relationship["TargetMode"] != "External" && relationship["Type"].orEmpty().endsWith("/worksheet")) { "Use local worksheet data." }
                 val target = relationship["Target"].orEmpty()
                 require(target.isNotEmpty() && !target.contains('\\') && !target.split('/').contains("..")) { "Invalid worksheet target." }
@@ -71,7 +71,20 @@ object EstateXlsx {
                 sheets[name] = path
             }
         }
+        // Until these entry sheets are mapped into the estate package schema, fail
+        // explicitly rather than appearing to import records that would be discarded.
+        val pendingEntryNames = setOf("field input", "abw input", "crop input",
+            "crop history input", "weeding input", "manuring input",
+            "pest disease input", "other upkeep input")
         val shared = files["xl/sharedStrings.xml"]?.let(::readShared) ?: emptyList()
+        pendingEntryNames.forEach { name ->
+            val path = sheets[name] ?: return@forEach
+            val records = readSheet(part(path), shared)
+            require(records.drop(1).none { row -> row.any(String::isNotBlank) }) {
+                "The ${name} worksheet is not importable yet. Keep its records until the Android importer supports this sheet."
+            }
+        }
+
         fun sheet(name: String) = readSheet(part(sheets[name] ?: throw IllegalArgumentException("Workbook is missing the " + name + " sheet.")), shared)
         val meta = linkedMapOf<String, String>()
         sheet("metadata").drop(1).filter { it.any(String::isNotBlank) }.forEach { row ->
