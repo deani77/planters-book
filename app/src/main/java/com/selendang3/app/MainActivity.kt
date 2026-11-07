@@ -131,7 +131,6 @@ fun EstateApp() {
                     }
                     composable("information") {
                         Column {
-                            FilledTonalButton(colors = bookTabButtonColors(1), onClick = { nav.navigate("estate-records") }, modifier = Modifier.fillMaxWidth().heightIn(min = EstateControlHeight)) { Text("All Estate Records") }
                             Box(Modifier.weight(1f)) { EstateDashboard(estateUpdate) }
                         }
                     }
