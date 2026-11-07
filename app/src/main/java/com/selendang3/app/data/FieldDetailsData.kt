@@ -55,7 +55,8 @@ fun estateFieldCodes(update: EstatePackage?): List<String> {
 
 private val basicFieldColumns = setOf("Field code", "Alternate code", "Area (ha)",
     "Source palms/ha", "Total palms", "Review status", "Planting year", "Planting date",
-    "Age / years", "Maturity", "Soil series", "Terrain")
+    "Age / years", "Maturity", "Soil series", "Terrain", "Maturity year", "Age category",
+    "Perimeter area (ha)", "Perimeter (ha)", "Planted area (ha)", "Standing palms/ha", "Palm variety")
 
 private val overviewLabels = listOf(
     "Field code", "Planting year", "Maturity year", "Age / years", "Age category",
@@ -94,8 +95,20 @@ fun estateFieldTables(update: EstatePackage?, code: String): List<EstateTable> {
     val overview = EstateTable("Field Overview", overviewLabels, listOf(values))
     // ABW belongs to field information, not crop production. Preserve imported
     // year labels and values; never fabricate a previous-year measurement.
-    val abw = fieldRecordTables(update, code, false).filter { it.id == "abw" }
-    return listOf(overview) + abw
+    // Keep legacy facts that have no slot in the ordered overview, including
+    // alternate identifiers, planting dates, review notes and separate source tables.
+    val represented = overviewSources.values.flatten().toSet()
+    val records = fieldRecordTables(update, code, false).mapNotNull { table ->
+        if (table.id != "fields") return@mapNotNull table
+        val indices = table.columns.indices.filter {
+            table.columns[it] == "Field code" || table.columns[it] !in represented
+        }
+        if (indices.size <= 1) null else table.copy(
+            columns = indices.map { table.columns[it] },
+            rows = table.rows.map { cells -> indices.map { cells[it] } }
+        )
+    }
+    return listOf(overview) + records
 }
 fun estateFieldCropTables(update: EstatePackage?, code: String): List<EstateTable> = fieldRecordTables(update, code, true)
 
@@ -110,7 +123,7 @@ private fun fieldRecordTables(update: EstatePackage?, code: String, crop: Boolea
             table.id == "fields" -> table.columns.indices.filter {
                 if (crop) it == key || table.columns[it] !in basicFieldColumns else table.columns[it] in basicFieldColumns
             }.also { if (crop && it.size <= 1) return@mapNotNull null }
-            (!crop && table.id == "abw") -> table.columns.indices.toList()
+            (!crop && table.id in listOf("abw", "ages", "soil", "roads")) -> table.columns.indices.toList()
             else -> return@mapNotNull null
         }
         if (indices.isEmpty()) null else table.copy(columns = indices.map { table.columns[it] }, rows = rows.map { row -> indices.map { row[it] } })
