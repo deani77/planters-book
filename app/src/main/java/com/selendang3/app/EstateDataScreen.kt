@@ -21,8 +21,9 @@ import java.util.Date
 @Composable
 fun EstateDataControls() {
     val context = LocalContext.current
-    val db = remember(context) { EstateDatabase.get(context) }
-    val snapshot by remember(db) { db.estateDao().observeSnapshot() }.collectAsStateWithLifecycle(null)
+    val repository = remember(context) { EstateRepository.get(context) }
+    val estateState by repository.state.collectAsStateWithLifecycle()
+    val snapshot = estateState.snapshot
     var busy by remember { mutableStateOf(false) }
     var message by remember { mutableStateOf<String?>(null) }
     var preview by remember { mutableStateOf<EstatePackage?>(null) }
@@ -31,7 +32,7 @@ fun EstateDataControls() {
     var exportContent by remember { mutableStateOf<String?>(null) }
     var source by remember { mutableStateOf("Local file") }
     val aiEstateId = remember(snapshot?.content) {
-        snapshot?.content?.let { org.json.JSONObject(it).getString("estateId") } ?: "local-estate"
+        estateState.update?.json?.let { org.json.JSONObject(it).getString("estateId") } ?: "local-estate"
     }
     val scope = rememberCoroutineScope()
     val zipExporter = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("application/zip")) { uri ->
@@ -111,6 +112,7 @@ fun EstateDataControls() {
         }
     }
     Text("Estate Data Management", style = MaterialTheme.typography.titleLarge)
+    estateState.error?.let { Text(it, color = MaterialTheme.colorScheme.error) }
     EstateProfileControls()
     Text(snapshot?.let { "Saved revision ${it.revision} · ${it.source}\nUpdated: ${DateFormat.getDateTimeInstance().format(Date(it.updatedAt))}" }
         ?: "No estate data imported yet.")
@@ -156,7 +158,7 @@ fun EstateDataControls() {
         busy = true
         scope.launch {
             try {
-                val previous = withContext(Dispatchers.IO) { db.estateDao().previousSnapshot() } ?: error("No previous snapshot available.")
+                val previous = withContext(Dispatchers.IO) { repository.previousSnapshot() } ?: error("No previous snapshot available.")
                 val update = EstatePackages.parse(previous.content)
                 prepared = EstateImport(update, snapshot?.content, "Restore the previous estate snapshot, including its older revision. The current snapshot becomes the backup. Production drafts and settings are unchanged.")
                 restoring = true
@@ -233,8 +235,8 @@ fun EstateDataControls() {
                     try {
                         val plan = prepared ?: error("Review the file again.")
                         withContext(Dispatchers.IO) {
-                            if (restoring) EstateUpdates(db).restore(plan.expectedJson ?: error("No saved estate."), update.json)
-                            else EstateUpdates(db).apply(update, source, plan.expectedJson, checkExpected = true)
+                            if (restoring) repository.restore(plan.expectedJson ?: error("No saved estate."), update.json)
+                            else repository.apply(update, source, plan.expectedJson)
                         }
                         message = "Estate data updated successfully from $source."
                         preview = null

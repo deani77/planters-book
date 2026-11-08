@@ -3,7 +3,7 @@ import SwiftUI
 struct HomeView: View {
     @AppStorage("estate_name") private var estateName = ""
     @Environment(\.colorScheme) private var colorScheme
-    @ObservedObject private var estate = EstateReferenceStore.shared
+    @ObservedObject var estate: EstateReferenceStore = .shared
     private var isPad: Bool { UIDevice.current.userInterfaceIdiom == .pad }
     @ScaledMetric(relativeTo: .largeTitle) private var iPadHeadingSize: CGFloat = 44
     @ScaledMetric(relativeTo: .body) private var minimumPhoneHomeHeight: CGFloat = 520

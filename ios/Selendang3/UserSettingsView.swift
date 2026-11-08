@@ -141,7 +141,7 @@ struct UserSettingsView: View {
             defer { try? input.close() }
             let raw = try input.read(upToCount: 8 * 1024 * 1024 + 1) ?? Data()
             guard raw.count <= 8 * 1024 * 1024 else { throw ProductionError.invalid("Workbook exceeds 8 MB.") }
-            let prepared = try EstateZip.read(raw, current: estate.savedData)
+            let prepared = try estate.prepare(raw)
             preparedImport = prepared
             pendingEstate = prepared.reference
             pendingEstateData = prepared.data

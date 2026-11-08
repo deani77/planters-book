@@ -12,13 +12,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import com.selendang3.app.data.*
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 
 @Composable
 fun ProductionScreen() {
     val context = LocalContext.current
-    val dao = remember(context) { EstateDatabase.get(context).estateDao() }
-    val snapshot by dao.observeSnapshot().collectAsState(initial = null)
-    val update = remember(snapshot?.content) { snapshot?.let { EstatePackages.parse(it.content) } }
+    val repository = remember(context) { EstateRepository.get(context) }
+    val state by repository.state.collectAsStateWithLifecycle()
+    val update = state.update
     val today by produceState(estateRainfallToday()) {
         while (true) { value = estateRainfallToday(); kotlinx.coroutines.delay(60_000) }
     }
