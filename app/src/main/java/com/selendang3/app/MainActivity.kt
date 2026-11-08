@@ -36,7 +36,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
-import com.selendang3.app.data.EstateDatabase
+import com.selendang3.app.data.EstateRepository
 import com.selendang3.app.data.EstatePackages
 import java.text.DateFormat
 import java.util.Date
