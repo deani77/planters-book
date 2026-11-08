@@ -21,6 +21,10 @@ jobs:
       - name: Generate Xcode project
         working-directory: ios
         run: xcodegen generate
+      - name: Check operational record models
+        run: |
+          cat ios/Selendang3/ProductionData.swift ios/Selendang3/OperationalRecords.swift ios/Tests/OperationalRecordChecks.swift > "$RUNNER_TEMP/OperationalRecordChecks.swift"
+          swift "$RUNNER_TEMP/OperationalRecordChecks.swift"
       - name: Check production calculations
         run: |
           cat ios/Selendang3/ProductionData.swift ios/Tests/ProductionChecks.swift > "$RUNNER_TEMP/ProductionChecks.swift"
