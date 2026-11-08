@@ -1,0 +1,64 @@
+package com.selendang3.app.features.fields
+import com.selendang3.app.*
+import com.selendang3.app.features.estate.*
+import com.selendang3.app.features.fields.*
+import com.selendang3.app.features.upkeep.*
+import com.selendang3.app.features.settings.*
+import com.selendang3.app.features.tools.*
+import com.selendang3.app.features.production.*
+
+
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
+import com.selendang3.app.data.*
+
+@Composable
+fun FieldDetailsScreen(update: EstatePackage?) {
+    var selected by rememberSaveable { mutableStateOf<String?>(null) }
+    val codes = estateFieldCodes(update)
+    val field = selected?.takeIf { it in codes }
+    Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()),
+        verticalArrangement = Arrangement.spacedBy(16.dp)) {
+        if (field == null) {
+            Card(Modifier.fillMaxWidth()) {
+                Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Text("Field Overview", style = MaterialTheme.typography.titleLarge)
+                    Text("Fields available: " + if (update == null) "Pending" else codes.size.toString())
+                    Text("Planting, maturity, area, palm population, terrain, soil and average bunch weight")
+                    Text("Choose a field for its basic information. Crop and harvesting records are under Crop Production.")
+                }
+            }
+            EstatePillGrid(codes.size, maxColumns = 2) { index ->
+                FilledTonalButton(colors = bookTabButtonColors(), onClick = { selected = codes[index] },
+                    modifier = Modifier.fillMaxWidth().heightIn(min = EstateControlHeight)) { Text(codes[index]) }
+            }
+            if (codes.isEmpty()) Text("Import estate records through Settings → Estate Data Management to see field buttons.")
+        } else {
+            TextButton(onClick = { selected = null }) { Text("‹ All Fields") }
+            Text(field, style = MaterialTheme.typography.titleLarge)
+            val profiles = sourceFieldProfileTables(update, field)
+            if (profiles.isNotEmpty()) {
+                Text("Imported profile: report year is shown below. Density and height apply to the division; source date is unconfirmed.", style = MaterialTheme.typography.bodySmall)
+            }
+            (estateFieldTables(update, field) + profiles).forEach { table ->
+                Text(estateSections.firstOrNull { it.route == table.id }?.title ?: table.id,
+                    style = MaterialTheme.typography.titleMedium)
+                table.rows.forEach { row ->
+                    Card(Modifier.fillMaxWidth()) {
+                        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                            table.columns.zip(row).forEach { (label, value) -> Text("$label: ${value ?: "Pending"}") }
+                        }
+                    }
+                }
+            }
+            Text("Field information and imported source records. Production and upkeep are maintained in their respective tabs.")
+        }
+    }
+}
+
