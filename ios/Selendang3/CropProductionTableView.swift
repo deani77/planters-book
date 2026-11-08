@@ -40,17 +40,17 @@ struct CropProductionTableView: View {
                 Text(row.field).fontWeight(.semibold)
                 Text(row.area).foregroundStyle(.secondary)
             }.frame(width: identityWidth)
-            ForEach(0..<3) { period in
+            ForEach(CropPeriod.allCases, id: \.self) { period in
                 VStack(spacing: 3) {
                     if measure == 2 {
-                        Text(row.values[10 + period] + (row.values[10 + period] == "Pending" ? "" : " %"))
+                        Text(EstateDashboardData.number(row.metrics.achievement(period)) + (EstateDashboardData.number(row.metrics.achievement(period)) == "Pending" ? "" : " %"))
                             .fontWeight(.semibold)
                     } else {
-                        let target = row.values[(measure == 0 ? 0 : 3) + period]
+                        let target = EstateDashboardData.number(row.metrics.target(period, yield: measure == 1))
                         Text("T " + target).fontWeight(.medium)
                             .accessibilityLabel("Target " + target)
-                        if period < 2 {
-                            let actual = row.values[(measure == 0 ? 6 : 8) + period]
+                        if period != .annual {
+                            let actual = EstateDashboardData.number(row.metrics.actual(period, yield: measure == 1))
                             Text("A " + actual).fontWeight(.semibold).foregroundStyle(EstateTheme.accent)
                                 .accessibilityLabel("Actual " + actual)
                         }

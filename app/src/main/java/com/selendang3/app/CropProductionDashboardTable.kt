@@ -13,6 +13,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.selendang3.app.data.CropTable
 import com.selendang3.app.data.CropTableRow
+import com.selendang3.app.data.CropPeriod
+import com.selendang3.app.data.formatCropMetric
 
 @Composable
 fun CropProductionDashboardTable(data: CropTable) {
@@ -37,15 +39,15 @@ fun CropProductionDashboardTable(data: CropTable) {
                         .background(if (total) MaterialTheme.colorScheme.secondaryContainer else MaterialTheme.colorScheme.surface)
                         .border(0.5.dp, MaterialTheme.colorScheme.outlineVariant), verticalAlignment = Alignment.CenterVertically) {
                         Text(record.field + "\n" + record.area, Modifier.width(identityWidth), style = font, textAlign = TextAlign.Center, fontWeight = FontWeight.SemiBold)
-                        (0..2).forEach { period ->
+                        CropPeriod.values().forEach { period ->
                             Column(Modifier.weight(1f), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(3.dp)) {
                                 if (measure == 2) {
-                                    val value = record.values[10 + period]
+                                    val value = formatCropMetric(record.metrics.achievement(period))
                                     Text(value + if (value == "Pending") "" else " %", style = font, fontWeight = FontWeight.SemiBold)
                                 } else {
-                                    Text("T " + record.values[(if (measure == 0) 0 else 3) + period], style = font)
-                                    if (period < 2) {
-                                        Text("A " + record.values[(if (measure == 0) 6 else 8) + period], style = font, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.primary)
+                                    Text("T " + formatCropMetric(record.metrics.target(period, measure == 1)), style = font)
+                                    if (period != CropPeriod.ANNUAL) {
+                                        Text("A " + formatCropMetric(record.metrics.actual(period, measure == 1)), style = font, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.primary)
                                     }
                                 }
                             }
