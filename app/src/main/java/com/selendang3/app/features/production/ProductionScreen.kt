@@ -23,10 +23,10 @@ fun ProductionScreen() {
         while (true) { value = estateRainfallToday(); kotlinx.coroutines.delay(60_000) }
     }
     var selected by rememberSaveable { mutableStateOf<String?>(null) }
-    val codes = estateFieldCodes(update)
+    val codes = cropProductionFieldCodes(update)
     val field = selected?.takeIf { it in codes }
     if (field != null) {
-        FieldCropReport(update, field) { selected = null }
+        FieldCropReport(update, field, today) { selected = null }
         return
     }
     Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(16.dp)) {
@@ -35,7 +35,7 @@ fun ProductionScreen() {
             Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 Text("Crop Production Dashboard", style = MaterialTheme.typography.titleLarge)
                 CropProductionDashboardTable(cropProductionTable(update, today))
-                CropHistoryPanel(update)
+                Text("Yield targets: MTD vs MTD budget, YTD vs YTD budget, and YTD vs annual budget (MT/ha and achievement %). Unavailable values remain Pending.", style = MaterialTheme.typography.bodySmall)
             }
         }
         Text("Field Crop Records", style = MaterialTheme.typography.titleMedium)
@@ -58,27 +58,61 @@ fun ProductionScreen() {
 }
 
 @Composable
-private fun FieldCropReport(update: EstatePackage?, code: String, back: () -> Unit) {
-    Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(16.dp)) {
+private fun FieldCropReport(update: EstatePackage?, code: String, today: java.time.LocalDate, back: () -> Unit) {
+    val summary = fieldCropSummary(update, today, code)
+    val performance = fieldProductionPerformance(update, today, code)
+    val monthly = fieldMonthlyProduction(update, today, code)
+    Column(
+        Modifier.fillMaxSize().verticalScroll(rememberScrollState()),
+        verticalArrangement = Arrangement.spacedBy(16.dp)
+    ) {
         TextButton(onClick = back) { Text("‹ All Fields") }
-        Text("$code · Crop Records", style = MaterialTheme.typography.titleLarge)
-        Text("Local report · Read-only", style = MaterialTheme.typography.bodySmall)
-        val summary = fieldCropSummary(update, estateRainfallToday(), code)
-        if (summary == null) Text("Crop records pending for this field.")
-        else {
-            Text(summary.note, style = MaterialTheme.typography.bodySmall)
-            summary.groups.forEach { group ->
-                Card(Modifier.fillMaxWidth()) {
-                    Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                        Text(group.title, style = MaterialTheme.typography.titleMedium)
-                        group.rows.forEach { row -> Text("${row.label}: ${row.value}") }
-                        if (group.note.isNotEmpty()) Text(group.note, style = MaterialTheme.typography.bodySmall)
-                        if (group.title == "Harvesting") Text(summary.crewNote, style = MaterialTheme.typography.bodySmall)
-                    }
+        Text("$code · Crop Production", style = MaterialTheme.typography.titleLarge)
+        Text("Local report · Read-only · Available offline", style = MaterialTheme.typography.bodySmall)
+
+        Text(summary?.note ?: cropProductionTable(update, today).note, style = MaterialTheme.typography.bodySmall)
+        Card(Modifier.fillMaxWidth()) {
+            Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Text("1. Field Crop Performance", style = MaterialTheme.typography.titleMedium)
+                performance.forEach { row -> Text("${row.label}: ${row.value}") }
+                summary?.groups?.filter { it.title in listOf("Field Profile", "Crop Budget and Actual") }?.forEach { group ->
+                    Text(group.title, style = MaterialTheme.typography.titleSmall)
+                    group.rows.forEach { row -> Text("${row.label}: ${row.value}") }
+                    if (group.note.isNotEmpty()) Text(group.note, style = MaterialTheme.typography.bodySmall)
                 }
             }
         }
+        Card(Modifier.fillMaxWidth()) {
+            Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Text("2. Monthly Crop Production", style = MaterialTheme.typography.titleMedium)
+                Text("January–December · Actual MT · Budget MT · Actual MT/ha · Achievement %")
+                Text("${monthly.year} · Past months require a complete month-end report. Current month is MTD through its report date.", style = MaterialTheme.typography.bodySmall)
+                monthly.rows.forEach { row ->
+                    Text(row.period, style = MaterialTheme.typography.titleSmall)
+                    Text("Actual: ${row.actualMt} MT · Budget: ${row.budgetMt} MT · Yield: ${row.actualYield} MT/ha · Achievement: ${row.achievement} %")
+                }
+            }
+        }
+        Card(Modifier.fillMaxWidth()) {
+            Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Text("3. Crop History", style = MaterialTheme.typography.titleMedium)
+                Text("Five-year yield history (MT/ha), including the current year")
+                CropHistoryPanel(update, code)
+            }
+        }
+        Card(Modifier.fillMaxWidth()) {
+            Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Text("4. Harvesting Performance", style = MaterialTheme.typography.titleMedium)
+                val groups = fieldHarvestingGroups(summary)
+                if (groups.isEmpty()) Text("Harvesting records: Pending")
+                groups.forEach { group ->
+                    Text(group.title, style = MaterialTheme.typography.titleSmall)
+                    group.rows.forEach { row -> Text("${row.label}: ${row.value}") }
+                    if (group.note.isNotEmpty()) Text(group.note, style = MaterialTheme.typography.bodySmall)
+                }
+                if (summary != null && summary.crewNote.isNotEmpty()) Text(summary.crewNote, style = MaterialTheme.typography.bodySmall)
+            }
+        }
+        Text("Average Bunch Weight is managed under Field Details, not Crop Production.")
     }
 }
-
-
