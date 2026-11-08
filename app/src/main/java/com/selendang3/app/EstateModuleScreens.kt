@@ -56,36 +56,55 @@ fun FieldDetailsScreen(update: EstatePackage?) {
 
 @Composable
 fun UpkeepCultivationScreen(update: EstatePackage?) {
+    var selected by rememberSaveable { mutableStateOf<String?>(null) }
+    val codes = estateFieldCodes(update)
+    val field = selected?.takeIf { it in codes }
     val manuring = operationalDashboardCards(update, estateRainfallToday())[3]
     val categories = listOf(
-        "Weeding" to "Estate totals: Pending",
-        "Manuring" to "Estate programme progress: ${manuring.metrics[0].value} %",
-        "Pest and Disease" to "Estate totals: Pending",
-        "Water Management" to "Estate totals: Pending",
-        "Road Management" to "Estate totals: Pending",
-        "Others" to "Additional estate work: Pending",
+        "Weeding", "Manuring", "Pest & Disease",
+        "Water Management", "Road Management", "Others"
     )
-    Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()),
-        verticalArrangement = Arrangement.spacedBy(16.dp)) {
-        Card(Modifier.fillMaxWidth()) {
-            Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                Text("Upkeep and Cultivation Dashboard", style = MaterialTheme.typography.titleLarge)
-                Text("Weeding progress: Pending")
-                Text("Manuring progress: ${manuring.metrics[0].value} %")
-                Text(manuring.period, style = MaterialTheme.typography.bodySmall)
-                Text("Pest and Disease: Pending")
-            }
-        }
-        Text("Major Upkeep Work", style = MaterialTheme.typography.titleLarge)
-        categories.forEach { (category, status) ->
-            Card(Modifier.fillMaxWidth()) {
-                Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                    Text(category, style = MaterialTheme.typography.titleMedium)
-                    Text(status)
+    Column(
+        Modifier.fillMaxSize().verticalScroll(rememberScrollState()),
+        verticalArrangement = Arrangement.spacedBy(16.dp)
+    ) {
+        if (field == null) {
+            Text("Upkeep & Cultivation", style = MaterialTheme.typography.titleLarge)
+            Text("Operations Overview", style = MaterialTheme.typography.titleMedium)
+            listOf(
+                "Weeding" to "Field-based progress: Pending",
+                "Manuring" to "Existing estate programme progress: ${manuring.metrics[0].value} % (${manuring.period}). Field-based totals: Pending",
+                "Pest & Disease" to "Active cases and treated area: Pending"
+            ).forEach { (title, status) ->
+                Card(Modifier.fillMaxWidth()) {
+                    Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Text(title, style = MaterialTheme.typography.titleMedium)
+                        Text(status)
+                    }
                 }
             }
+            Text("Field Maintenance Records", style = MaterialTheme.typography.titleMedium)
+            Text("Select a field to view its six upkeep categories. Missing activity records are marked Pending.")
+            EstatePillGrid(codes.size, maxColumns = 2) { index ->
+                FilledTonalButton(
+                    colors = bookTabButtonColors(),
+                    onClick = { selected = codes[index] },
+                    modifier = Modifier.fillMaxWidth().heightIn(min = EstateControlHeight)
+                ) { Text(codes[index]) }
+            }
+            if (codes.isEmpty()) Text("Import field information in Settings → Estate Data Management to see field buttons.")
+        } else {
+            TextButton(onClick = { selected = null }) { Text("‹ All Fields") }
+            Text("$field · Upkeep & Cultivation", style = MaterialTheme.typography.titleLarge)
+            categories.forEach { category ->
+                Card(Modifier.fillMaxWidth()) {
+                    Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Text(category, style = MaterialTheme.typography.titleMedium)
+                        Text("Field activity records: Pending")
+                    }
+                }
+            }
+            Text("Field-level upkeep records are not yet available in the local data model. Estate-level manuring figures are not assigned to individual fields.")
         }
-        Text("Upkeep records are shown at estate level. Entered or imported field profiles are not presented as field-level upkeep activity.")
-        Text("Crop production activities are recorded under Crop Production.")
     }
 }
