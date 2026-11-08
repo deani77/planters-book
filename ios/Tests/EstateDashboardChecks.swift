@@ -388,3 +388,8 @@ precondition(januaryRows[0].label.contains("2024-12-31"))
 let dailyOnly = try previousYearRows([pastFieldReport("2025-10-21")])
 precondition(dailyOnly[0].value == "Pending")
 print("Completed-month comparison: month boundaries, leap month, January rollover and daily-report exclusion passed")
+
+let namedMetrics = CropMetrics(areaHa: 3, targetMtdMt: 10, targetYtdMt: 20, targetAnnualMt: 40, actualMtdMt: 5, actualYtdMt: 30)
+precondition(abs(namedMetrics.actual(.mtd, yield: true)! - 5.0 / 3.0) < 1e-12)
+precondition(namedMetrics.achievement(.annual) == 75)
+precondition(namedMetrics.actual(.annual) == nil)

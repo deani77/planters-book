@@ -1,9 +1,43 @@
 import Foundation
 
+enum CropPeriod: Int, CaseIterable { case mtd, ytd, annual }
+struct CropMetrics {
+    let areaHa: Double?
+    let targetMtdMt: Double?
+    let targetYtdMt: Double?
+    let targetAnnualMt: Double?
+    let actualMtdMt: Double?
+    let actualYtdMt: Double?
+    private func divide(_ n: Double?, _ d: Double?, scale: Double = 1) -> Double? {
+        guard let n, let d, n.isFinite, n >= 0, d.isFinite, d > 0 else { return nil }
+        let result = n / d * scale
+        return result.isFinite ? result : nil
+    }
+    func target(_ period: CropPeriod, yield: Bool = false) -> Double? {
+        let tonnes: Double?
+        switch period { case .mtd: tonnes = targetMtdMt; case .ytd: tonnes = targetYtdMt; case .annual: tonnes = targetAnnualMt }
+        return yield ? divide(tonnes, areaHa) : tonnes
+    }
+    func actual(_ period: CropPeriod, yield: Bool = false) -> Double? {
+        let tonnes: Double?
+        switch period { case .mtd: tonnes = actualMtdMt; case .ytd: tonnes = actualYtdMt; case .annual: tonnes = nil }
+        return yield ? divide(tonnes, areaHa) : tonnes
+    }
+    func achievement(_ period: CropPeriod) -> Double? { divide(period == .mtd ? actualMtdMt : actualYtdMt, target(period), scale: 100) }
+}
 struct CropProductionTableRow: Identifiable {
     let field: String
-    let area: String
-    let values: [String]
+    let metrics: CropMetrics
+    var area: String { EstateDashboardData.number(metrics.areaHa) }
+    // Compatibility adapter; new presentation code uses named metrics.
+    var values: [String] {
+        let targets = CropPeriod.allCases.map { metrics.target($0) }
+        let yields = CropPeriod.allCases.map { metrics.target($0, yield: true) }
+        let actuals = [CropPeriod.mtd, .ytd].map { metrics.actual($0) }
+        let actualYields = [CropPeriod.mtd, .ytd].map { metrics.actual($0, yield: true) }
+        let achievements = CropPeriod.allCases.map { metrics.achievement($0) }
+        return (targets + yields + actuals + actualYields + achievements).map(EstateDashboardData.number)
+    }
     var id: String { field }
 }
 struct CropProductionTableData {
@@ -77,9 +111,7 @@ struct CropProductionTableData {
         return [valid(rows[0].sentToMillMtdMt), valid(rows[0].sentToMillYtdMt)]
     }
     private func row(_ field: String, area: Double?, target: [Double?], actual: [Double?]) -> CropProductionTableRow {
-        let values = target + target.map { divide($0, area) } + actual + actual.map { divide($0, area) } +
-            [divide(actual[0], target[0], scale: 100), divide(actual[1], target[1], scale: 100), divide(actual[1], target[2], scale: 100)]
-        return CropProductionTableRow(field: field, area: EstateDashboardData.number(area), values: values.map(EstateDashboardData.number))
+        return CropProductionTableRow(field: field, metrics: CropMetrics(areaHa: area, targetMtdMt: target[0], targetYtdMt: target[1], targetAnnualMt: target[2], actualMtdMt: actual[0], actualYtdMt: actual[1]))
     }
     var rows: [CropProductionTableRow] {
         sourceFields.map { row($0.0, area: $0.1, target: targets($0.0), actual: actual($0.0)) }
@@ -170,11 +202,11 @@ extension CropProductionTableData {
                 FieldCropSummaryRow(label: "Field Code", value: code),
                 FieldCropSummaryRow(label: "Hectare (ha)", value: values.area)]),
             FieldCropSummaryGroup(title: "Crop Budget and Actual", rows: [
-                FieldCropSummaryRow(label: "Budget This Month (mt)", value: values.values[0]),
-                FieldCropSummaryRow(label: "Budget YTD (mt)", value: values.values[1]),
-                FieldCropSummaryRow(label: "Year Budget (mt)", value: values.values[2]),
-                FieldCropSummaryRow(label: "Actual MTD (mt)", value: values.values[6]),
-                FieldCropSummaryRow(label: "Actual YTD (mt)", value: values.values[7])] + previousYearCropRows(code: code),
+                FieldCropSummaryRow(label: "Budget This Month (mt)", value: EstateDashboardData.number(values.metrics.targetMtdMt)),
+                FieldCropSummaryRow(label: "Budget YTD (mt)", value: EstateDashboardData.number(values.metrics.targetYtdMt)),
+                FieldCropSummaryRow(label: "Year Budget (mt)", value: EstateDashboardData.number(values.metrics.targetAnnualMt)),
+                FieldCropSummaryRow(label: "Actual MTD (mt)", value: EstateDashboardData.number(values.metrics.actualMtdMt)),
+                FieldCropSummaryRow(label: "Actual YTD (mt)", value: EstateDashboardData.number(values.metrics.actualYtdMt))] + previousYearCropRows(code: code),
                 note: "Last-year yield uses each field’s historical sent-to-mill tonnes and hectares. Same-period YTD runs through the last completed month, one year earlier. Missing or ambiguous records remain Pending."),
             abwSummary(code: code),
             FieldCropSummaryGroup(title: "Harvesting", rows: [

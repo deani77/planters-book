@@ -4,7 +4,34 @@ import org.json.JSONObject
 import java.time.LocalDate
 import java.util.Locale
 
-data class CropTableRow(val field: String, val area: String, val values: List<String>)
+fun formatCropMetric(value: Double?): String = value?.takeIf { it.isFinite() && it >= 0 }
+    ?.let { String.format(Locale.US, "%.2f", it) } ?: "Pending"
+
+enum class CropPeriod { MTD, YTD, ANNUAL }
+data class CropMetrics(val areaHa: Double?, val targetMtdMt: Double?, val targetYtdMt: Double?,
+    val targetAnnualMt: Double?, val actualMtdMt: Double?, val actualYtdMt: Double?) {
+    private fun divide(n: Double?, d: Double?, scale: Double = 1.0): Double? =
+        if (n != null && d != null && n.isFinite() && n >= 0 && d.isFinite() && d > 0)
+            (n / d * scale).takeIf(Double::isFinite) else null
+    fun target(period: CropPeriod, asYield: Boolean = false): Double? {
+        val tonnes = when (period) { CropPeriod.MTD -> targetMtdMt; CropPeriod.YTD -> targetYtdMt; CropPeriod.ANNUAL -> targetAnnualMt }
+        return if (asYield) divide(tonnes, areaHa) else tonnes
+    }
+    fun actual(period: CropPeriod, asYield: Boolean = false): Double? {
+        val tonnes = when (period) { CropPeriod.MTD -> actualMtdMt; CropPeriod.YTD -> actualYtdMt; CropPeriod.ANNUAL -> null }
+        return if (asYield) divide(tonnes, areaHa) else tonnes
+    }
+    fun achievement(period: CropPeriod): Double? = divide(if (period == CropPeriod.MTD) actualMtdMt else actualYtdMt, target(period), 100.0)
+}
+data class CropTableRow(val field: String, val metrics: CropMetrics) {
+    val area: String get() = formatCropMetric(metrics.areaHa)
+    // Compatibility adapter for older consumers, including the separate PR #20.
+    val values: List<String> get() = (CropPeriod.values().map { metrics.target(it) } +
+        CropPeriod.values().map { metrics.target(it, true) } +
+        listOf(CropPeriod.MTD, CropPeriod.YTD).map { metrics.actual(it) } +
+        listOf(CropPeriod.MTD, CropPeriod.YTD).map { metrics.actual(it, true) } +
+        CropPeriod.values().map { metrics.achievement(it) }).map(::formatCropMetric)
+}
 data class CropTable(val note: String, val rows: List<CropTableRow>, val total: CropTableRow?, val reportDate: String? = null)
 val cropTableGroups = listOf(
     "Target · mt" to listOf("This Month", "Year to Date", "Full Year"),
@@ -53,9 +80,7 @@ fun cropProductionTable(update: EstatePackage?, today: LocalDate): CropTable {
         return listOf(number(rows.single(), "sentToMillMtdMt"), number(rows.single(), "sentToMillYtdMt"))
     }
     fun row(field: String, area: Double?, target: List<Double?>, actual: List<Double?>): CropTableRow {
-        val values = target + target.map { divide(it, area) } + actual + actual.map { divide(it, area) } + listOf(
-            divide(actual[0], target[0], 100.0), divide(actual[1], target[1], 100.0), divide(actual[1], target[2], 100.0))
-        return CropTableRow(field, label(area), values.map(::label))
+        return CropTableRow(field, CropMetrics(area, target[0], target[1], target[2], actual[0], actual[1]))
     }
     fun sum(values: List<Double?>): Double? = if (values.any { it == null }) null else valid(values.filterNotNull().sum())
     val rows = identities.map { row(it.first, it.second, targets(it.first), actual(it.first)) }
@@ -129,8 +154,8 @@ fun fieldCropSummary(update: EstatePackage?, today: LocalDate, code: String): Fi
     return FieldCropSummary(note, crewNote, listOf(
         FieldCropSummaryGroup("Field Profile", listOf(FieldCropSummaryRow("Field Code", code), FieldCropSummaryRow("Hectare (ha)", field.area))),
         FieldCropSummaryGroup("Crop Budget and Actual", listOf(
-            FieldCropSummaryRow("Budget This Month (mt)", field.values[0]), FieldCropSummaryRow("Budget YTD (mt)", field.values[1]),
-            FieldCropSummaryRow("Year Budget (mt)", field.values[2]), FieldCropSummaryRow("Actual MTD (mt)", field.values[6]), FieldCropSummaryRow("Actual YTD (mt)", field.values[7])) + previousYearCropRows(update, table.reportDate, code),
+            FieldCropSummaryRow("Budget This Month (mt)", formatCropMetric(field.metrics.targetMtdMt)), FieldCropSummaryRow("Budget YTD (mt)", formatCropMetric(field.metrics.targetYtdMt)),
+            FieldCropSummaryRow("Year Budget (mt)", formatCropMetric(field.metrics.targetAnnualMt)), FieldCropSummaryRow("Actual MTD (mt)", formatCropMetric(field.metrics.actualMtdMt)), FieldCropSummaryRow("Actual YTD (mt)", formatCropMetric(field.metrics.actualYtdMt))) + previousYearCropRows(update, table.reportDate, code),
             "Last-year yield uses each field’s historical sent-to-mill tonnes and hectares. Same-period YTD runs through the last completed month, one year earlier. Missing or ambiguous records remain Pending."),
         fieldAbwSummary(update, today, code),
         FieldCropSummaryGroup("Harvesting", listOf(FieldCropSummaryRow("Required Harvesters (people)", crew), FieldCropSummaryRow("Harvesting Rounds This Month (rounds)", label("roundsMtd")))),
