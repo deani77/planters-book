@@ -1,4 +1,12 @@
-package com.selendang3.app
+package com.selendang3.app.features.tools
+import com.selendang3.app.*
+import com.selendang3.app.features.estate.*
+import com.selendang3.app.features.fields.*
+import com.selendang3.app.features.upkeep.*
+import com.selendang3.app.features.settings.*
+import com.selendang3.app.features.tools.*
+import com.selendang3.app.features.production.*
+
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
