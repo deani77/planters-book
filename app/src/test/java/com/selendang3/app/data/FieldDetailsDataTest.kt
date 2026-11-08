@@ -87,7 +87,7 @@ class FieldDetailsDataTest {
     @Test fun fieldButtonsUseSavedCodesAndDetailsStayIsolatedToSelectedField() {
         assertEquals(listOf("A", "B"), estateFieldCodes(input))
         val tables = estateFieldTables(input, "A")
-        assertEquals(listOf("fields", "ages"), tables.map { it.id })
+        assertEquals(listOf("Field Overview", "ages"), tables.map { it.id })
         assertTrue(tables.all { it.rows.size == 1 && it.rows[0][0] == "A" })
         assertTrue(estateFieldTables(input, "UNKNOWN").isEmpty())
         assertTrue(estateFieldCodes(null).isEmpty())
@@ -99,11 +99,37 @@ class FieldDetailsDataTest {
             EstateTable("abw", listOf("Field", "ABW (kg/bunch)"), listOf(listOf("A", "18"), listOf("B", "20"))))
         val basic = estateFieldTables(updated, "A")
         val crop = estateFieldCropTables(updated, "A")
-        assertEquals(listOf("Field code", "Area (ha)", "Total palms"), basic.first().columns)
-        assertEquals(listOf("fields", "abw"), crop.map { it.id })
+        assertEquals("10", basic.first().rows.single()[basic.first().columns.indexOf("Planted area (ha)")])
+        assertEquals("1000", basic.first().rows.single()[basic.first().columns.indexOf("Total palms")])
+        assertEquals(listOf("Field Overview", "ages", "abw"), basic.map { it.id })
+        assertEquals(listOf("A", "18"), basic.last().rows.single())
+        assertEquals(listOf("fields"), crop.map { it.id })
         assertEquals(listOf("Field code", "Sent to mill MTD (mt)", "Harvested area MTD (ha)"), crop.first().columns)
         assertTrue(crop.all { it.rows.size == 1 && it.rows[0][0] == "A" })
         assertTrue(estateFieldCropTables(updated, "UNKNOWN").isEmpty())
         assertEquals(5, updated.tables.first().columns.size)
+    }
+
+    @Test fun overviewPreservesLegacyFactsAndSeparateTablesWithoutMutatingStorage() {
+        val fields = EstateTable("fields",
+            listOf("Field code", "Alternate code", "Planting date", "Review status", "Area (ha)", "Maturity year", "Palm variety"),
+            listOf(listOf("A", "ALT-A", "2010-01-01", "Verified", "10", "2013", "DxP"),
+                listOf("B", "ALT-B", "2012-01-01", "Pending", "20", "2015", "Other")))
+        val soil = EstateTable("soil", listOf("Field", "Soil series"), listOf(listOf("A", "Clay"), listOf("B", "Sand")))
+        val roads = EstateTable("roads", listOf("Field", "Road length"), listOf(listOf("A", "2"), listOf("B", "4")))
+        val updated = input.copy(tables = listOf(fields, soil, roads))
+        val before = updated.tables
+        val tables = estateFieldTables(updated, "A")
+        assertEquals(listOf("Field Overview", "fields", "soil", "roads"), tables.map { it.id })
+        assertEquals(listOf("A", "ALT-A", "2010-01-01", "Verified"), tables[1].rows.single())
+        assertEquals(listOf("A", "Clay"), tables[2].rows.single())
+        assertEquals(listOf("A", "2"), tables[3].rows.single())
+        val overview = tables.first()
+        assertEquals("2013", overview.rows.single()[overview.columns.indexOf("Maturity year")])
+        assertEquals("DxP", overview.rows.single()[overview.columns.indexOf("Palm variety")])
+        assertNull(overview.rows.single()[overview.columns.indexOf("Perimeter area (ha)")])
+        assertTrue(overview.columns.indexOf("Perimeter area (ha)") < overview.columns.indexOf("Planted area (ha)"))
+        assertTrue(estateFieldCropTables(updated, "A").isEmpty())
+        assertEquals(before, updated.tables)
     }
 }

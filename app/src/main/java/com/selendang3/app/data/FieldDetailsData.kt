@@ -55,9 +55,61 @@ fun estateFieldCodes(update: EstatePackage?): List<String> {
 
 private val basicFieldColumns = setOf("Field code", "Alternate code", "Area (ha)",
     "Source palms/ha", "Total palms", "Review status", "Planting year", "Planting date",
-    "Age / years", "Maturity", "Soil series", "Terrain")
+    "Age / years", "Maturity", "Soil series", "Terrain", "Maturity year", "Age category",
+    "Perimeter area (ha)", "Perimeter (ha)", "Planted area (ha)", "Standing palms/ha", "Palm variety")
 
-fun estateFieldTables(update: EstatePackage?, code: String): List<EstateTable> = fieldRecordTables(update, code, false)
+private val overviewLabels = listOf(
+    "Field code", "Planting year", "Maturity year", "Age / years", "Age category",
+    "Perimeter area (ha)", "Planted area (ha)", "Total palms", "Standing palms/ha",
+    "Palm variety", "Terrain", "Soil series"
+)
+
+private val overviewSources = mapOf(
+    "Field code" to listOf("Field code"),
+    "Planting year" to listOf("Planting year"),
+    "Maturity year" to listOf("Maturity year"),
+    "Age / years" to listOf("Age / years"),
+    "Age category" to listOf("Age category"),
+    "Perimeter area (ha)" to listOf("Perimeter area (ha)", "Perimeter (ha)"),
+    "Planted area (ha)" to listOf("Planted area (ha)", "Area (ha)"),
+    "Total palms" to listOf("Total palms"),
+    "Standing palms/ha" to listOf("Standing palms/ha", "Source palms/ha"),
+    "Palm variety" to listOf("Palm variety"),
+    "Terrain" to listOf("Terrain"),
+    "Soil series" to listOf("Soil series")
+)
+
+fun estateFieldTables(update: EstatePackage?, code: String): List<EstateTable> {
+    if (code !in estateFieldCodes(update)) return emptyList()
+    val fields = update?.tables?.firstOrNull { it.id == "fields" }
+    val fieldCodeIndex = fields?.columns?.indexOf("Field code") ?: -1
+    val row = if (fieldCodeIndex >= 0) fields?.rows?.firstOrNull {
+        it.getOrNull(fieldCodeIndex)?.trim() == code
+    } else null
+    val values = overviewLabels.map { label ->
+        overviewSources[label].orEmpty().firstNotNullOfOrNull { source ->
+            val index = fields?.columns?.indexOf(source) ?: -1
+            if (index < 0) null else row?.getOrNull(index)?.takeIf { it.isNotBlank() }
+        }
+    }
+    val overview = EstateTable("Field Overview", overviewLabels, listOf(values))
+    // ABW belongs to field information, not crop production. Preserve imported
+    // year labels and values; never fabricate a previous-year measurement.
+    // Keep legacy facts that have no slot in the ordered overview, including
+    // alternate identifiers, planting dates, review notes and separate source tables.
+    val represented = overviewSources.values.flatten().toSet()
+    val records = fieldRecordTables(update, code, false).mapNotNull { table ->
+        if (table.id != "fields") return@mapNotNull table
+        val indices = table.columns.indices.filter {
+            table.columns[it] == "Field code" || table.columns[it] !in represented
+        }
+        if (indices.size <= 1) null else table.copy(
+            columns = indices.map { table.columns[it] },
+            rows = table.rows.map { cells -> indices.map { cells[it] } }
+        )
+    }
+    return listOf(overview) + records
+}
 fun estateFieldCropTables(update: EstatePackage?, code: String): List<EstateTable> = fieldRecordTables(update, code, true)
 
 private fun fieldRecordTables(update: EstatePackage?, code: String, crop: Boolean): List<EstateTable> {
@@ -71,7 +123,7 @@ private fun fieldRecordTables(update: EstatePackage?, code: String, crop: Boolea
             table.id == "fields" -> table.columns.indices.filter {
                 if (crop) it == key || table.columns[it] !in basicFieldColumns else table.columns[it] in basicFieldColumns
             }.also { if (crop && it.size <= 1) return@mapNotNull null }
-            (crop && table.id == "abw") || (!crop && table.id in listOf("ages", "soil", "roads")) -> table.columns.indices.toList()
+            (!crop && table.id in listOf("abw", "ages", "soil", "roads")) -> table.columns.indices.toList()
             else -> return@mapNotNull null
         }
         if (indices.isEmpty()) null else table.copy(columns = indices.map { table.columns[it] }, rows = rows.map { row -> indices.map { row[it] } })
