@@ -54,8 +54,9 @@ final class ProductionStore: ObservableObject {
         try FileManager.default.setAttributes([.protectionKey: FileProtectionType.completeUntilFirstUserAuthentication], ofItemAtPath: url.path)
         entries = updated
     }
-    func save(_ draft: ProductionDraft) throws {
+    func save(_ draft: ProductionDraft, registry: FieldRegistry) throws {
         try draft.validate()
+        try registry.requireActive(draft.field)
         let previous = entries.first { $0.id == draft.id }
         guard previous?.conflict == nil else { throw ProductionError.invalid("Resolve this record's conflict in Settings first.") }
         let updated = ProductionEntry(record: draft, baseVersion: previous?.baseVersion ?? 0)
