@@ -420,10 +420,33 @@ func estateFieldCodes(_ reference: EstateReference?) -> [String] {
 // Keep the source snapshot intact; route its field columns to their owning modules.
 private let basicFieldColumns: Set<String> = ["Field code", "Alternate code", "Area (ha)",
     "Source palms/ha", "Total palms", "Review status", "Planting year", "Planting date",
-    "Age / years", "Maturity", "Soil series", "Terrain"]
+    "Age / years", "Maturity", "Soil series", "Terrain", "Maturity year", "Age category",
+    "Perimeter area (ha)", "Perimeter (ha)", "Planted area (ha)", "Standing palms/ha", "Palm variety"]
 
 func estateFieldTables(_ reference: EstateReference?, code: String) -> [EstateReferenceTable] {
-    fieldRecordTables(reference, code: code, crop: false)
+    guard estateFieldCodes(reference).contains(code) else { return [] }
+    let labels = ["Field code", "Planting year", "Maturity year", "Age / years", "Age category", "Perimeter area (ha)",
+                  "Planted area (ha)", "Total palms", "Standing palms/ha", "Palm variety", "Terrain", "Soil series"]
+    let aliases = ["Perimeter area (ha)": ["Perimeter area (ha)", "Perimeter (ha)"],
+                   "Planted area (ha)": ["Planted area (ha)", "Area (ha)"],
+                   "Standing palms/ha": ["Standing palms/ha", "Source palms/ha"]]
+    let fields = reference?.sections.first { $0.id == "fields" }
+    let key = fields?.columns.firstIndex(of: "Field code")
+    let row = fields?.rows.first { cells in key.map { cells[$0]?.text.trimmingCharacters(in: .whitespacesAndNewlines) == code } ?? false }
+    let values: [EstateReferenceCell?] = labels.map { label in
+        for source in aliases[label] ?? [label] {
+            if let index = fields?.columns.firstIndex(of: source), let value = row?[index], !value.text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty { return value }
+        }
+        return nil
+    }
+    let represented = Set(labels.flatMap { aliases[$0] ?? [$0] })
+    let records: [EstateReferenceTable] = fieldRecordTables(reference, code: code, crop: false).compactMap { table in
+        if table.id != "fields" { return table }
+        let indices = table.columns.indices.filter { table.columns[$0] == "Field code" || !represented.contains(table.columns[$0]) }
+        if indices.count <= 1 { return nil }
+        return EstateReferenceTable(id: table.id, columns: indices.map { table.columns[$0] }, rows: table.rows.map { row in indices.map { row[$0] } })
+    }
+    return [EstateReferenceTable(id: "Field Overview", columns: labels, rows: [values])] + records
 }
 func estateFieldCropTables(_ reference: EstateReference?, code: String) -> [EstateReferenceTable] {
     fieldRecordTables(reference, code: code, crop: true)
@@ -438,7 +461,7 @@ private func fieldRecordTables(_ reference: EstateReference?, code: String, crop
         if table.id == "fields" {
             indices = table.columns.indices.filter { crop ? ($0 == key || !basicFieldColumns.contains(table.columns[$0])) : basicFieldColumns.contains(table.columns[$0]) }
             if crop && indices.count <= 1 { return nil }
-        } else if crop ? table.id == "abw" : ["ages", "soil", "roads"].contains(table.id) {
+        } else if !crop && ["abw", "ages", "soil", "roads"].contains(table.id) {
             indices = Array(table.columns.indices)
         } else { return nil }
         guard !indices.isEmpty else { return nil }

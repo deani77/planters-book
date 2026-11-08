@@ -37,10 +37,10 @@ struct FieldDetailsView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 16) {
-                GroupBox("Field Dashboard") {
+                GroupBox("Field Overview") {
                     VStack(alignment: .leading, spacing: 8) {
                         Text("Fields available: " + (estate.reference == nil ? "Pending" : String(estateFieldCodes(estate.reference).count)))
-                        Text("Basic field profiles · area, palms, planting and age records")
+                        Text("Planting, maturity, area, palm population, terrain, soil and average bunch weight")
                         Text("Choose a field for its basic information. Crop and harvesting records are under Crop Production.")
                             .font(.footnote).foregroundStyle(.secondary)
                     }.frame(maxWidth: .infinity, alignment: .leading)
@@ -80,7 +80,7 @@ struct FieldDetailsView: View {
                                         }
                                     }
                                 }
-                                Text("Basic records for this field only. Crop, harvesting and productivity records are under Crop Production.")
+                                Text("Field information and imported source records. Production and upkeep are maintained in their respective tabs.")
                                     .font(.footnote)
                             }.estateScreen().navigationTitle(code)
                         } label: {
@@ -100,29 +100,33 @@ struct FieldDetailsView: View {
 
 struct UpkeepCultivationView: View {
     @ObservedObject private var estate = EstateReferenceStore.shared
+    private let categories = ["Weeding", "Manuring", "Pest & Disease", "Water Management", "Road Management", "Others"]
     var body: some View {
         let manuring = EstateDashboardData(reference: estate.reference, today: Date()).operationalCards[3]
         List {
-            Section("Upkeep and Cultivation Dashboard") {
-                LabeledContent("Weeding progress", value: "Pending")
-                LabeledContent("Manuring progress", value: manuring.rows[0][1] + " %")
+            Section("Operations Overview") {
+                LabeledContent("Weeding", value: "Field-based progress: Pending")
+                LabeledContent("Manuring", value: "Existing estate programme progress: " + manuring.rows[0][1] + " %")
                 Text(manuring.note).font(.footnote).foregroundStyle(.secondary)
-                LabeledContent("Pest and Disease", value: "Pending")
+                Text("Field-based manuring totals: Pending").font(.footnote)
+                LabeledContent("Pest & Disease", value: "Active cases and treated area: Pending")
             }
-            Section("Major Upkeep Work") {
-                LabeledContent("Weeding", value: "Pending")
-                LabeledContent("Manuring", value: manuring.rows[0][1] + " %")
-                LabeledContent("Pest and Disease", value: "Pending")
-                LabeledContent("Water Management", value: "Pending")
-                LabeledContent("Road Management", value: "Pending")
-                LabeledContent("Others", value: "Pending")
+            Section("Field Maintenance Records") {
+                ForEach(estateFieldCodes(estate.reference), id: \.self) { code in
+                    NavigationLink(code) {
+                        List {
+                            ForEach(categories, id: \.self) { category in
+                                Section(category) { Text("Field activity records: Pending") }
+                            }
+                            Text("Field-level upkeep records are not yet available in the local data model. Estate-level manuring figures are not assigned to individual fields.")
+                        }.estateScreen().navigationTitle(code + " · Upkeep & Cultivation")
+                    }
+                }
+                if estateFieldCodes(estate.reference).isEmpty {
+                    Text("Import field information in Settings → Estate Data Management to see fields.")
+                }
             }
-            Section {
-                Text("Upkeep records are shown at estate level. Imported field profiles are not presented as field-level upkeep activity.")
-                Text("Crop production activities are recorded under Crop Production.")
-            }
-        }
-        .estateScreen().navigationTitle("Upkeep and Cultivation").navigationBarTitleDisplayMode(.inline)
+        }.estateScreen().navigationTitle("Upkeep and Cultivation").navigationBarTitleDisplayMode(.inline)
         .toolbar(.visible, for: .navigationBar)
     }
 }

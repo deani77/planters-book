@@ -1,0 +1,170 @@
+{
+  "schemaVersion": 1,
+  "estateId": "fictional-parity",
+  "revision": 1,
+  "reportingPeriod": "Fictional October 2026",
+  "exportedAt": "2026-10-21T00:00:00Z",
+  "sections": [
+    {
+      "id": "overview",
+      "columns": [
+        "Value"
+      ],
+      "rows": []
+    },
+    {
+      "id": "fields",
+      "columns": [
+        "Field code",
+        "Area (ha)",
+        "Alternate code",
+        "Planting date"
+      ],
+      "rows": [
+        [
+          "USER-A",
+          10,
+          "OLD-A",
+          "2010-01-01"
+        ]
+      ]
+    },
+    {
+      "id": "ages",
+      "columns": [
+        "Field",
+        "Age / years"
+      ],
+      "rows": [
+        [
+          "USER-A",
+          "16"
+        ]
+      ]
+    },
+    {
+      "id": "soil",
+      "columns": [
+        "Value"
+      ],
+      "rows": []
+    },
+    {
+      "id": "rainfall",
+      "columns": [
+        "Value"
+      ],
+      "rows": []
+    },
+    {
+      "id": "abw",
+      "columns": [
+        "Field code",
+        "Year",
+        "YTD ABW (kg/bunch)"
+      ],
+      "rows": [
+        [
+          "USER-A",
+          2026,
+          0
+        ]
+      ]
+    },
+    {
+      "id": "roads",
+      "columns": [
+        "Value"
+      ],
+      "rows": []
+    }
+  ],
+  "cropProductionReport": {
+    "reportDate": "2026-10-20",
+    "totals": {},
+    "fields": [
+      {
+        "field": "USER-A",
+        "sentToMillMtdMt": 20,
+        "sentToMillYtdMt": 200
+      }
+    ]
+  },
+  "cropBudget": {
+    "year": 2026,
+    "monthlyBudget": [
+      {
+        "field": "USER-A",
+        "year": 2026,
+        "month": 1,
+        "tonnes": 10
+      },
+      {
+        "field": "USER-A",
+        "year": 2026,
+        "month": 2,
+        "tonnes": 10
+      },
+      {
+        "field": "USER-A",
+        "year": 2026,
+        "month": 3,
+        "tonnes": 10
+      },
+      {
+        "field": "USER-A",
+        "year": 2026,
+        "month": 4,
+        "tonnes": 10
+      },
+      {
+        "field": "USER-A",
+        "year": 2026,
+        "month": 5,
+        "tonnes": 10
+      },
+      {
+        "field": "USER-A",
+        "year": 2026,
+        "month": 6,
+        "tonnes": 10
+      },
+      {
+        "field": "USER-A",
+        "year": 2026,
+        "month": 7,
+        "tonnes": 10
+      },
+      {
+        "field": "USER-A",
+        "year": 2026,
+        "month": 8,
+        "tonnes": 10
+      },
+      {
+        "field": "USER-A",
+        "year": 2026,
+        "month": 9,
+        "tonnes": 10
+      },
+      {
+        "field": "USER-A",
+        "year": 2026,
+        "month": 10,
+        "tonnes": 10
+      },
+      {
+        "field": "USER-A",
+        "year": 2026,
+        "month": 11,
+        "tonnes": 10
+      },
+      {
+        "field": "USER-A",
+        "year": 2026,
+        "month": 12,
+        "tonnes": 10
+      }
+    ]
+  }
+}

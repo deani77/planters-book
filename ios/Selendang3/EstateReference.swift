@@ -2,6 +2,7 @@ import Foundation
 
 struct EstateReferenceCell: Decodable {
     let text: String
+    init(text: String) { self.text = text }
     init(from decoder: Decoder) throws {
         let value = try decoder.singleValueContainer()
         if let string = try? value.decode(String.self) {
