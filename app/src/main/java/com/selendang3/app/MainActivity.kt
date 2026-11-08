@@ -80,9 +80,10 @@ fun EstateApp() {
         "dark" -> true
         else -> isSystemInDarkTheme()
     }
-    val dao = remember(context) { EstateDatabase.get(context).estateDao() }
-    val snapshot by remember(dao) { dao.observeSnapshot() }.collectAsStateWithLifecycle(null)
-    val estateUpdate = remember(snapshot?.content) { snapshot?.let { EstatePackages.parse(it.content) } }
+    val repository = remember(context) { EstateRepository.get(context) }
+    val estateState by repository.state.collectAsStateWithLifecycle()
+    val snapshot = estateState.snapshot
+    val estateUpdate = estateState.update
     val nav = rememberNavController()
     val entry by nav.currentBackStackEntryAsState()
     val route = entry?.destination?.route ?: "home"
@@ -98,6 +99,7 @@ fun EstateApp() {
         Box(Modifier.fillMaxSize()) {
             PlantationBackground()
             Column(Modifier.fillMaxSize().safeDrawingPadding().padding(horizontal = 20.dp)) {
+                estateState.error?.let { Text(it, color = Color.White, style = MaterialTheme.typography.bodySmall) }
                 if (route != "home") {
                     TextButton(onClick = { nav.popBackStack() }, colors = ButtonDefaults.textButtonColors(contentColor = Color.White)) { Text("‹  Back") }
                 } else {

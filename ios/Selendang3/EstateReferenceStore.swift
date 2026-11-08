@@ -2,7 +2,17 @@ import Foundation
 import Combine
 
 @MainActor
-final class EstateReferenceStore: ObservableObject {
+protocol EstateRepositoryAccess {
+    var reference: EstateReference? { get }
+    var storageError: String? { get }
+    var savedData: Data? { get }
+    func prepare(_ data: Data) throws -> EstateImport
+    func apply(_ prepared: EstateImport) throws
+    func previousImport() throws -> EstateImport
+}
+
+@MainActor
+final class EstateReferenceStore: ObservableObject, EstateRepositoryAccess {
     static let shared = EstateReferenceStore()
     @Published private(set) var reference: EstateReference?
     @Published private(set) var storageError: String?
@@ -30,6 +40,8 @@ final class EstateReferenceStore: ObservableObject {
         return EstateImport(data: data, reference: try EstateReference.parse(data), expectedData: savedData,
             summary: "Restore the previous estate snapshot. This can lower the revision. The current snapshot becomes the backup. Production drafts and profile settings are unchanged.", restoring: true)
     }
+
+    func prepare(_ data: Data) throws -> EstateImport { try EstateZip.read(data, current: savedData) }
 
     func apply(_ data: Data) throws {
         try apply(EstateZip.prepare(data, current: savedData))

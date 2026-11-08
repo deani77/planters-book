@@ -1,7 +1,7 @@
 import SwiftUI
 
 struct ProductionView: View {
-    @ObservedObject private var estate = EstateReferenceStore.shared
+    @ObservedObject var estate: EstateReferenceStore = .shared
     private let columns = [GridItem(.adaptive(minimum: 92, maximum: 200))]
 
     var body: some View {
@@ -44,7 +44,7 @@ struct ProductionView: View {
 
 private struct FieldCropReportView: View {
     let code: String
-    @ObservedObject private var estate = EstateReferenceStore.shared
+    @ObservedObject var estate: EstateReferenceStore = .shared
     var body: some View {
         TimelineView(.periodic(from: Date(), by: 60)) { context in
             let summary = CropProductionTableData(reference: estate.reference, today: context.date).fieldSummary(code: code)
