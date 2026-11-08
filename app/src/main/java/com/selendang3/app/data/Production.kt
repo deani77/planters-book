@@ -2,8 +2,17 @@ package com.selendang3.app.data
 
 import java.time.LocalDate
 
+// Legacy identifiers retained for reading old drafts; new entry uses the estate registry.
 val productionFields = listOf("PM04D", "PM05E", "PM06F", "PM08G", "PM10K", "PM11M", "PM15P")
 val productionAliases = listOf("0256PM0401", "0256PM0502", "0256PM0603", "0256PM0804", "0256PM1006", "0256PM1108", "0256PM1511").zip(productionFields).toMap()
+
+class FieldRegistry(codes: Collection<String>, retainedCodes: Collection<String> = emptyList()) {
+    val activeCodes: List<String> = codes.map(String::trim).filter(String::isNotEmpty).distinct().sorted()
+    val retainedCodes: List<String> = retainedCodes.distinct().sorted()
+    fun requireActive(code: String) {
+        require(code in activeCodes) { "Choose a field from this estate." }
+    }
+}
 
 // One editable local draft per field and reporting date. No server receipt is implied.
 data class ProductionDraft(
@@ -13,7 +22,7 @@ data class ProductionDraft(
 ) {
     val key: String get() = "$date/${this.field}"
     fun validate() {
-        require(field in productionFields) { "Choose a valid field." }
+        require(field.isNotBlank() && field == field.trim() && field.length <= 100 && field.none { it.isISOControl() }) { "Include a valid field identifier." }
         require(LocalDate.parse(date).toString() == date) { "Use YYYY-MM-DD for the reporting date." }
         require(listOf(harvested, sentToMill, backlog, hectares).all { it == null || (it.isFinite() && it in 0.0..1e9) }) { "Values must be finite and non-negative." }
         require(harvesters == null || harvesters in 0..1000000000) { "Harvesters must be a non-negative whole number." }

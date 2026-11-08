@@ -17,9 +17,9 @@ class ProductionDraftStoreTest {
     @Test fun savedDraftSurvivesNewStoreAndEditingDoesNotDuplicate() {
         val store = ProductionDraftStore(context)
         val row = ProductionDraft("2026-10-20", "PM04D", null, 2.0, null, 3.0, 4)
-        store.save(row)
-        store.save(row.copy(sentToMill = 5.0))
-        store.save(row.copy(field = "PM05E"))
+        store.save(row, FieldRegistry(productionFields))
+        store.save(row.copy(sentToMill = 5.0), FieldRegistry(productionFields))
+        store.save(row.copy(field = "PM05E"), FieldRegistry(productionFields))
         val reloaded = ProductionDraftStore(context).load()
         assertEquals(2, reloaded.size)
         assertEquals(5.0, reloaded.first { it.field == "PM04D" }.sentToMill!!, 0.0001)
@@ -29,7 +29,7 @@ class ProductionDraftStoreTest {
         val preferences = context.getSharedPreferences("production_drafts_v1", 0)
         preferences.edit().putString("records", "unreadable").commit()
         try {
-            ProductionDraftStore(context).save(ProductionDraft("2026-10-20", "PM04D", null, 2.0, null, null, null))
+            ProductionDraftStore(context).save(ProductionDraft("2026-10-20", "PM04D", null, 2.0, null, null, null), FieldRegistry(productionFields))
             fail("Unreadable data must prevent saving")
         } catch (_: org.json.JSONException) { }
         assertEquals("unreadable", preferences.getString("records", null))

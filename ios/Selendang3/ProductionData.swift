@@ -1,8 +1,21 @@
 import Foundation
 
+// Legacy identifiers remain readable; new entry uses the estate registry.
 let productionFields = ["PM04D", "PM05E", "PM06F", "PM08G", "PM10K", "PM11M", "PM15P"]
 let productionAliases = Dictionary(uniqueKeysWithValues: zip(
     ["0256PM0401", "0256PM0502", "0256PM0603", "0256PM0804", "0256PM1006", "0256PM1108", "0256PM1511"], productionFields))
+
+struct FieldRegistry {
+    let activeCodes: [String]
+    let retainedCodes: [String]
+    init(codes: [String], retainedCodes: [String] = []) {
+        activeCodes = Array(Set(codes.map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }.filter { !$0.isEmpty })).sorted()
+        self.retainedCodes = Array(Set(retainedCodes)).sorted()
+    }
+    func requireActive(_ code: String) throws {
+        guard activeCodes.contains(code) else { throw ProductionError.invalid("Choose a field from this estate.") }
+    }
+}
 
 func productionDateKey(_ date: Date) -> String {
     let formatter = DateFormatter()
@@ -35,7 +48,8 @@ struct ProductionDraft: Codable, Identifiable {
         formatter.timeZone = .current
         formatter.dateFormat = "yyyy-MM-dd"
         formatter.isLenient = false
-        guard productionFields.contains(field), let parsed = formatter.date(from: date), productionDateKey(parsed) == date else {
+        guard !field.isEmpty, field == field.trimmingCharacters(in: .whitespacesAndNewlines), field.count <= 100,
+              field.rangeOfCharacter(from: .controlCharacters) == nil, let parsed = formatter.date(from: date), productionDateKey(parsed) == date else {
             throw ProductionError.invalid("Choose a valid field and reporting date.")
         }
         guard [harvested, sentToMill, backlog, hectares].allSatisfy({ $0 == nil || ($0!.isFinite && $0! >= 0 && $0! <= 1e9) }),
