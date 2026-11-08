@@ -220,3 +220,8 @@ extension CropProductionTableData {
 }
 
 
+
+// Rendering and checks consume the same report groups; ABW belongs to Field Details.
+func fieldCropReportGroups(_ summary: FieldCropSummary) -> [FieldCropSummaryGroup] {
+    summary.groups.filter { $0.title != "Average Bunch Weight" }
+}

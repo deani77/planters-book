@@ -59,7 +59,7 @@ class NavigationTest {
         compose.onNodeWithText("‹ Settings").performScrollTo().performClick()
         compose.onNodeWithText("User Profile").performScrollTo().assertIsDisplayed()
     }
-    @Test fun cropProductionIsServerManagedAndHasNoDataEntry() {
+    @Test fun cropProductionIsOfflineAndReadOnly() {
         compose.onNodeWithText("Crop Production").performScrollTo().performClick()
         compose.onNodeWithText("Crop Production Dashboard").assertIsDisplayed()
         compose.onNodeWithText("Field Crop Records").performScrollTo().assertIsDisplayed()

@@ -54,7 +54,7 @@ private struct FieldCropReportView: View {
                     if let summary = summary { Text(summary.note).font(.footnote).foregroundStyle(.secondary) }
                 }
                 if let summary = summary {
-                    ForEach(summary.groups) { group in
+                    ForEach(fieldCropReportGroups(summary)) { group in
                         Section(group.title) {
                             ForEach(group.rows) { row in LabeledContent(row.label, value: row.value) }
                             if !group.note.isEmpty { Text(group.note).font(.footnote).foregroundStyle(.secondary) }

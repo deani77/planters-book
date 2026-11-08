@@ -95,6 +95,10 @@ fun cropProductionTable(update: EstatePackage?, today: LocalDate): CropTable {
 data class FieldCropSummaryRow(val label: String, val value: String)
 data class FieldCropSummaryGroup(val title: String, val rows: List<FieldCropSummaryRow>, val note: String = "")
 data class FieldCropSummary(val note: String, val crewNote: String, val groups: List<FieldCropSummaryGroup>)
+// Presentation contract: keep every existing production group except ABW, owned by Field Details.
+fun fieldCropReportGroups(summary: FieldCropSummary): List<FieldCropSummaryGroup> =
+    summary.groups.filter { it.title != "Average Bunch Weight" }
+
 private fun fieldAbwSummary(update: EstatePackage?, today: LocalDate, code: String): FieldCropSummaryGroup {
     val table = update?.tables?.firstOrNull { it.id == "abw" }
     val columns = table?.columns.orEmpty()
