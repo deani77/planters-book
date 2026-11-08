@@ -72,7 +72,7 @@ jobs:
       - uses: gradle/actions/setup-gradle@v4
       - run: sdkmanager 'platforms;android-35' 'build-tools;35.0.0'
       - name: Test and lint without generating an APK
-        run: ./gradlew --no-daemon testDebugUnitTest lintDebug
+        run: ./gradlew --no-daemon testDebugUnitTest lintDebug compileDebugAndroidTestKotlin
       - uses: actions/upload-artifact@v4
         if: always()
         with:

@@ -60,7 +60,7 @@ fun ProductionScreen() {
 }
 
 @Composable
-private fun FieldCropReport(update: EstatePackage?, code: String, back: () -> Unit) {
+internal fun FieldCropReport(update: EstatePackage?, code: String, back: () -> Unit) {
     Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(16.dp)) {
         TextButton(onClick = back) { Text("‹ All Fields") }
         Text("$code · Crop Records", style = MaterialTheme.typography.titleLarge)
@@ -69,7 +69,7 @@ private fun FieldCropReport(update: EstatePackage?, code: String, back: () -> Un
         if (summary == null) Text("Crop records pending for this field.")
         else {
             Text(summary.note, style = MaterialTheme.typography.bodySmall)
-            summary.groups.forEach { group ->
+            fieldCropReportGroups(summary).forEach { group ->
                 Card(Modifier.fillMaxWidth()) {
                     Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                         Text(group.title, style = MaterialTheme.typography.titleMedium)
