@@ -23,10 +23,10 @@ fun ProductionScreen() {
         while (true) { value = estateRainfallToday(); kotlinx.coroutines.delay(60_000) }
     }
     var selected by rememberSaveable { mutableStateOf<String?>(null) }
-    val codes = estateFieldCodes(update)
+    val codes = cropProductionFieldCodes(update)
     val field = selected?.takeIf { it in codes }
     if (field != null) {
-        FieldCropReport(update, field) { selected = null }
+        FieldCropReport(update, field, today) { selected = null }
         return
     }
     Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(16.dp)) {
@@ -58,8 +58,10 @@ fun ProductionScreen() {
 }
 
 @Composable
-private fun FieldCropReport(update: EstatePackage?, code: String, back: () -> Unit) {
-    val summary = fieldCropSummary(update, estateRainfallToday(), code)
+private fun FieldCropReport(update: EstatePackage?, code: String, today: java.time.LocalDate, back: () -> Unit) {
+    val summary = fieldCropSummary(update, today, code)
+    val performance = fieldProductionPerformance(update, today, code)
+    val monthly = fieldMonthlyProduction(update, today, code)
     Column(
         Modifier.fillMaxSize().verticalScroll(rememberScrollState()),
         verticalArrangement = Arrangement.spacedBy(16.dp)
@@ -68,20 +70,27 @@ private fun FieldCropReport(update: EstatePackage?, code: String, back: () -> Un
         Text("$code · Crop Production", style = MaterialTheme.typography.titleLarge)
         Text("Local report · Read-only · Available offline", style = MaterialTheme.typography.bodySmall)
 
+        Text(summary?.note ?: cropProductionTable(update, today).note, style = MaterialTheme.typography.bodySmall)
         Card(Modifier.fillMaxWidth()) {
             Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 Text("1. Field Crop Performance", style = MaterialTheme.typography.titleMedium)
-                Text("MTD actual vs budget (MT/ha) · Achievement: Pending")
-                Text("YTD actual vs YTD budget (MT/ha) · Achievement: Pending")
-                Text("YTD actual vs annual budget (MT/ha) · Achievement: Pending")
-                Text("Performance comparisons require matching field-level budget and planted-area records.", style = MaterialTheme.typography.bodySmall)
+                performance.forEach { row -> Text("${row.label}: ${row.value}") }
+                summary?.groups?.filter { it.title in listOf("Field Profile", "Crop Budget and Actual") }?.forEach { group ->
+                    Text(group.title, style = MaterialTheme.typography.titleSmall)
+                    group.rows.forEach { row -> Text("${row.label}: ${row.value}") }
+                    if (group.note.isNotEmpty()) Text(group.note, style = MaterialTheme.typography.bodySmall)
+                }
             }
         }
         Card(Modifier.fillMaxWidth()) {
             Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 Text("2. Monthly Crop Production", style = MaterialTheme.typography.titleMedium)
                 Text("January–December · Actual MT · Budget MT · Actual MT/ha · Achievement %")
-                Text("Monthly field breakdown: Pending")
+                Text("${monthly.year} · Past months require a complete month-end report. Current month is MTD through its report date.", style = MaterialTheme.typography.bodySmall)
+                monthly.rows.forEach { row ->
+                    Text(row.period, style = MaterialTheme.typography.titleSmall)
+                    Text("Actual: ${row.actualMt} MT · Budget: ${row.budgetMt} MT · Yield: ${row.actualYield} MT/ha · Achievement: ${row.achievement} %")
+                }
             }
         }
         Card(Modifier.fillMaxWidth()) {
@@ -94,13 +103,14 @@ private fun FieldCropReport(update: EstatePackage?, code: String, back: () -> Un
         Card(Modifier.fillMaxWidth()) {
             Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 Text("4. Harvesting Performance", style = MaterialTheme.typography.titleMedium)
-                val harvesting = summary?.groups?.firstOrNull { it.title == "Harvesting" }
-                if (harvesting == null) Text("Harvested area, rounds, frequency, coverage and productivity: Pending")
-                else {
-                    harvesting.rows.forEach { row -> Text("${row.label}: ${row.value}") }
-                    if (summary.crewNote.isNotEmpty()) Text(summary.crewNote, style = MaterialTheme.typography.bodySmall)
+                val groups = fieldHarvestingGroups(summary)
+                if (groups.isEmpty()) Text("Harvesting records: Pending")
+                groups.forEach { group ->
+                    Text(group.title, style = MaterialTheme.typography.titleSmall)
+                    group.rows.forEach { row -> Text("${row.label}: ${row.value}") }
+                    if (group.note.isNotEmpty()) Text(group.note, style = MaterialTheme.typography.bodySmall)
                 }
-                Text("Detailed field harvesting records will be shown when supporting data are available.", style = MaterialTheme.typography.bodySmall)
+                if (summary != null && summary.crewNote.isNotEmpty()) Text(summary.crewNote, style = MaterialTheme.typography.bodySmall)
             }
         }
         Text("Average Bunch Weight is managed under Field Details, not Crop Production.")
