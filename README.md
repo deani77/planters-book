@@ -20,6 +20,7 @@ Start with the [Excel template and JSON format guide](docs/data-updates.md), the
 
 | Task | Start here |
 | --- | --- |
+| Follow app startup, imports and report data | [Architecture guide](docs/architecture.md) |
 | Android setup and source checks | [Android development](docs/android-development.md) |
 | iPhone and iPad setup | [iOS development](ios/README.md#build-and-validation) |
 | Android test APK requests | [APK policy](docs/android-apk-policy.md) |
