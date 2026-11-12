@@ -1,4 +1,4 @@
-package com.selendang3.app
+package com.selendang3.app.features.estate
 
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
@@ -49,6 +49,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.selendang3.app.FfbCostPanel
+import com.selendang3.app.RainfallBarChart
+import com.selendang3.app.YphPanel
 
 private const val Pending = "—"
 

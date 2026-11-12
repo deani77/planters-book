@@ -1,5 +1,6 @@
-package com.selendang3.app
+package com.selendang3.app.features.settings
 
+import com.selendang3.app.BuildConfig
 import android.content.ActivityNotFoundException
 import android.content.Intent
 import android.net.Uri
