@@ -1,35 +1,36 @@
 # Planters Book
 
-Offline estate management for individual planters, estate managers and smallholders, with native Android and iOS apps.
+Planters Book is an offline estate management app for individual planters, estate managers and smallholders. The repository contains a Kotlin/Jetpack Compose Android app and a SwiftUI app for iPhone and iPad.
 
-Set an estate name in Settings → Estate Data Management. The name and estate records are stored on this device.
+## What works on main
 
-## Data ownership
+- In **Settings → Estate Data Management**, set the estate name, download a blank Excel template, or import a local XLSX, JSON or ZIP file. Review the validated snapshot before confirming the import.
+- Dashboards and field reports use saved estate records. The app stores estate snapshots and production drafts on the device.
+- XLSX and JSON replace the estate snapshot. Versioned ZIPs also support merging selected sections and reports against an exact base revision. You can export or share an estate ZIP and review or restore the previous local snapshot.
 
-Estate information and production drafts are stored locally. Users supply estate records through local imports. The existing production draft storage is retained; exposing the full Data Input forms remains follow-up work. Normal use requires no VPS, account, server address, access token, or internet connection.
+Start with the [Excel template and JSON format guide](docs/data-updates.md), the [ZIP format and backup scope](docs/estate-zip.md), or the [sample estate JSON](sample-data/estate-update.example.json). Keep real estate records, completed workbooks and private exports out of this public repository.
 
-## Current implementation
+## Planned work
 
-- Android and iOS support offline ZIP, JSON and XLSX estate imports with validation, preview, a previous-snapshot backup and reviewed restore.
-- Versioned ZIPs support full replacement or an exact-base merge of selected sections/reports, plus local export and system sharing.
-- Android and iOS can create a blank XLSX template and import a filled workbook.
-- Workbook sheets cover the existing seven estate reference tables and supported optional YPH, production, manuring, and budget report data.
-- The previous estate snapshot is retained on-device when a new import is confirmed.
-- Existing local production draft storage and data fields are preserved.
+- Estate and field setup forms and a dedicated Data Input area for crop and upkeep records.
+- The planned Home, Estate, Field, Data Input, Tools and Settings navigation, with read-only field reports.
+- Full-device backup and restore. The current estate ZIP covers the reference snapshot and optional reports. Production drafts and app preferences are stored separately.
 
-ZIP format, backup scope and Selendang-3 export compatibility are in [docs/estate-zip.md](docs/estate-zip.md). Workbook details and limits are in docs/data-updates.md. The sample JSON format remains available at sample-data/estate-update.example.json.
+## Developer setup
 
-## Planned Data Input work
+| Task | Start here |
+| --- | --- |
+| Follow app startup, imports and report data | [Architecture guide](docs/architecture.md) |
+| Android setup and source checks | [Android development](docs/android-development.md) |
+| iPhone and iPad setup | [iOS development](ios/README.md#build-and-validation) |
+| Android test APK requests | [APK policy](docs/android-apk-policy.md) |
+| Bring in a Selendang 3 Apps change | [Upstream pull request policy](docs/upstream-sync-policy.md) |
+| Repository instructions | [AGENTS.md](AGENTS.md) |
 
-- Complete estate and field setup forms.
-- Add the agreed Home, Estate, Field, Data Input, Tools and Settings navigation.
-- Keep all editing in Data Input, with field reports read-only.
-- Capture field crop records daily, weekly and monthly; capture weeding and manuring at estate level.
-- Drive dashboards and reports from user records and support portable backup and restore.
+Run the routine Android checks from the repository root with JDK 17 and Android SDK Platform 35 installed.
 
-## Development
+```sh
+./gradlew testDebugUnitTest lintDebug
+```
 
-- Android build instructions: docs/android-development.md
-- iOS build instructions: ios/README.md
-
-Keep real estate records and private exports out of this public repository.
+On Windows, use `gradlew.bat` in place of `./gradlew`.
