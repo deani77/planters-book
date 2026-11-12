@@ -8,9 +8,11 @@ struct HomeDashboardScreen: View {
                 ScrollView { IPadHomeDashboardCard().padding(20) }
             } else {
                 OperationalDashboardGrid()
+                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
             }
         }
         .estateScreen()
+        .toolbarBackground(isPad ? .visible : .hidden, for: .navigationBar)
         .navigationTitle("Estate Dashboard")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar(.visible, for: .navigationBar)
@@ -24,36 +26,41 @@ private struct OperationalDashboardGrid: View {
     private let green = EstateTheme.accent
 
     var body: some View {
-        ScrollView {
-            TimelineView(.periodic(from: Date(), by: 60)) { context in
-                let cards = EstateDashboardData(reference: estate.reference, today: context.date).operationalCards
-                VStack(spacing: 10) {
-                    dashboardCard(cards[0], symbol: "leaf.fill", wide: true)
-                    HStack(alignment: .top, spacing: 10) {
-                        dashboardCard(cards[1], symbol: "square.grid.3x3.fill", height: 144)
-                        dashboardCard(cards[2], symbol: "person.fill", height: 144)
-                    }
-                    HStack(alignment: .top, spacing: 10) {
-                        dashboardCard(cards[3], symbol: "leaf.circle.fill", height: 126)
-                        dashboardCard(cards[4], symbol: "sprinkler.and.droplets.fill", height: 126)
-                    }
-                    dashboardCard(cards[5], symbol: "ant.fill", wide: true)
-                    dashboardCard(cards[6], symbol: "banknote.fill", wide: true)
-                }
-                .padding(12)
+        TimelineView(.periodic(from: Date(), by: 60)) { context in
+            let cards = EstateDashboardData(reference: estate.reference, today: context.date).operationalCards
+            ViewThatFits(in: .vertical) {
+                dashboard(cards)
+                ScrollView { dashboard(cards) }
             }
         }
-        .background { EstateBackground() }
     }
 
-    private func dashboardCard(_ card: EstateDashboardPanel, symbol: String, height: CGFloat = 0, wide: Bool = false) -> some View {
-        VStack(alignment: .leading, spacing: 6) {
+    private func dashboard(_ cards: [EstateDashboardPanel]) -> some View {
+        VStack(spacing: 6) {
+            dashboardCard(cards[0], symbol: "leaf.fill", wide: true)
+            HStack(alignment: .top, spacing: 6) {
+                dashboardCard(cards[1], symbol: "square.grid.3x3.fill")
+                dashboardCard(cards[2], symbol: "person.fill")
+            }
+            HStack(alignment: .top, spacing: 6) {
+                dashboardCard(cards[3], symbol: "leaf.circle.fill")
+                dashboardCard(cards[4], symbol: "sprinkler.and.droplets.fill")
+            }
+            dashboardCard(cards[5], symbol: "ant.fill", wide: true)
+            dashboardCard(cards[6], symbol: "banknote.fill", wide: true)
+        }
+        .padding(8)
+        .fixedSize(horizontal: false, vertical: true)
+    }
+
+    private func dashboardCard(_ card: EstateDashboardPanel, symbol: String, wide: Bool = false) -> some View {
+        VStack(alignment: .leading, spacing: 4) {
             HStack(alignment: .firstTextBaseline, spacing: 6) {
                 Image(systemName: symbol).font(.caption).foregroundStyle(green)
                 Text(card.title).font(.subheadline.weight(.semibold))
                     .fixedSize(horizontal: false, vertical: true)
             }
-            .frame(maxWidth: .infinity, minHeight: wide ? 18 : 34, alignment: wide ? .center : .topLeading)
+            .frame(maxWidth: .infinity, alignment: wide ? .center : .topLeading)
             Rectangle().fill(green.opacity(0.15)).frame(height: 1)
             if card.title == "Crop Production" {
                 HStack(alignment: .top, spacing: 8) {
@@ -78,14 +85,13 @@ private struct OperationalDashboardGrid: View {
                 ForEach(card.rows.indices, id: \.self) { row in
                     metric(card.rows[row])
                 }
-                Spacer(minLength: 0)
             }
             Text(card.note).font(.caption2).foregroundStyle(.secondary)
                 .frame(maxWidth: .infinity, alignment: wide ? .center : .leading)
                 .fixedSize(horizontal: false, vertical: true)
         }
-        .padding(10)
-        .frame(maxWidth: .infinity, minHeight: height, alignment: .topLeading)
+        .padding(8)
+        .frame(maxWidth: .infinity, alignment: .topLeading)
         .background(EstateTheme.surface)
         .clipShape(RoundedRectangle(cornerRadius: 16))
         .overlay(RoundedRectangle(cornerRadius: 16).stroke(EstateTheme.border, lineWidth: 1))
