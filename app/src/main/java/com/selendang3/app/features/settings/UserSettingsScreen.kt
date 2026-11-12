@@ -1,5 +1,6 @@
 package com.selendang3.app.features.settings
 
+import com.selendang3.app.BuildConfig
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
