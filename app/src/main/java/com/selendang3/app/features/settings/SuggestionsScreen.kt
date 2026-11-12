@@ -1,4 +1,4 @@
-package com.selendang3.app
+package com.selendang3.app.features.settings
 
 import android.content.ActivityNotFoundException
 import android.content.Intent

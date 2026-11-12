@@ -1,4 +1,4 @@
-package com.selendang3.app
+package com.selendang3.app.features.estate
 
 import androidx.compose.foundation.background
 import androidx.compose.ui.graphics.Brush
@@ -22,6 +22,9 @@ import com.selendang3.app.data.OperationalMetric
 import com.selendang3.app.data.estateRainfallToday
 import com.selendang3.app.data.operationalDashboardCards
 import kotlinx.coroutines.delay
+import com.selendang3.app.EstateControlHeight
+import com.selendang3.app.EstateModuleIcon
+import com.selendang3.app.bookAccent
 
 @Composable
 fun OperationalDashboardScreen(update: EstatePackage?) {

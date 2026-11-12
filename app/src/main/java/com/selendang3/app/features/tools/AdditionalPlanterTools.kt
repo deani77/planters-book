@@ -1,4 +1,4 @@
-package com.selendang3.app
+package com.selendang3.app.features.tools
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
@@ -8,6 +8,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.selendang3.app.data.*
 import java.util.Locale
+import com.selendang3.app.EstatePillSelector
 
 @Composable
 internal fun FertilizerCalculator() {

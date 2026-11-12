@@ -1,4 +1,4 @@
-package com.selendang3.app
+package com.selendang3.app.features.settings
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -9,6 +9,9 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import com.selendang3.app.EstateControlHeight
+import com.selendang3.app.bookTabButtonColors
+import com.selendang3.app.features.estate.EstateDataControls
 
 @Composable
 fun UserSettingsScreen(themeChoice: String, onThemeChange: (String) -> Unit) {

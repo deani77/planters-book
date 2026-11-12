@@ -1,4 +1,4 @@
-package com.selendang3.app
+package com.selendang3.app.features.production
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -13,6 +13,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.selendang3.app.data.CropTable
 import com.selendang3.app.data.CropTableRow
+import com.selendang3.app.EstatePillSelector
 
 @Composable
 fun CropProductionDashboardTable(data: CropTable) {

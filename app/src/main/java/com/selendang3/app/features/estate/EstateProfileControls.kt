@@ -1,4 +1,4 @@
-package com.selendang3.app
+package com.selendang3.app.features.estate
 
 import android.content.SharedPreferences
 import androidx.compose.foundation.layout.*

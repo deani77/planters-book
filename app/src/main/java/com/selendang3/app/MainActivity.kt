@@ -40,6 +40,14 @@ import com.selendang3.app.data.EstateDatabase
 import com.selendang3.app.data.EstatePackages
 import java.text.DateFormat
 import java.util.Date
+import com.selendang3.app.features.estate.EstateDashboard
+import com.selendang3.app.features.estate.EstateSectionData
+import com.selendang3.app.features.estate.OperationalDashboardScreen
+import com.selendang3.app.features.estate.rememberEstateName
+import com.selendang3.app.features.fields.FieldDetailsScreen
+import com.selendang3.app.features.settings.UserSettingsScreen
+import com.selendang3.app.features.tools.PlanterToolsScreen
+import com.selendang3.app.features.upkeep.UpkeepCultivationScreen
 
 data class Section(val route: String, val title: String, val description: String)
 
