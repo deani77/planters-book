@@ -24,42 +24,52 @@ import com.selendang3.app.data.operationalDashboardCards
 import kotlinx.coroutines.delay
 
 @Composable
-fun OperationalDashboardScreen(update: EstatePackage?) {
+fun OperationalDashboardScreen(update: EstatePackage?, compact: Boolean) {
     val today by produceState(estateRainfallToday()) {
         while (true) { value = estateRainfallToday(); delay(60_000) }
     }
     val cards = operationalDashboardCards(update, today)
+    val cardGap = if (compact) 6.dp else 10.dp
     Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()),
-        verticalArrangement = Arrangement.spacedBy(10.dp)) {
-        OperationalSummaryCard(cards[0], "information", wide = true)
-        Row(Modifier.height(IntrinsicSize.Min), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-            OperationalSummaryCard(cards[1], "production", Modifier.weight(1f).fillMaxHeight())
-            OperationalSummaryCard(cards[2], "worker", Modifier.weight(1f).fillMaxHeight())
+        verticalArrangement = Arrangement.spacedBy(cardGap)) {
+        OperationalSummaryCard(cards[0], "information", compact, wide = true)
+        Row(Modifier.height(IntrinsicSize.Min), horizontalArrangement = Arrangement.spacedBy(cardGap)) {
+            OperationalSummaryCard(cards[1], "production", compact, Modifier.weight(1f).fillMaxHeight())
+            OperationalSummaryCard(cards[2], "worker", compact, Modifier.weight(1f).fillMaxHeight())
         }
-        Row(Modifier.height(IntrinsicSize.Min), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-            OperationalSummaryCard(cards[3], "information", Modifier.weight(1f).fillMaxHeight())
-            OperationalSummaryCard(cards[4], "upkeep", Modifier.weight(1f).fillMaxHeight())
+        Row(Modifier.height(IntrinsicSize.Min), horizontalArrangement = Arrangement.spacedBy(cardGap)) {
+            OperationalSummaryCard(cards[3], "information", compact, Modifier.weight(1f).fillMaxHeight())
+            OperationalSummaryCard(cards[4], "upkeep", compact, Modifier.weight(1f).fillMaxHeight())
         }
-        OperationalSummaryCard(cards[5], "pest", wide = true)
-        OperationalSummaryCard(cards[6], "cost", wide = true)
+        OperationalSummaryCard(cards[5], "pest", compact, wide = true)
+        OperationalSummaryCard(cards[6], "cost", compact, wide = true)
     }
 }
 
 @Composable
-private fun OperationalSummaryCard(card: OperationalCard, symbol: String, modifier: Modifier = Modifier, wide: Boolean = false) {
+private fun OperationalSummaryCard(
+    card: OperationalCard,
+    symbol: String,
+    compact: Boolean,
+    modifier: Modifier = Modifier,
+    wide: Boolean = false,
+) {
+    val contentGap = if (compact) 4.dp else 6.dp
+    val contentPadding = if (compact) 8.dp else 12.dp
     val accent = bookAccent(card.title)
     MaterialTheme(colorScheme = MaterialTheme.colorScheme.copy(primary = if (MaterialTheme.colorScheme.surface.luminance() < 0.5f) accent.light else accent.start)) {
         Card(modifier.fillMaxWidth().heightIn(min = EstateControlHeight), shape = RoundedCornerShape(16.dp),
             colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
             border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)) {
-            Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                Row(Modifier.fillMaxWidth().background(Brush.linearGradient(listOf(accent.start, accent.end))).padding(14.dp), horizontalArrangement = if (wide) Arrangement.Center else Arrangement.Start,
+            Column(verticalArrangement = Arrangement.spacedBy(contentGap)) {
+                Row(Modifier.fillMaxWidth().background(Brush.linearGradient(listOf(accent.start, accent.end))).padding(if (compact) 8.dp else 14.dp), horizontalArrangement = if (wide) Arrangement.Center else Arrangement.Start,
                     verticalAlignment = Alignment.Top) {
                     EstateModuleIcon(symbol, Modifier.size(18.dp), Color.White)
                     Spacer(Modifier.width(6.dp))
                     Text(card.title, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold, color = Color.White)
                 }
-                Column(Modifier.padding(horizontal = 12.dp).padding(bottom = 12.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                Column(Modifier.padding(horizontal = contentPadding).padding(bottom = contentPadding),
+                    verticalArrangement = Arrangement.spacedBy(contentGap)) {
                     HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
                     if (card.title == "Crop Production") {
                         Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
@@ -74,7 +84,7 @@ private fun OperationalSummaryCard(card: OperationalCard, symbol: String, modifi
                                 style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.SemiBold)
                         }
                     } else if (wide) {
-                        Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                        Row(horizontalArrangement = Arrangement.spacedBy(if (compact) 6.dp else 10.dp)) {
                             card.metrics.forEach { metric ->
                                 OperationalMetricValue(metric, Modifier.weight(1f), centered = true,
                                     prominent = card.title == "Estate Cost")
@@ -83,7 +93,7 @@ private fun OperationalSummaryCard(card: OperationalCard, symbol: String, modifi
                     } else {
                         card.metrics.forEach { OperationalMetricValue(it) }
                     }
-                    Text(card.period, modifier = Modifier.fillMaxWidth().padding(top = 3.dp),
+                    Text(card.period, modifier = Modifier.fillMaxWidth().padding(top = if (compact) 0.dp else 3.dp),
                         style = MaterialTheme.typography.labelSmall,
                         textAlign = if (wide) TextAlign.Center else TextAlign.Start,
                         color = MaterialTheme.colorScheme.onSurfaceVariant)

@@ -23,6 +23,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.role
@@ -86,6 +87,8 @@ fun EstateApp() {
     val nav = rememberNavController()
     val entry by nav.currentBackStackEntryAsState()
     val route = entry?.destination?.route ?: "home"
+    val compactWidth = LocalConfiguration.current.screenWidthDp < 600
+    val compactDashboard = route == "dashboard" && compactWidth
     val allSections = mainSections + estateSections
     val title = when (route) {
         "home" -> "Planters Book"
@@ -97,7 +100,8 @@ fun EstateApp() {
         Surface(Modifier.fillMaxSize(), color = BookSlate, contentColor = Color.White) {
         Box(Modifier.fillMaxSize()) {
             PlantationBackground()
-            Column(Modifier.fillMaxSize().safeDrawingPadding().padding(horizontal = 20.dp)) {
+            Column(Modifier.fillMaxSize().safeDrawingPadding()
+                .padding(horizontal = if (compactDashboard) 12.dp else 20.dp)) {
                 if (route != "home") {
                     TextButton(onClick = { nav.popBackStack() }, colors = ButtonDefaults.textButtonColors(contentColor = Color.White)) { Text("‹  Back") }
                 } else {
@@ -111,12 +115,12 @@ fun EstateApp() {
                     lineHeight = MaterialTheme.typography.headlineLarge.lineHeight * 0.5f
                 ) else MaterialTheme.typography.headlineMedium,
                     fontWeight = FontWeight.Bold, color = Color.White,
-                    modifier = Modifier.fillMaxWidth().padding(vertical = 12.dp)
+                    modifier = Modifier.fillMaxWidth().padding(vertical = if (compactDashboard) 6.dp else 12.dp)
                         .background(Color(0xFF2D2D2D), RoundedCornerShape(24.dp))
-                        .padding(20.dp),
+                        .padding(horizontal = 20.dp, vertical = if (compactDashboard) 8.dp else 20.dp),
                     textAlign = if (route == "home") TextAlign.Center else TextAlign.Start)
                 Surface(Modifier.weight(1f).fillMaxWidth()
-                    .padding(vertical = if (route == "home") 0.dp else 12.dp),
+                    .padding(vertical = if (route == "home" || compactDashboard) 0.dp else 12.dp),
                     color = Color.Transparent,
                     contentColor = if (route == "home") Color.White else MaterialTheme.colorScheme.onSurface,
                     shape = RoundedCornerShape(18.dp)) {
@@ -149,7 +153,7 @@ fun EstateApp() {
                     }
                     composable("production") { FieldDetailsScreen(estateUpdate) }
                     composable("upkeep") { UpkeepCultivationScreen(estateUpdate) }
-                    composable("dashboard") { OperationalDashboardScreen(estateUpdate) }
+                    composable("dashboard") { OperationalDashboardScreen(estateUpdate, compact = compactWidth) }
                     composable("reports") { ProductionScreen() }
                     composable("tools") { PlanterToolsScreen() }
                     composable("settings") {
@@ -176,7 +180,8 @@ fun EstateApp() {
                 }
                 Text("v${BuildConfig.VERSION_NAME}  •  Local storage\nLast update: ${snapshot?.let { DateFormat.getDateTimeInstance().format(Date(it.updatedAt)) + " · " + it.source } ?: "No data yet"}",
                     style = MaterialTheme.typography.labelMedium, color = Color.White.copy(alpha = 0.8f),
-                    modifier = Modifier.fillMaxWidth().padding(vertical = 16.dp), textAlign = TextAlign.Center)
+                    modifier = Modifier.fillMaxWidth().padding(vertical = if (compactDashboard) 8.dp else 16.dp),
+                    textAlign = TextAlign.Center)
             }
         }
     }
