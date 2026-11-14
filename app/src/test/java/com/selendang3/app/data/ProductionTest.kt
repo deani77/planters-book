@@ -9,6 +9,16 @@ class ProductionTest {
         ProductionDraft(date, field, null, mill, backlog, 3.0, 4)
     private val through = LocalDate.parse("2026-02-10")
 
+    @Test fun registryAcceptsUserFieldsAndRetainsUnlistedSavedIdentifiers() {
+        val registry = FieldRegistry(listOf(" NEW-A ", "NEW-B", "NEW-A"), listOf("OLD-A"))
+        assertEquals(listOf("NEW-A", "NEW-B"), registry.activeCodes)
+        row("2026-02-01", "NEW-A").validate()
+        registry.requireActive("NEW-A")
+        row("2026-02-01", "OLD-A").validate() // old saved records remain readable
+        assertEquals(listOf("OLD-A"), registry.retainedCodes)
+        assertThrows(IllegalArgumentException::class.java) { registry.requireActive("OLD-A") }
+        assertThrows(IllegalArgumentException::class.java) { registry.requireActive("UNKNOWN") }
+    }
     @Test fun aliasesPreserveOriginalFieldCodes() {
         assertEquals("PM04D", productionAliases["0256PM0401"])
         assertEquals("PM15P", productionAliases["0256PM1511"])
@@ -44,7 +54,7 @@ class ProductionTest {
     @Test fun invalidDraftsAreRejectedButMeasuredZeroIsValid() {
         row("2026-02-01", mill = 0.0).validate()
         listOf(row("2026-02-01", mill = -1.0), row("2026-02-01", mill = Double.NaN),
-            row("2026-02-01", field = "unknown"), row("2026-02-01").copy(harvesters = -1)).forEach { draft ->
+            row("2026-02-01", field = " "), row("2026-02-01").copy(harvesters = -1)).forEach { draft ->
             assertThrows(IllegalArgumentException::class.java) { draft.validate() }
         }
         assertThrows(java.time.format.DateTimeParseException::class.java) { row("2026-02-30").validate() }

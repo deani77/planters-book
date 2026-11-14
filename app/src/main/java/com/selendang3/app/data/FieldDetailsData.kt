@@ -50,7 +50,7 @@ fun estateFieldCodes(update: EstatePackage?): List<String> {
     val table = update?.tables?.firstOrNull { it.id == "fields" } ?: return emptyList()
     val column = table.columns.indexOf("Field code")
     if (column < 0) return emptyList()
-    return table.rows.mapNotNull { it.getOrNull(column)?.trim()?.takeIf(String::isNotEmpty) }.distinct().sorted()
+    return FieldRegistry(table.rows.mapNotNull { it.getOrNull(column) }).activeCodes
 }
 
 private val basicFieldColumns = setOf("Field code", "Alternate code", "Area (ha)",

@@ -74,8 +74,9 @@ class ProductionDraftStore(context: Context) {
             .put("conflict", row.conflict?.let { remoteJson(it) } ?: JSONObject.NULL)) }
         check(preferences.edit().putString("records", JSONObject().put("version",2).put("rows",values).toString()).commit()) { "Could not save production data." }
     }
-    fun save(draft: ProductionDraft): List<ProductionDraft> = synchronized(lock) {
+    fun save(draft: ProductionDraft, registry: FieldRegistry): List<ProductionDraft> = synchronized(lock) {
         draft.validate()
+        registry.requireActive(draft.field)
         val current = entries()
         val previous = current.find { it.record.key == draft.key }
         require(previous?.conflict == null) { "Resolve this record's sync conflict in Settings first." }

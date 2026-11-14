@@ -22,3 +22,9 @@ try decoded.validate()
 precondition(decoded.rows[0].sentToMill == 0 && decoded.rows[0].harvested == nil)
 print("Production model checks passed")
 
+
+let userRegistry = FieldRegistry(codes: [" NEW-A ", "NEW-B", "NEW-A"], retainedCodes: ["OLD-A"])
+precondition(userRegistry.activeCodes == ["NEW-A", "NEW-B"])
+try userRegistry.requireActive("NEW-A")
+do { try userRegistry.requireActive("OLD-A"); fatalError("Retired field accepted for new entry") } catch {}
+try ProductionDraft(date: "2026-02-01", field: "NEW-A", harvested: nil, sentToMill: 0, backlog: nil, hectares: nil, harvesters: nil).validate()
