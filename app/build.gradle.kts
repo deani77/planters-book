@@ -9,7 +9,7 @@ android {
     namespace = "com.selendang3.app"
     compileSdk = 35
     defaultConfig {
-        applicationId = "com.selendang3.app"
+        applicationId = "com.deani77.plantersbook"
         minSdk = 26
         targetSdk = 35
         versionCode = 13
