@@ -13,15 +13,15 @@ import java.time.LocalDate
 import java.util.Locale
 
 @Composable
-fun CropHistoryPanel(update: EstatePackage?) {
+fun CropHistoryPanel(update: EstatePackage?, fieldCode: String? = null) {
     val history = cropHistoryFields(update)
     val codes = (estateFieldCodes(update) + history.map { it.code }).distinct().sorted()
     var selection by remember { mutableStateOf<String?>(null) }
-    val selected = selection?.takeIf { it in codes } ?: codes.firstOrNull()
+    val selected = fieldCode ?: selection?.takeIf { it in codes } ?: codes.firstOrNull()
     val field = history.singleOrNull { it.code == selected }
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Text("Crop History · t/ha", style = MaterialTheme.typography.titleMedium)
-        EstatePillSelector(codes, selected, { selection = it }) { it.orEmpty() }
+        if (fieldCode == null) EstatePillSelector(codes, selected, { selection = it }) { it.orEmpty() }
         if (field == null) Text("Crop history unavailable. Import records in Settings → Estate Data Management.") else {
             Text("Production cutoff: ${field.cutoff}. Completed years and partial YTD are not directly comparable.")
             val years = field.years(LocalDate.now().year)
