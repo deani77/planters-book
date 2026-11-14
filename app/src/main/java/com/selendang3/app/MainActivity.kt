@@ -36,7 +36,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
-import com.selendang3.app.data.EstateDatabase
+import com.selendang3.app.data.EstateRepository
 import com.selendang3.app.data.EstatePackages
 import java.text.DateFormat
 import java.util.Date
@@ -80,8 +80,8 @@ fun EstateApp() {
         "dark" -> true
         else -> isSystemInDarkTheme()
     }
-    val dao = remember(context) { EstateDatabase.get(context).estateDao() }
-    val snapshot by remember(dao) { dao.observeSnapshot() }.collectAsStateWithLifecycle(null)
+    val repository = remember(context) { EstateRepository.get(context) }
+    val snapshot by remember(repository) { repository.observeSnapshot() }.collectAsStateWithLifecycle(null)
     val estateUpdate = remember(snapshot?.content) { snapshot?.let { EstatePackages.parse(it.content) } }
     val nav = rememberNavController()
     val entry by nav.currentBackStackEntryAsState()

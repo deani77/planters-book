@@ -16,8 +16,8 @@ import com.selendang3.app.data.*
 @Composable
 fun ProductionScreen() {
     val context = LocalContext.current
-    val dao = remember(context) { EstateDatabase.get(context).estateDao() }
-    val snapshot by dao.observeSnapshot().collectAsState(initial = null)
+    val repository = remember(context) { EstateRepository.get(context) }
+    val snapshot by remember(repository) { repository.observeSnapshot() }.collectAsState(initial = null)
     val update = remember(snapshot?.content) { snapshot?.let { EstatePackages.parse(it.content) } }
     val today by produceState(estateRainfallToday()) {
         while (true) { value = estateRainfallToday(); kotlinx.coroutines.delay(60_000) }
