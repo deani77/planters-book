@@ -4,20 +4,40 @@ import android.content.Context
 import androidx.room.withTransaction
 import org.json.JSONObject
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
+
+/** Keep the original snapshot available even when its payload cannot be parsed. */
+data class EstateReadState(
+    val snapshot: EstateSnapshot? = null,
+    val update: EstatePackage? = null,
+    val error: String? = null
+)
+
+fun readEstateSnapshot(snapshot: EstateSnapshot?): EstateReadState {
+    if (snapshot == null) return EstateReadState()
+    return try {
+        EstateReadState(snapshot = snapshot, update = EstatePackages.parse(snapshot.content))
+    } catch (failure: Exception) {
+        EstateReadState(
+            snapshot = snapshot,
+            error = "Saved estate data could not be read. Review a backup or import a valid estate file. The original data is retained."
+        )
+    }
+}
 
 /**
  * Android entry point for persisted estate records.
  *
  * The schema-v2 snapshot remains the authoritative report source. This façade
- * intentionally does not change import/restore transactions or add competing
- * field/report tables. Callers needing a validated import must continue using
- * the existing import flow until its transaction is moved here separately.
+ * does not add competing field/report tables. Existing import/restore controls
+ * retain their established transactional path until explicit UI integration.
  */
 class EstateRepository internal constructor(
     private val dao: EstateDao,
     private val database: EstateDatabase
 ) {
     fun observeSnapshot(): Flow<EstateSnapshot?> = dao.observeSnapshot()
+    fun observeReadState(): Flow<EstateReadState> = observeSnapshot().map(::readEstateSnapshot)
     fun observeFields(): Flow<List<EstateField>> = dao.observeFields()
     fun observeSyncState(): Flow<SyncState?> = dao.observeSync()
 
