@@ -11,11 +11,46 @@ jobs:
   vulnerability-scan:
     name: Scan repository dependencies
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 25
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-      - name: Scan for known vulnerable dependencies
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+        with:
+          packages: platform-tools
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+      - name: Install Android SDK platform
+        run: sdkmanager 'platforms;android-35' 'build-tools;35.0.0'
+      - name: Resolve Gradle dependencies into temporary lockfiles
+        shell: bash
+        run: |
+          cat > "$RUNNER_TEMP/security-locks.gradle" <<'EOF'
+          allprojects {
+              configurations.configureEach {
+                  if (canBeResolved) {
+                      resolutionStrategy.activateDependencyLocking()
+                  }
+              }
+          }
+          EOF
+          ./gradlew --no-daemon --init-script "$RUNNER_TEMP/security-locks.gradle" :app:dependencies --write-locks
+      - name: Verify scanner has real dependency data
+        shell: bash
+        run: |
+          test -s app/gradle.lockfile || { echo "::error::Gradle dependency lockfile was not generated"; exit 1; }
+          if ! grep -Eq '^[^#[:space:]][^=]*:[^=]*:[^=]*=' app/gradle.lockfile; then
+            echo "::error::Gradle lockfile contains no resolved dependency coordinates"
+            exit 1
+          fi
+          echo "Resolved dependency entries: $(grep -Ec '^[^#[:space:]][^=]*:[^=]*:[^=]*=' app/gradle.lockfile)"
+      - name: Scan resolved dependencies for known vulnerabilities
         uses: aquasecurity/trivy-action@v0.36.0
         with:
           scan-type: fs
