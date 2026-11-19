@@ -1,0 +1,87 @@
+name: Dependency vulnerability scan
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  vulnerability-scan:
+    name: Scan runtime and build dependencies
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+        with:
+          packages: platform-tools
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+      - name: Install Android SDK platform
+        run: sdkmanager 'platforms;android-35' 'build-tools;35.0.0'
+      - name: Resolve release runtime dependencies only
+        shell: bash
+        run: |
+          cat > "$RUNNER_TEMP/security-locks.gradle" <<'EOF'
+          allprojects {
+              configurations.configureEach {
+                  if (name == 'releaseRuntimeClasspath') {
+                      resolutionStrategy.activateDependencyLocking()
+                  }
+              }
+          }
+          EOF
+          ./gradlew --no-daemon --init-script "$RUNNER_TEMP/security-locks.gradle" :app:dependencies --configuration releaseRuntimeClasspath --write-locks
+          mkdir -p "$RUNNER_TEMP/runtime-scan"
+          test -s app/gradle.lockfile || { echo "::error::Release runtime lockfile missing"; exit 1; }
+          cp app/gradle.lockfile "$RUNNER_TEMP/runtime-scan/gradle.lockfile"
+          if ! grep -Eq '^[^#[:space:]][^=]*:[^=]*:[^=]*=' "$RUNNER_TEMP/runtime-scan/gradle.lockfile"; then
+            echo "::error::Release runtime dependency lockfile is empty"
+            exit 1
+          fi
+          echo "Release runtime dependencies: $(grep -Ec '^[^#[:space:]][^=]*:[^=]*:[^=]*=' "$RUNNER_TEMP/runtime-scan/gradle.lockfile")"
+      - name: Block high and critical release runtime vulnerabilities
+        uses: aquasecurity/trivy-action@v0.36.0
+        with:
+          scan-type: fs
+          scan-ref: ${{ runner.temp }}/runtime-scan
+          scanners: vuln
+          severity: HIGH,CRITICAL
+          exit-code: '1'
+          ignore-unfixed: false
+          format: table
+      - name: Resolve full dependency graph for advisory scan
+        if: always()
+        shell: bash
+        run: |
+          cat > "$RUNNER_TEMP/all-locks.gradle" <<'EOF'
+          allprojects {
+              configurations.configureEach {
+                  if (canBeResolved) {
+                      resolutionStrategy.activateDependencyLocking()
+                  }
+              }
+          }
+          EOF
+          ./gradlew --no-daemon --init-script "$RUNNER_TEMP/all-locks.gradle" :app:dependencies --write-locks
+          test -s app/gradle.lockfile || { echo "::error::Full dependency lockfile missing"; exit 1; }
+      - name: Report build and test dependency vulnerabilities (advisory)
+        if: always()
+        uses: aquasecurity/trivy-action@v0.36.0
+        with:
+          scan-type: fs
+          scan-ref: app/gradle.lockfile
+          scanners: vuln
+          severity: HIGH,CRITICAL
+          exit-code: '0'
+          ignore-unfixed: false
+          format: table
