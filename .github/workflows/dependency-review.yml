@@ -1,4 +1,4 @@
-name: Dependency vulnerability review
+name: Dependency vulnerability scan
 
 on:
   pull_request:
@@ -8,13 +8,20 @@ permissions:
   contents: read
 
 jobs:
-  dependency-review:
-    name: Review dependency changes
+  vulnerability-scan:
+    name: Scan repository dependencies
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-      - name: Check dependency changes for known vulnerabilities
-        uses: actions/dependency-review-action@v4
+      - name: Scan for known vulnerable dependencies
+        uses: aquasecurity/trivy-action@0.33.1
         with:
-          fail-on-severity: high
+          scan-type: fs
+          scan-ref: .
+          scanners: vuln
+          severity: HIGH,CRITICAL
+          exit-code: '1'
+          ignore-unfixed: false
+          format: table
